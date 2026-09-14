@@ -1,0 +1,11 @@
+# Dependencias del TP1 de Minería de Datos (librerías vistas en tp1/teoria).
+# Instalar en el venv con: .entorno\Scripts\python.exe -m pip install -r requirements.txt
+pandas==3.0.5
+numpy==2.5.3
+matplotlib==3.11.2
+seaborn==0.13.2
+plotly==7.0.0
+scikit-learn==1.9.1
+scipy==1.18.1
+feature-engine==1.9.4
+ipykernel==7.3.0
