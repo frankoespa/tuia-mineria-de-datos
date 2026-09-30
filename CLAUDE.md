@@ -58,11 +58,18 @@ Los autores piden avanzar **paso por paso** para entender cada decisión:
 
 Las decisiones que modifican el dataset las toman los autores: consultarlas antes de implementarlas.
 
+**`RepasoParcial.md` (raíz del repo):** material de estudio para el parcial, con la explicación **para principiantes** de todos los conceptos aplicados en los TPs. Es la primera vez que los autores ven estos temas.
+- **Cada vez que aparece un tema o concepto nuevo, hay que agregarlo al archivo con su explicación**, en el mismo paso en que se usa.
+- Debe cubrir estrictamente todos los temas de los TPs, con ejemplos de los datos propios y los números reales obtenidos.
+- Vive fuera de `tp1/` porque va a abarcar también los trabajos prácticos siguientes.
+- La sección final lista los temas todavía no vistos; al explicarlos, se mueven al cuerpo del archivo.
+
 Convenciones del notebook:
 - Variables que se arrastran entre celdas: `df` (dataset limpio, 342 filas), `num_cols` (las 4 medidas numéricas), `X` (5 características), `y` (`Especie`) y `X_std` (`X` estandarizada). **Las consignas 2 a 6 trabajan sobre `X_std` y usan `y` solo para colorear y comparar.**
 - Los ids de celda llevan el prefijo del paso: `cab-`, `imp-`, `carga-`, `estr-`, `desc-`, `cat-`, `nul-`, `dup-`, `dist-`, `corr-`, `out-`, `cod-`, `std-`, `cierre-`.
 - Antes de cada gráfico va una celda markdown con la **hipótesis previa**, y después otra con la interpretación que la confirma o la refuta (lo pide el enunciado).
 - Se usa pandas 3: las columnas de texto tienen dtype `str` y no `object` como en los notebooks de clase.
+- **Nombres de las componentes:** `scikit-learn` numera las columnas de salida desde cero (`pca0`, `pca1`, ...). Apenas se ajusta un método de reducción, sus columnas se renombran como `PC1`, `PC2`, ... para que el nombre coincida con el número de componente. Mantener esa convención en Isomap y t-SNE.
 
 ## Estado del TP1
 
@@ -83,7 +90,30 @@ Convenciones del notebook:
 | 10 | `StandardScaler().set_output(transform="pandas")` + `fit_transform(X)` → `X_std` (U1 celda 57). Media 0; `describe()` muestra desvío 1.001 por usar n − 1 | Hecho |
 | 11 | Markdown de cierre del punto 1 | Hecho |
 
-Consignas 2 a 6: sin empezar.
+### Consigna 2: PCA (terminada)
+
+| Paso | Contenido | Estado |
+|---|---|---|
+| 1 | Hipótesis previa (redundancia entre aleta y masa → pocas componentes) | Hecho |
+| 2 | `from sklearn.decomposition import PCA` en imports; `pca = PCA().set_output(transform="pandas")`, `X_pca = pca.fit_transform(X_std)` y renombrado de columnas a `PC1`..`PC5`. Sin `Pipeline` porque `X_std` ya está estandarizada | Hecho |
+| 3 | Criterio 1: varianza acumulada, `var_exp`/`var_cum` + gráfico de barras y línea (U2 celdas 93-94, sin cambios) → 2 componentes (84.6%) | Hecho |
+| 4 | Criterio 2: Kaiser, tabla con `explained_variance_` y `explained_variance_ratio_` → 2 (2.87 y 1.38) | Hecho |
+| 5 | Criterio 3: codo (U2 celda 101) → quiebre en PC3, se conservan 2 | Hecho |
+| 6 | Elección: los 3 coinciden en 2; se argumenta que varianza acumulada representa mejor porque cuantifica lo conservado (84.6%) | Hecho |
+| 7 | Tabla de cargas `pca.components_`: PC1 tamaño, PC2 sexo + profundidad, PC3 longitud del culmen | Hecho |
+| 8 | Scatter 2D `PC1` vs `PC2` con `hue=y` (U2 celda 107): Gentoo separada, Adelie/Chinstrap superpuestas, cada especie partida en dos nubes por sexo | Hecho |
+| 9 | 3D con `PC1`, `PC2`, `PC3` (U2 celda 109 corregida; colores con `sns.color_palette('Set1')` para que coincidan con el 2D): separa Adelie de Chinstrap | Hecho |
+| 10 | Cierre de la consigna 2 | Hecho |
+
+Resultados esperados (calculados sobre `X_std`): varianza explicada 57.2%, 27.5%, 9.6%, 3.7%, 2.1% (acumulada con 2 componentes: 84.6%); eigenvalues 2.87, 1.38, 0.48, 0.18, 0.11. Los 3 criterios dan 2 componentes. PC1 ≈ tamaño; PC2 ≈ profundidad del culmen + sexo; PC3 ≈ longitud del culmen, que es la variable que separa Adelie de Chinstrap.
+
+**Errores en `U2_Reducción_de_la_dimensionalidad.ipynb` que no hay que copiar:**
+- Celda 98: aplica Kaiser como "varianza explicada ≥ 0.1"; el criterio correcto es eigenvalue (`explained_variance_`) > 1, como dice la celda 91. Con estos datos ambos dan 2.
+- Celda 109: el gráfico 3D usa `pca1`, `pca2`, `pca3` y se saltea `pca0`, porque sklearn numera las columnas desde 0.
+
+Consignas 3 a 6: sin empezar.
+
+**Entorno:** Smart App Control de Windows llegó a bloquear los `.pyd` de scipy y scikit-learn (`ImportError: DLL load failed ... Una directiva de Control de aplicaciones bloqueó este archivo`). Los autores lo desactivaron el 29/09/2026 y volvió a funcionar. Si reaparece un error así, no es del código.
 
 ### Decisiones de limpieza tomadas
 
