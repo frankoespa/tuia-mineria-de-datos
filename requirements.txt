@@ -9,3 +9,6 @@ scikit-learn==1.9.1
 scipy==1.18.1
 feature-engine==1.9.4
 ipykernel==7.3.0
+
+# Solo para ejecutar el notebook desde la consola (no hace falta para abrirlo en VS Code)
+nbclient==0.11.0

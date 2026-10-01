@@ -69,7 +69,7 @@ Convenciones del notebook:
 - Los ids de celda llevan el prefijo del paso: `cab-`, `imp-`, `carga-`, `estr-`, `desc-`, `cat-`, `nul-`, `dup-`, `dist-`, `corr-`, `out-`, `cod-`, `std-`, `cierre-`.
 - Antes de cada gráfico va una celda markdown con la **hipótesis previa**, y después otra con la interpretación que la confirma o la refuta (lo pide el enunciado).
 - Se usa pandas 3: las columnas de texto tienen dtype `str` y no `object` como en los notebooks de clase.
-- **Nombres de las componentes:** `scikit-learn` numera las columnas de salida desde cero (`pca0`, `pca1`, ...). Apenas se ajusta un método de reducción, sus columnas se renombran como `PC1`, `PC2`, ... para que el nombre coincida con el número de componente. Mantener esa convención en Isomap y t-SNE.
+- **Nombres de las componentes:** `scikit-learn` numera las columnas de salida desde cero (`pca0`, `pca1`, ...). Apenas se ajusta un método de reducción, sus columnas se renombran con el prefijo del método y numeradas desde 1: `PC1`, `PC2`, ... en PCA; `ISO1`, `ISO2` en Isomap; `TSNE1`, `TSNE2` en t-SNE.
 
 ## Estado del TP1
 
@@ -111,7 +111,25 @@ Resultados esperados (calculados sobre `X_std`): varianza explicada 57.2%, 27.5%
 - Celda 98: aplica Kaiser como "varianza explicada ≥ 0.1"; el criterio correcto es eigenvalue (`explained_variance_`) > 1, como dice la celda 91. Con estos datos ambos dan 2.
 - Celda 109: el gráfico 3D usa `pca1`, `pca2`, `pca3` y se saltea `pca0`, porque sklearn numera las columnas desde 0.
 
-Consignas 3 a 6: sin empezar.
+### Consigna 3: Isomap (terminada)
+
+| Paso | Contenido | Estado |
+|---|---|---|
+| 1 | Hipótesis previa (¿separa Adelie de Chinstrap en 2D, cosa que PCA no logró?) | Hecho |
+| 2 | Imports: `Isomap`, `kneighbors_graph`, `connected_components` | Hecho |
+| 3 | Variación de vecinos: grilla 2x2 con `n_neighbors` en {5, 11, 30, 50}, 2 componentes | Hecho |
+| 4 | Diagnóstico del aviso de grafo desconectado y su causa | Hecho |
+| 5 | Variación de componentes: `reconstruction_error()` para 1 a 5 con 15 vecinos | Hecho |
+| 6 | Gráfico 2D final con la configuración elegida | Hecho |
+| 7 | Comparación con PCA y cierre | Hecho |
+
+Resultados: Isomap **sí separa las tres especies en 2D**, a diferencia de PCA. Error de reconstrucción con 15 vecinos: 4.15 (1 comp.), 1.18 (2), 0.62 (3), 0.56 (4), 0.54 (5). Configuración elegida: **`n_neighbors=15`, `n_components=2`** (decisión de los autores).
+
+**Hallazgo importante:** el grafo de vecinos queda **desconectado en 4 bloques hasta 20 vecinos** (se conecta recién con 30). Los bloques son machos y hembras, cruzados con Gentoo contra el resto: `Sexo`, al ser binaria, deja una distancia fija de 2 unidades tras estandarizar y ningún punto tiene vecinos del otro sexo. Sin esa columna serían 2 bloques. Por eso aparece el `UserWarning` de scikit-learn al correr Isomap con pocos vecinos: **es esperado y está explicado en el notebook**, no es un error.
+
+Ojo al interpretar: `reconstruction_error()` solo es comparable entre distintos `n_components` con el mismo `n_neighbors`.
+
+Consignas 4 a 6: sin empezar.
 
 **Entorno:** Smart App Control de Windows llegó a bloquear los `.pyd` de scipy y scikit-learn (`ImportError: DLL load failed ... Una directiva de Control de aplicaciones bloqueó este archivo`). Los autores lo desactivaron el 29/09/2026 y volvió a funcionar. Si reaparece un error así, no es del código.
 

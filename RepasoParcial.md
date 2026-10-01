@@ -18,9 +18,10 @@ Cada vez que aparece un tema nuevo en un TP, se agrega acá con su explicación.
 10. [Codificación de variables categóricas](#10-codificación-de-variables-categóricas)
 11. [Escalas y estandarización](#11-escalas-y-estandarización)
 12. [PCA](#12-pca-análisis-de-componentes-principales)
-13. [Cómo funciona scikit-learn](#13-cómo-funciona-scikit-learn)
-14. [Preguntas típicas de parcial](#14-preguntas-típicas-de-parcial)
-15. [Temas que todavía no vimos](#15-temas-que-todavía-no-vimos)
+13. [Isomap](#13-isomap)
+14. [Cómo funciona scikit-learn](#14-cómo-funciona-scikit-learn)
+15. [Preguntas típicas de parcial](#15-preguntas-típicas-de-parcial)
+16. [Temas que todavía no vimos](#16-temas-que-todavía-no-vimos)
 
 ---
 
@@ -380,7 +381,96 @@ Conclusión para el parcial: **la componente más importante en varianza no es n
 
 ---
 
-## 13. Cómo funciona scikit-learn
+## 13. Isomap
+
+### El problema que PCA no puede resolver
+
+PCA es **lineal**: sus componentes son rectas, así que solo puede mirar los datos desde otro ángulo, nunca "desenrollarlos".
+
+Imaginen una serpentina enrollada en espiral. Dos puntos de la espiral pueden estar **muy cerca en línea recta**, porque una vuelta quedó encima de la otra, pero **lejísimos recorriendo la serpentina**. PCA mide en línea recta y los considera parecidos. Isomap, en cambio, mide **caminando por los datos**.
+
+**Manifold learning** es la familia de métodos que asume que los datos, aunque estén en muchas dimensiones, en realidad viven sobre una superficie de menos dimensiones que está curvada (la serpentina enrollada). El objetivo es **desenrollar** esa superficie.
+
+### Las dos distancias
+
+| | Qué mide | Ejemplo |
+|---|---|---|
+| **Euclídea** | La línea recta entre dos puntos, atravesando el vacío | El túnel que atravesaría la montaña |
+| **Geodésica** | El camino más corto **sin salirse de los datos**, saltando de vecino en vecino | El sendero que rodea la montaña |
+
+Isomap usa la **geodésica**, y por eso capta estructuras curvas que PCA no ve.
+
+### Cómo funciona, en 3 pasos
+
+1. **Arma el grafo de vecinos.** A cada punto lo conecta con sus `n_neighbors` más cercanos.
+2. **Calcula las distancias geodésicas**: el camino más corto entre cada par de puntos, pero solo pudiendo viajar por las conexiones del grafo.
+3. **Ubica los puntos en 2 dimensiones** tratando de respetar lo mejor posible esas distancias.
+
+### Los dos parámetros
+
+**`n_components`:** cuántas dimensiones tiene la salida. Para graficar, 2.
+
+**`n_neighbors`:** cuántos vecinos se conectan. Es **el** parámetro que hay que entender:
+
+| | Qué pasa | Riesgo |
+|---|---|---|
+| **Muy chico** (3, 5) | Solo conecta lo más cercano: conserva mucho detalle **local** | El grafo puede quedar **partido en pedazos** entre los que no hay camino, y la proyección se deforma |
+| **Intermedio** | Equilibrio entre estructura local y global | Es lo que se busca |
+| **Muy grande** (50) | Conecta puntos que no son realmente vecinos, con atajos que "atraviesan la montaña" | Las distancias geodésicas se parecen a las rectas y **el resultado se vuelve parecido a PCA**: se pierde lo no lineal |
+
+### El grafo desconectado
+
+Si `n_neighbors` es muy chico, pueden quedar grupos de puntos **sin ningún camino** que los una. La distancia geodésica entre ellos sería infinita, y sklearn avisa:
+
+> `The number of connected components of the neighbors graph is 4 > 1`
+
+No es un error: sklearn completa el grafo por su cuenta para poder seguir. Pero las distancias entre esos bloques quedan **inventadas**, así que la proyección resultante no es confiable. **Ante ese aviso, hay que subir `n_neighbors`.**
+
+### Los avisos que aparecen al correr Isomap (matrices dispersas)
+
+Cuando el grafo queda desconectado, al ejecutar Isomap salen dos avisos distintos. **Los dos tienen la misma causa.**
+
+**1. `UserWarning: The number of connected components ... is 4 > 1`**
+Es el que importa: el grafo quedó partido. Ya explicado arriba.
+
+**2. `SparseEfficiencyWarning: Changing the sparsity structure of a csr_matrix is expensive`**
+Es ruido técnico, pero conviene entenderlo porque explica cómo se guardan los grafos.
+
+Una **matriz dispersa** (*sparse*) es una matriz donde casi todo son ceros. El grafo de vecinos es así: con 342 pingüinos la matriz es de 342 × 342, unos 117.000 casilleros, pero cada punto se conecta solo con sus 15 vecinos, así que más del 95% son ceros. Guardar todos esos ceros sería un desperdicio, y por eso se guardan **solo los valores distintos de cero**, anotando su fila y su columna.
+
+Hay varios formatos para organizar esa lista:
+
+| Formato | Bueno para | Malo para |
+|---|---|---|
+| **CSR** (el que usa sklearn) | Leer y hacer cuentas rápido | **Insertar** valores nuevos |
+| **LIL** o **DOK** | Insertar valores nuevos | Hacer cuentas |
+
+CSR guarda los datos en tiras ordenadas y compactas, así que insertar un valor en el medio obliga a reacomodar todo lo que sigue, como insertar una fila en el medio de una planilla enorme.
+
+**Por qué aparece:** para unir los bloques desconectados, sklearn **agrega conexiones** al grafo, es decir, inserta valores nuevos en una matriz CSR. Cada inserción dispara el aviso. La prueba de que es la misma causa es que con 30 vecinos, donde el grafo ya está conectado, **no aparece ninguno de los dos avisos**.
+
+No indica ningún problema con los datos ni con los resultados: es una sugerencia de rendimiento dirigida a quien programó la librería.
+
+### El error de reconstrucción
+
+`iso.reconstruction_error()` mide cuánto se deforman las distancias al bajar de dimensión. Más chico es mejor, y baja al agregar componentes. Con nuestros datos y 11 vecinos: 4.32 con 1 componente, 1.28 con 2 y 0.67 con 3.
+
+⚠️ **Solo se puede comparar entre distintos `n_components` con el mismo `n_neighbors`.** Al cambiar los vecinos cambia el grafo y, con él, las distancias geodésicas contra las que se mide el error: sería comparar contra dos varas distintas. **No sirve para elegir `n_neighbors`.**
+
+### Diferencias con PCA
+
+| | PCA | Isomap |
+|---|---|---|
+| Tipo | Lineal | No lineal |
+| Qué preserva | La varianza (la dispersión global) | Las distancias geodésicas (la vecindad) |
+| ¿Hay cargas interpretables? | Sí, `components_` dice qué variable pesa en cada eje | **No**: los ejes no tienen una receta en términos de las variables originales |
+| ¿Varianza explicada? | Sí, permite elegir cuántas componentes | **No existe**; se usa el error de reconstrucción |
+| ¿Se pueden proyectar datos nuevos? | Sí, fácil | Más costoso: depende del grafo |
+| Parámetros | Ninguno relevante | `n_neighbors` cambia mucho el resultado |
+
+**Para el parcial:** que los ejes de Isomap **no sean interpretables** es su gran desventaja frente a PCA. En PCA podíamos decir "PC1 es el tamaño"; en Isomap, ISO1 no significa nada concreto. A cambio, puede separar grupos que PCA no logra separar.
+
+## 14. Cómo funciona scikit-learn
 
 Todos los métodos se usan igual, y por eso conviene entender el patrón una sola vez:
 
@@ -407,7 +497,7 @@ Así el nombre de la columna coincide con el número de componente y los gráfic
 
 ---
 
-## 14. Preguntas típicas de parcial
+## 15. Preguntas típicas de parcial
 
 **¿Por qué hay que estandarizar antes de PCA o de un clustering?**
 Porque trabajan con varianzas y distancias. Sin estandarizar, la variable con los números más grandes domina el resultado solo por su unidad de medida.
@@ -436,16 +526,27 @@ Porque el promedio general sesga las muestras hacia el centro y borra las difere
 **¿Qué es la paradoja de Simpson?**
 Que una tendencia observada sobre los datos mezclados se invierte al mirar dentro de cada grupo. Nos pasó con la profundidad del culmen.
 
+**¿En qué se diferencian PCA e Isomap?**
+PCA es lineal y preserva la varianza; Isomap es no lineal y preserva las distancias geodésicas, medidas saltando de vecino en vecino por un grafo.
+
+**¿Qué pasa si `n_neighbors` es muy grande en Isomap?**
+Se crean atajos entre puntos que no son vecinos reales, las distancias geodésicas se parecen a las euclídeas y el resultado se aproxima al de PCA.
+
+**¿Qué es una matriz dispersa y por qué se usa para el grafo de vecinos?**
+Una matriz donde casi todo son ceros, de la que se guardan solo los valores distintos de cero. El grafo de vecinos es disperso porque cada punto se conecta con unos pocos vecinos y el resto de la matriz son ceros.
+
+**¿Qué significa el aviso de que el grafo tiene más de una componente conexa?**
+Que con esa cantidad de vecinos quedaron grupos sin camino entre sí. sklearn completa el grafo, pero esas distancias son artificiales: conviene aumentar `n_neighbors`.
+
 **¿Media o mediana para imputar?**
 La mediana, si hay asimetría o valores extremos, porque no se deja arrastrar por ellos.
 
 ---
 
-## 15. Temas que todavía no vimos
+## 16. Temas que todavía no vimos
 
 Se van a agregar a este archivo, con la misma explicación para principiantes, cuando los trabajemos:
 
-- **Isomap** (consigna 3)
 - **t-SNE**: iteraciones, componentes y perplejidad (consigna 4)
 - **Clustering y K-means**: número de clusters, inercia, centroides (consigna 5)
 - **Coeficiente de Silhouette** (consignas 5 y 6)
