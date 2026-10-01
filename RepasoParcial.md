@@ -19,9 +19,10 @@ Cada vez que aparece un tema nuevo en un TP, se agrega acá con su explicación.
 11. [Escalas y estandarización](#11-escalas-y-estandarización)
 12. [PCA](#12-pca-análisis-de-componentes-principales)
 13. [Isomap](#13-isomap)
-14. [Cómo funciona scikit-learn](#14-cómo-funciona-scikit-learn)
-15. [Preguntas típicas de parcial](#15-preguntas-típicas-de-parcial)
-16. [Temas que todavía no vimos](#16-temas-que-todavía-no-vimos)
+14. [t-SNE](#14-t-sne)
+15. [Cómo funciona scikit-learn](#15-cómo-funciona-scikit-learn)
+16. [Preguntas típicas de parcial](#16-preguntas-típicas-de-parcial)
+17. [Temas que todavía no vimos](#17-temas-que-todavía-no-vimos)
 
 ---
 
@@ -470,7 +471,79 @@ No indica ningún problema con los datos ni con los resultados: es una sugerenci
 
 **Para el parcial:** que los ejes de Isomap **no sean interpretables** es su gran desventaja frente a PCA. En PCA podíamos decir "PC1 es el tamaño"; en Isomap, ISO1 no significa nada concreto. A cambio, puede separar grupos que PCA no logra separar.
 
-## 14. Cómo funciona scikit-learn
+## 14. t-SNE
+
+### La idea: vecindades en vez de distancias
+
+PCA preserva la varianza. Isomap preserva las distancias geodésicas. **t-SNE preserva las vecindades**: no le importa que dos puntos queden a la distancia exacta, sino que **los que eran vecinos sigan siendo vecinos**.
+
+Pensalo como armar una foto grupal: no importa que las distancias estén a escala, importa que cada uno quede al lado de los suyos.
+
+### Cómo funciona, en 4 pasos
+
+1. **Arma una tabla de vecindades en el espacio original.** Para cada par de pingüinos calcula una **probabilidad de ser vecinos**: alta si están cerca, casi cero si están lejos. Usa una campana de Gauss centrada en cada punto.
+2. **Tira todos los puntos al azar en el plano.** De ahí viene su carácter aleatorio.
+3. **Arma la misma tabla en el plano**, pero con una distribución t de Student, que tiene colas más pesadas y permite que los grupos distintos se separen más.
+4. **Mueve los puntos de a poco**, iteración tras iteración, hasta que las dos tablas se parezcan lo más posible.
+
+### El KL (divergencia de Kullback-Leibler)
+
+Es la medida de **cuánto se diferencian las dos tablas**, y lo que el algoritmo minimiza. KL = 0 significa que el mapa reproduce las vecindades a la perfección; cuanto más chico, mejor copiado.
+
+**Cuándo se puede comparar:**
+
+| Comparar KL entre… | ¿Vale? | Por qué |
+|---|---|---|
+| **Iteraciones** | **Sí** | La tabla original no cambia; menos KL = más convergido |
+| **Componentes** | **Sí** | Con más dimensiones hay más lugar para acomodar los puntos |
+| **Perplejidades** | **NO** | La perplejidad **define** la tabla original; se mediría contra otra vara |
+
+Es la misma trampa que el error de reconstrucción de Isomap entre distintos `n_neighbors`. Con nuestros datos el KL baja de 0.49 (perplejidad 5) a 0.07 (perplejidad 100), y sería un error concluir que 100 es mejor: con perplejidad alta la referencia es más difusa y más fácil de copiar.
+
+### Los parámetros
+
+**`perplexity` (perplejidad).** Es el parámetro propio de t-SNE: una medida suave de **cuántos vecinos efectivos** considera cada punto. El rango recomendado es **5 a 50**, y siempre debe ser menor que la cantidad de puntos.
+
+| Valor | Qué pasa | En nuestros datos (342 pingüinos) |
+|---|---|---|
+| Muy bajo (5) | Dominan las variaciones locales: los grupos se parten en fragmentos | Grupos despedazados |
+| Intermedio (15) | Equilibrio | Seis grupos compactos y separados |
+| Alto (30-50) | Los grupos se fusionan | Adelie y Chinstrap se pegan y terminan mezclándose |
+
+**`max_iter` (iteraciones).** Cuántas veces mueve los puntos. Lo habitual es del orden de 1000. Si se corta antes de converger, aparecen formas raras y "pellizcadas", con grupos poco definidos. Nuestros números: KL 0.549 (300), 0.383 (500), 0.361 (1000), 0.353 (2000). A partir de 1000 deja de mejorar.
+
+⚠️ En `scikit-learn` moderno el parámetro se llama **`max_iter`**; antes era `n_iter`. El mínimo admitido es 250, pero no debe usarse: ahí la optimización termina durante la fase inicial (*early exaggeration*) y el KL informado es un valor centinela gigantesco, no un error real.
+
+**`n_components`.** Dimensiones de salida, 2 o 3 para visualizar.
+
+**`random_state` (semilla).** Como arranca al azar, cada corrida da un dibujo distinto. Fijar la semilla hace el resultado reproducible. Con nuestros datos, tres semillas dieron KL 0.369, 0.359 y 0.361: **cambia el dibujo, no la calidad**. Por eso se recomienda correrlo varias veces y comparar.
+
+### Qué NO hay que leer en un gráfico de t-SNE
+
+Esto suele ser pregunta de parcial:
+
+1. **Los ejes no significan nada.** No hay cargas ni interpretación posible, a diferencia de PCA.
+2. **Los tamaños de los grupos no son reales.** El algoritmo expande las zonas densas y comprime las dispersas, así que todos los grupos terminan pareciendo del mismo tamaño.
+3. **Las distancias entre grupos no son confiables.** Que dos grupos aparezcan lejos no significa que sean muy distintos.
+
+Lo que sí se puede afirmar: **que los grupos existen y están diferenciados**.
+
+### Comparación de los tres métodos
+
+| | PCA | Isomap | t-SNE |
+|---|---|---|---|
+| Tipo | Lineal | No lineal | No lineal |
+| Qué preserva | La varianza (estructura global) | Distancias geodésicas (local y global) | Vecindades (estructura local) |
+| ¿Ejes interpretables? | **Sí** (cargas) | No | No |
+| ¿Determinista? | Sí | Sí | **No**, depende de la semilla |
+| Medida de error | Varianza explicada | Error de reconstrucción | KL |
+| Parámetro clave | Ninguno | `n_neighbors` | `perplexity` |
+| Costo de cómputo | Bajo | Medio | Alto |
+| En nuestros datos | No separa Adelie de Chinstrap en 2D | Las separa, contiguas | Las separa, con un contacto puntual |
+
+**Regla práctica:** PCA para entender **qué** variables explican la variabilidad; t-SNE para **ver** si hay grupos; Isomap como intermedio cuando la estructura es curva.
+
+## 15. Cómo funciona scikit-learn
 
 Todos los métodos se usan igual, y por eso conviene entender el patrón una sola vez:
 
@@ -497,7 +570,7 @@ Así el nombre de la columna coincide con el número de componente y los gráfic
 
 ---
 
-## 15. Preguntas típicas de parcial
+## 16. Preguntas típicas de parcial
 
 **¿Por qué hay que estandarizar antes de PCA o de un clustering?**
 Porque trabajan con varianzas y distancias. Sin estandarizar, la variable con los números más grandes domina el resultado solo por su unidad de medida.
@@ -538,16 +611,27 @@ Una matriz donde casi todo son ceros, de la que se guardan solo los valores dist
 **¿Qué significa el aviso de que el grafo tiene más de una componente conexa?**
 Que con esa cantidad de vecinos quedaron grupos sin camino entre sí. sklearn completa el grafo, pero esas distancias son artificiales: conviene aumentar `n_neighbors`.
 
+**¿Por qué dos corridas de t-SNE dan gráficos distintos?**
+Porque parte de una configuración aleatoria. La calidad (el KL) se mantiene, pero la disposición cambia. Se fija `random_state` para que sea reproducible.
+
+**¿Se puede decir que dos clusters de un gráfico t-SNE están muy lejos entre sí?**
+No. t-SNE expande las zonas densas y comprime las dispersas, así que ni las distancias entre grupos ni sus tamaños relativos son interpretables.
+
+**¿Por qué no se puede usar el KL para elegir la perplejidad?**
+Porque la perplejidad define la tabla de vecindades contra la que se mide el error: al cambiarla se compara contra otra referencia. Solo sirve para comparar iteraciones o componentes.
+
+**¿Qué método elegirías para cada cosa?**
+PCA si se necesita interpretar qué variables pesan y cuánta información se conserva; t-SNE si solo se quiere ver si existen grupos; Isomap si la estructura es curva y se quiere conservar la noción de distancia.
+
 **¿Media o mediana para imputar?**
 La mediana, si hay asimetría o valores extremos, porque no se deja arrastrar por ellos.
 
 ---
 
-## 16. Temas que todavía no vimos
+## 17. Temas que todavía no vimos
 
 Se van a agregar a este archivo, con la misma explicación para principiantes, cuando los trabajemos:
 
-- **t-SNE**: iteraciones, componentes y perplejidad (consigna 4)
 - **Clustering y K-means**: número de clusters, inercia, centroides (consigna 5)
 - **Coeficiente de Silhouette** (consignas 5 y 6)
 - **Estadístico GAP** (consignas 5 y 6)

@@ -129,7 +129,44 @@ Resultados: Isomap **sí separa las tres especies en 2D**, a diferencia de PCA. 
 
 Ojo al interpretar: `reconstruction_error()` solo es comparable entre distintos `n_components` con el mismo `n_neighbors`.
 
-Consignas 4 a 6: sin empezar.
+### Consigna 4: t-SNE (terminada)
+
+| Paso | Contenido | Estado |
+|---|---|---|
+| 1 | Hipótesis previa, encadenada con Isomap | Hecho |
+| 2 | Import de `TSNE`; parámetros de clase (`init='random'`, `random_state=42`, `method='exact'`) | Hecho |
+| 3 | Variación de perplejidad: grilla 2x2 con 5, 15, 30 y 50 | Hecho |
+| 4 | Variación de iteraciones: grilla 2x2 con 300, 500, 1000 y 2000 (perplejidad 15) | Hecho |
+| 5 | Variación de componentes: KL con 2 y 3, sin figura | Hecho |
+| 6 | Gráfico 2D final y comparación con PCA e Isomap | Hecho |
+| 7 | Dependencia de la semilla (3 valores de `random_state`) | Hecho |
+
+Configuración elegida (decisión de los autores): **`perplexity=15`, `max_iter=1000`, `n_components=2`**. Con 15 los seis grupos (3 especies × 2 sexos) quedan separados, con un contacto puntual entre un grupo de Adelie y uno de Chinstrap (distancia mínima 0.90, del orden de la distancia entre vecinos dentro de un grupo; solo 3 puntos de 342 tienen su vecino más cercano en la otra especie). Gentoo queda aislada a casi 37. Con 30 y 50 Adelie y Chinstrap se fusionan.
+
+KL medidos: iteraciones 0.549 / 0.383 / 0.361 / 0.353 (300 / 500 / 1000 / 2000); componentes 0.361 (2) y 0.265 (3); semillas 0.369 / 0.359 / 0.361.
+
+**Cuidados:**
+- En sklearn 1.9 el parámetro es **`max_iter`**, no `n_iter`. El mínimo (250) devuelve un KL centinela gigantesco porque la optimización termina durante la fase inicial.
+- El KL **no** es comparable entre perplejidades distintas (la perplejidad define la referencia); sí entre iteraciones y entre componentes.
+- t-SNE es el paso más lento: el notebook completo pasó de ~75 s a ~114 s.
+
+Consignas 5 y 6: sin empezar.
+
+### PDFs de teoría (`tp1/teoria/Mineria_Datos_U2.pdf` y `U3.pdf`)
+
+Los autores agregaron las filminas de las unidades. **Hay que tenerlas en cuenta junto con los notebooks.** Se leen con `pypdf` (fijado en `requirements.txt`):
+
+```powershell
+.entorno\Scripts\python.exe -c "from pypdf import PdfReader; print(PdfReader('tp1/teoria/Mineria_Datos_U2.pdf').pages[45].extract_text())"
+```
+
+Lo revisado de la U2 (71 páginas) **confirma** lo hecho en las consignas 2 a 4, y aporta:
+- PCA (pág. 25): estandarizar siempre antes; el signo de los autovalores puede invertirse según el software.
+- Isomap (pág. 41): k chico desconecta el grafo, k grande crea atajos; (pág. 38) ante un grafo desconectado se puede trabajar cada componente por separado.
+- t-SNE (pág. 53-57): perplejidad típica 5-50 y menor que la cantidad de puntos; con 100 los clusters se fusionan; iteraciones del orden de 1000; si se corta antes aparecen formas "pellizcadas"; conviene correrlo varias veces; **no se pueden leer ni los tamaños de los clusters ni las distancias entre ellos**; los ejes no tienen significado.
+- Comparación PCA / Isomap / t-SNE / UMAP (pág. 69-70).
+
+La U3 (58 páginas) todavía no se revisó: hacerlo al empezar la consigna 5 (K-means, Silhouette y GAP).
 
 **Entorno:** Smart App Control de Windows llegó a bloquear los `.pyd` de scipy y scikit-learn (`ImportError: DLL load failed ... Una directiva de Control de aplicaciones bloqueó este archivo`). Los autores lo desactivaron el 29/09/2026 y volvió a funcionar. Si reaparece un error así, no es del código.
 
