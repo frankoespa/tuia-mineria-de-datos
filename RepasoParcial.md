@@ -20,9 +20,10 @@ Cada vez que aparece un tema nuevo en un TP, se agrega acá con su explicación.
 12. [PCA](#12-pca-análisis-de-componentes-principales)
 13. [Isomap](#13-isomap)
 14. [t-SNE](#14-t-sne)
-15. [Cómo funciona scikit-learn](#15-cómo-funciona-scikit-learn)
-16. [Preguntas típicas de parcial](#16-preguntas-típicas-de-parcial)
-17. [Temas que todavía no vimos](#17-temas-que-todavía-no-vimos)
+15. [Clustering y K-means](#15-clustering-y-k-means)
+16. [Cómo funciona scikit-learn](#16-cómo-funciona-scikit-learn)
+17. [Preguntas típicas de parcial](#17-preguntas-típicas-de-parcial)
+18. [Temas que todavía no vimos](#18-temas-que-todavía-no-vimos)
 
 ---
 
@@ -543,7 +544,100 @@ Lo que sí se puede afirmar: **que los grupos existen y están diferenciados**.
 
 **Regla práctica:** PCA para entender **qué** variables explican la variabilidad; t-SNE para **ver** si hay grupos; Isomap como intermedio cuando la estructura es curva.
 
-## 15. Cómo funciona scikit-learn
+## 15. Clustering y K-means
+
+### Qué es el clustering
+
+Hasta acá **reducíamos dimensiones** para poder *ver* los datos. El clustering hace otra cosa: **arma grupos** (clusters) de muestras parecidas entre sí, **sin mirar la etiqueta**. Es no supervisado: el algoritmo nunca ve la columna `Especie`. Después nosotros comparamos los grupos que armó con las especies, para ver si coinciden.
+
+"Parecidas" significa **cercanas**: se mide con distancias, y por eso hay que estandarizar antes (si no, la masa en gramos decide todo).
+
+### Cómo funciona K-means
+
+Hay que decirle de antemano cuántos grupos queremos: ese número es **k**.
+
+1. Ubica k **centroides** (el "centro" de cada grupo) en posiciones iniciales.
+2. Asigna cada punto al centroide que tiene más cerca.
+3. Mueve cada centroide al promedio de los puntos que le tocaron.
+4. Repite 2 y 3 hasta que los grupos dejan de cambiar.
+
+**Analogía:** k locales de una cadena que se van mudando hasta quedar cada uno en el medio de sus clientes.
+
+El **centroide** es el pingüino "promedio" de su cluster: un valor por cada característica. En sklearn queda en `kmeans.cluster_centers_`, y el cluster de cada muestra en `kmeans.labels_`.
+
+**`random_state=42`:** las posiciones iniciales tienen una parte de azar, así que dos corridas pueden dar grupos algo distintos (o los mismos con otro número). Fijar la semilla lo hace reproducible.
+
+**Ojo:** los números de cluster (0, 1, 2...) son arbitrarios. "Cluster 0" no significa nada por sí mismo: hay que mirar qué muestras tiene adentro.
+
+### La inercia y el método del codo
+
+La **inercia** (`kmeans.inertia_`) es la suma de las distancias al cuadrado de cada punto a su centroide. Mide qué tan **apretados** están los grupos: cuanto menor, más compactos.
+
+El problema es que **siempre baja al aumentar k** (con un cluster por punto sería 0), así que no se puede elegir "el k con menor inercia". Se grafica contra k y se busca el **codo**: el punto donde deja de bajar rápido.
+
+En nuestros datos: 1710 (k=1), 907, 593, 403, 301, **233 (k=6)**, 217, 203... Baja de a poco hasta 6 y después se aplana. No hay un codo nítido, y por eso hacen falta índices más precisos.
+
+### El coeficiente de Silhouette
+
+Para **cada punto** compara dos distancias:
+
+- **a**: qué tan lejos está, en promedio, de los puntos de **su propio** cluster.
+- **b**: qué tan lejos está, en promedio, de los puntos del cluster **vecino más cercano**.
+
+Silhouette = (b − a) / max(a, b). Va de −1 a 1:
+
+| Valor | Significado |
+|---|---|
+| Cerca de 1 | El punto está bien adentro de su cluster y lejos de los demás |
+| Cerca de 0 | Está en la frontera entre dos clusters |
+| Negativo | Probablemente quedó en el cluster equivocado |
+
+`silhouette_score` devuelve el **promedio** de todos los puntos. Se calcula para varios k y se elige **el más alto**. Empieza en k=2 porque con un solo cluster no hay "vecino".
+
+En nuestros datos: 0.443 (k=2), 0.450, 0.501, 0.513, **0.515 (k=6)**, 0.467, 0.412... El máximo es k=6, pero k=4 y k=5 quedan casi empatados.
+
+### El estadístico GAP
+
+**La idea:** comparar nuestros datos contra datos **sin ningún grupo**. Si K-means agrupa nuestros datos mucho mejor de lo que agrupa puntos tirados al azar, es que los grupos son reales.
+
+Para cada k:
+
+1. Se calcula la inercia de K-means sobre los datos reales.
+2. Se generan varios conjuntos de puntos al azar, **uniformes dentro del mismo rango** que los datos (el "rectángulo" que los contiene), se calcula la inercia de cada uno y se promedia: es la **referencia**.
+3. `GAP = log(inercia de referencia) − log(inercia real)`.
+
+Un GAP alto significa que los datos reales quedan mucho más apretados que el azar. Se elige **el k con el GAP más alto**.
+
+En nuestros datos: 0.35, 0.72, 1.00, 1.26, 1.44, **1.61 (k=6)**, 1.59, 1.56, 1.54, 1.60. Crece hasta 6 y después queda casi plano.
+
+**Los dos errores del código de clase** (y por qué los corregimos):
+
+1. La función hacía `kmeans.fit(X_std)` en lugar de `kmeans.fit(X)`: ignoraba los datos que recibía, así que la "referencia" era otra vez nuestros datos y el GAP no comparaba nada.
+2. La referencia salía de `np.random.rand`, que da números entre 0 y 1. Nuestros datos estandarizados van de −2 a 3: la referencia quedaba amontonada en un rincón, su inercia era chiquita, el GAP daba **negativo** y elegía siempre k=10. La corrección es estirar esos números al rango de cada columna: `np.random.rand(...) * (máximo − mínimo) + mínimo`.
+
+Además fijamos `np.random.seed(42)`, porque los puntos de referencia son al azar y sin semilla el GAP cambia en cada corrida.
+
+### Qué nos dio: 6 clusters, no 3
+
+Los dos índices coinciden en **k=6**, aunque por poco. No son las 3 especies: son las **6 combinaciones de especie y sexo**, los mismos seis grupos que se veían en Isomap y t-SNE.
+
+| k | Qué arma K-means |
+|---|---|
+| 3 | Un cluster con todo Gentoo, uno con los **machos** de Adelie y Chinstrap, y uno con las **hembras** de Adelie y Chinstrap |
+| 6 | Un cluster por especie y sexo; solo 5 pingüinos de 342 quedan fuera de su grupo |
+
+**Por qué con k=3 no salen las especies:** K-means no sabe qué es una especie, solo ve distancias. Como metimos `Sexo` como característica, machos y hembras quedan a 2 unidades de distancia en esa dimensión, y "le conviene" cortar por sexo antes que separar Adelie de Chinstrap. Es la misma decisión que partió el grafo de Isomap en bloques.
+
+**La tabla cruzada** (`pd.crosstab`) es la herramienta para leer un clustering: filas con lo que sabemos (especie y sexo), columnas con el cluster, y en cada celda cuántos pingüinos hay. Si cada fila cae casi entera en una sola columna, el clustering recuperó ese grupo.
+
+### Límites de K-means
+
+- Hay que elegir k de antemano.
+- Arma grupos más o menos redondos; no sirve para formas raras.
+- Es sensible a los valores atípicos, que arrastran a los centroides.
+- Depende de las posiciones iniciales (por eso la semilla).
+
+## 16. Cómo funciona scikit-learn
 
 Todos los métodos se usan igual, y por eso conviene entender el patrón una sola vez:
 
@@ -570,7 +664,7 @@ Así el nombre de la columna coincide con el número de componente y los gráfic
 
 ---
 
-## 16. Preguntas típicas de parcial
+## 17. Preguntas típicas de parcial
 
 **¿Por qué hay que estandarizar antes de PCA o de un clustering?**
 Porque trabajan con varianzas y distancias. Sin estandarizar, la variable con los números más grandes domina el resultado solo por su unidad de medida.
@@ -623,17 +717,29 @@ Porque la perplejidad define la tabla de vecindades contra la que se mide el err
 **¿Qué método elegirías para cada cosa?**
 PCA si se necesita interpretar qué variables pesan y cuánta información se conserva; t-SNE si solo se quiere ver si existen grupos; Isomap si la estructura es curva y se quiere conservar la noción de distancia.
 
+**¿Qué es la inercia y por qué no alcanza para elegir k?**
+La suma de distancias al cuadrado de cada punto a su centroide. Siempre baja al aumentar k, así que solo sirve buscar el codo, que a veces no es nítido.
+
+**¿Cómo se interpreta el coeficiente de Silhouette?**
+Va de −1 a 1. Cerca de 1, clusters compactos y separados; cerca de 0, superpuestos; negativo, puntos mal asignados. Se elige el k con el promedio más alto.
+
+**¿Qué compara el estadístico GAP?**
+La inercia de los datos reales contra la de datos uniformes al azar generados en el mismo rango. Se elige el k donde la diferencia (en logaritmos) es mayor.
+
+**¿Por qué K-means dio 6 clusters si hay 3 especies?**
+Porque es no supervisado y solo ve distancias. Al incluir `Sexo` como característica, los grupos naturales pasan a ser especie × sexo.
+
+**¿El número de cluster significa algo?**
+No. Las etiquetas 0, 1, 2... son arbitrarias; hay que cruzarlas con lo que se conoce de los datos (tabla cruzada).
+
 **¿Media o mediana para imputar?**
 La mediana, si hay asimetría o valores extremos, porque no se deja arrastrar por ellos.
 
 ---
 
-## 17. Temas que todavía no vimos
+## 18. Temas que todavía no vimos
 
 Se van a agregar a este archivo, con la misma explicación para principiantes, cuando los trabajemos:
 
-- **Clustering y K-means**: número de clusters, inercia, centroides (consigna 5)
-- **Coeficiente de Silhouette** (consignas 5 y 6)
-- **Estadístico GAP** (consignas 5 y 6)
-- **Clustering jerárquico y dendrograma** (consigna 6)
+- **Clustering jerárquico y dendrograma** (consigna 6), con Silhouette y GAP aplicados a ese método
 - Vistos en clase pero fuera del TP1: MDS, UMAP, DBSCAN, HDBSCAN, división en entrenamiento y prueba (TP2)

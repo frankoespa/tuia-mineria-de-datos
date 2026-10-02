@@ -20,7 +20,8 @@ Este proyecto tiene un repositorio remoto llamado https://github.com/frankoespa/
 - `tp1/teoria/`: notebooks de clase, que son la **referencia de qué librerías, métodos y parámetros se pueden usar**. Antes de escribir una celda, buscar cómo se hizo ahí:
   - `U1_Introducción.ipynb`: EDA, `SimpleImputer(strategy='mean')`, `Winsorizer(capping_method='iqr', tail='both', fold=1.5)` (feature-engine), `StandardScaler`, `train_test_split`.
   - `U2_Reducción_de_la_dimensionalidad.ipynb`: `Pipeline([('scaler', StandardScaler()), ('pca', PCA())])`, `Isomap(n_neighbors=..., n_components=...)`, `TSNE(n_components=..., init='random', random_state=42, method='exact')`, UMAP y MDS. Los 3 criterios para elegir componentes de PCA son: varianza acumulada (~75–80%), Kaiser (eigenvalues > 1) y codo/scree. El gráfico de varianza explicada (barras) + acumulada (línea) está hecho con matplotlib.
-  - `U3_Clustering_Wheat.ipynb`: `KMeans(n_clusters=k, random_state=42)`, `AgglomerativeClustering(n_clusters=k, linkage='ward')`, `scipy.cluster.hierarchy.linkage` + `dendrogram`, `silhouette_score` / `silhouette_samples` (k de 2 a `max_k`), DBSCAN y HDBSCAN. **GAP no viene de ninguna librería**: se programa a mano con `calculate_intra_cluster_dispersion(X, k)`, que compara `log(inercia de referencia) - log(inercia real)` usando 10 conjuntos `np.random.rand(*X.shape)`, con `max_k = 10` y `optimal_k = np.argmax(gaps) + 1`. Hay una versión para K-means y otra para jerárquico. Reutilizar ese mismo enfoque.
+  - `U3_Clustering_Wheat.ipynb`: `KMeans(n_clusters=k, random_state=42)`, `AgglomerativeClustering(n_clusters=k, linkage='ward')`, `scipy.cluster.hierarchy.linkage` + `dendrogram`, `silhouette_score` / `silhouette_samples` (k de 2 a `max_k`), DBSCAN y HDBSCAN. **GAP se programa a mano** con `calculate_intra_cluster_dispersion(X, k)`, que compara `log(inercia de referencia) - log(inercia real)` usando 10 conjuntos de referencia, con `max_k = 10` y `optimal_k = np.argmax(gaps) + 1`. Hay una versión para K-means y otra para jerárquico. Reutilizar ese enfoque **con las correcciones** de la sección de la consigna 5.
+  - `Unidad3.py` (script del profesor, con `wheat.csv` y `Mall_Customers.csv`; `CC GENERAL.csv` no lo usa ningún archivo): gráfico 3D de clusters con matplotlib, paleta `husl` y centroides con `marker='*'`; codo con `.score()`; dendrograma + `AgglomerativeClustering(n_clusters=4, metric='euclidean', linkage='ward')` + `silhouette_score`; GAP con `gap_statistic.OptimalK`. **Esa librería no instala en este entorno** (falla al construir en Python 3.13), por eso se usa la función manual. El script no corre tal cual: termina con una URL suelta y trabaja sin estandarizar.
 - `tp1/tp1_mineria_renna_esparza.ipynb`: entrega. Usa el kernel del venv `.entorno`. El avance está en la sección **Estado del TP1**, más abajo.
 
 ## Particularidades del dataset (`penguins_size.csv`)
@@ -77,7 +78,7 @@ Smart App Control de Windows llegó a bloquear los `.pyd` de scipy y scikit-lear
   - `DataFrame`: `print("Tabla 3. ...")` como última línea antes de la expresión que lo muestra, para que el título quede justo arriba.
   - Markdown: una línea `**Tabla 10.** ...` antes de la tabla.
 - En el texto se las cita por número ("en la Figura 2", "(Tabla 13)") en lugar de "el gráfico anterior".
-- Al insertar una figura o tabla en el medio hay que renumerar las siguientes y sus citas. Hoy el notebook llega hasta la **Figura 13** y la **Tabla 18** (fin de la consigna 4).
+- Al insertar una figura o tabla en el medio hay que renumerar las siguientes y sus citas. Hoy el notebook llega hasta la **Figura 17** y la **Tabla 22** (fin de la consigna 5).
 
 ## Forma de trabajo
 
@@ -182,7 +183,47 @@ KL medidos: perplejidad 0.492 / 0.361 / 0.228 / 0.125 (5 / 15 / 30 / 50); iterac
 - El KL **no** es comparable entre perplejidades distintas (la perplejidad define la referencia); sí entre iteraciones y entre componentes.
 - t-SNE es el paso más lento del notebook, que completo tarda alrededor de 1 minuto.
 
-Consignas 5 y 6: sin empezar.
+### Consigna 5: K-means (terminada)
+
+Celdas `km-01` a `km-25`. Imports agregados: `KMeans` y `silhouette_score`.
+
+| Paso | Contenido | Estado |
+|---|---|---|
+| 1 | Hipótesis previa: óptimo mayor que 3, posiblemente 6 (por los seis grupos de las Figuras 10 y 13) | Hecho |
+| 2 | Variación de k: inercia para k=1..10 y gráfico del codo (U3 celda 36) → Figura 14 | Hecho |
+| 3 | Silhouette para k=2..10 con `calculate_silhouette` (U3 celdas 79-80) → Figura 15 | Hecho |
+| 4 | GAP para k=1..10 con `calculate_intra_cluster_dispersion` (U3 celdas 75-77), corregida → Figura 16 | Hecho |
+| 5 | `DataFrame` `resultados` con inercia, Silhouette y GAP por k → Tabla 19 | Hecho |
+| 6 | `kmeans_3` y `kmeans_6` cruzados con especie y sexo (`pd.crosstab`) → Tablas 20 y 21 | Hecho |
+| 7 | 3D con k=6 sobre longitud del culmen, masa corporal y profundidad del culmen, con centroides → Figura 17 | Hecho |
+| 8 | Resumen → Tabla 22 | Hecho |
+
+Resultados (con `random_state=42` y `np.random.seed(42)`):
+
+| k | Inercia | Silhouette | GAP |
+|---|---|---|---|
+| 2 | 907.2 | 0.443 | 0.723 |
+| 3 | 593.3 | 0.450 | 1.003 |
+| 4 | 403.1 | 0.501 | 1.259 |
+| 5 | 300.9 | 0.513 | 1.436 |
+| **6** | **233.2** | **0.515** | **1.605** |
+| 7 | 216.7 | 0.467 | 1.587 |
+| 10 | 172.3 | 0.365 | 1.601 |
+
+- **Óptimo k=6 por los dos índices, pero por poco margen**: Silhouette casi empata con k=4 y k=5, y el GAP queda plano de 6 en adelante (k=10 da 1.601). En el notebook se describe así, sin presentarlo como un máximo contundente.
+- **k=3 no recupera las especies**: cluster 1 = Gentoo (123), cluster 0 = machos de Adelie y Chinstrap (73 + 34), cluster 2 = hembras (78 + 34).
+- **k=6 = especie × sexo**: Gentoo machos 65 / hembras 58, Adelie machos 71 / hembras 77, Chinstrap machos 34 / hembras 32. Solo 5 de 342 fuera de su grupo (3 Adelie en clusters de Chinstrap, 2 Chinstrap hembras con las hembras de Adelie).
+- Es otra consecuencia de haber incluido `Sexo` como característica, igual que el grafo desconectado de Isomap.
+
+**Errores del código de clase que no hay que copiar** (decisiones aprobadas por los autores; aplican también a la consigna 6):
+- U3 celda 75: la función de GAP hace `kmeans.fit(X_std)` e ignora su argumento `X`. Se corrige a `kmeans.fit(X)`.
+- U3 celdas 76 y 84: la referencia sale de `np.random.rand(*X.shape)`, en [0, 1], mientras `X_std` va de −2 a 3. Así el GAP da negativo, creciente y óptimo k=10. Se genera dentro del rango de cada característica: `np.random.rand(*X_std.shape) * (maximos - minimos) + minimos` (filmina 41 de la U3: uniforme sobre el rectángulo que contiene a los datos).
+- Ninguno fija semillas: se agregan `random_state=42` en cada `KMeans` y `np.random.seed(42)` antes del bucle del GAP.
+- `Unidad3.py`: dibuja los centroides dentro del bucle de clusters. En el notebook se dibujan una sola vez, afuera.
+
+Para el 3D se probaron varias combinaciones de atributos; la que mejor distingue los seis clusters con la vista por defecto es x = longitud del culmen, y = masa corporal, z = profundidad del culmen.
+
+Consigna 6: sin empezar. Usa Silhouette + GAP con `AgglomerativeClustering(n_clusters=k, linkage='ward')` (U3 celdas 83-88), con las mismas correcciones al GAP.
 
 ### PDFs de teoría (`tp1/teoria/Mineria_Datos_U2.pdf` y `U3.pdf`)
 
@@ -194,7 +235,12 @@ Lo revisado de la U2 (71 páginas) **confirma** lo hecho en las consignas 2 a 4,
 - t-SNE (pág. 53-57): perplejidad típica 5-50 y menor que la cantidad de puntos; con 100 los clusters se fusionan; iteraciones del orden de 1000; si se corta antes aparecen formas "pellizcadas"; conviene correrlo varias veces; **no se pueden leer ni los tamaños de los clusters ni las distancias entre ellos**; los ejes no tienen significado.
 - Comparación PCA / Isomap / t-SNE / UMAP (pág. 69-70).
 
-La U3 (58 páginas) todavía no se revisó: hacerlo al empezar la consigna 5 (K-means, Silhouette y GAP).
+De la U3 (58 páginas) se revisó lo de K-means e índices:
+- K-means (pág. 16-19): algoritmo y criterios de parada. Ejemplo en Python (pág. 24-27), que es `Unidad3.py`.
+- GAP (pág. 41): la referencia es una distribución uniforme sobre el rectángulo que contiene a los datos. Silhouette (pág. 42-43): rango de −1 a 1 y fórmula (b − a) / max(a, b).
+- Pág. 47: GAP con `gap_statistic.OptimalK` para K-means y para jerárquico.
+
+Falta revisar la parte de clustering jerárquico al empezar la consigna 6.
 ### Decisiones de limpieza tomadas
 
 | Problema | Decisión | Justificación |
