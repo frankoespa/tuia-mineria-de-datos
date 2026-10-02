@@ -516,7 +516,7 @@ Es la misma trampa que el error de reconstrucción de Isomap entre distintos `n_
 
 **`n_components`.** Dimensiones de salida, 2 o 3 para visualizar.
 
-**`random_state` (semilla).** Como arranca al azar, cada corrida da un dibujo distinto. Fijar la semilla hace el resultado reproducible. Con nuestros datos, tres semillas dieron KL 0.369, 0.359 y 0.361: **cambia el dibujo, no la calidad**. Por eso se recomienda correrlo varias veces y comparar.
+**`random_state` (semilla).** Como arranca al azar, cada corrida da un dibujo distinto. Fijar la semilla hace el resultado reproducible. Con otra semilla **cambia el dibujo, no la calidad** (lo probamos con tres semillas y el KL casi no varió, aunque ese apartado no quedó en el TP). Por eso se recomienda correrlo varias veces y comparar.
 
 ### Qué NO hay que leer en un gráfico de t-SNE
 

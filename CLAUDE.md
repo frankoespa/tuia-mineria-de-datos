@@ -34,7 +34,7 @@ No es el CSV original de Kaggle; está modificado:
 
 ## Entorno
 
-El venv es `.entorno` (Python 3.13, Windows). Las dependencias del TP1 están fijadas con versión en `requirements.txt`:
+El venv es `.entorno`, en la raíz del repo (Python 3.13, Windows). Git lo ignora por el `.gitignore` que crea el propio venv adentro. Los comandos se corren desde la raíz del repo. Las dependencias del TP1 están fijadas con versión en `requirements.txt`:
 
 ```powershell
 .entorno\Scripts\python.exe -m pip install -r requirements.txt
@@ -42,11 +42,42 @@ El venv es `.entorno` (Python 3.13, Windows). Las dependencias del TP1 están fi
 
 Si se agrega una librería, fijar su versión en `requirements.txt`. `umap-learn`, `hdbscan` y `kagglehub` se usan en los notebooks de teoría pero quedaron afuera porque el TP1 no los necesita.
 
+Ejecutar el notebook completo desde la consola (`nbclient`). Con `--output` la copia ejecutada se guarda aparte y la entrega no se modifica; con `--inplace` se sobrescribe. El kernel arranca en `tp1/`, por eso el notebook lee `penguins_size.csv` con ruta relativa. **`PYTHONUTF8=1` es obligatorio**: sin esa variable `nbclient` lee el archivo como cp1252 y rompe todos los acentos (con `--inplace` arruina la entrega; se detecta buscando `Ã` en el `.ipynb`):
+
+```powershell
+$env:PYTHONUTF8 = "1"; .entorno\Scripts\jupyter-execute.exe tp1\tp1_mineria_renna_esparza.ipynb --output C:\ruta\temporal\salida.ipynb
+```
+
+Después de modificar código hay que re-ejecutar el notebook con `--inplace` para que las salidas guardadas coincidan con las celdas.
+
+Leer una página de los PDF de teoría (`pypdf`):
+
+```powershell
+.entorno\Scripts\python.exe -c "from pypdf import PdfReader; print(PdfReader('tp1/teoria/Mineria_Datos_U2.pdf').pages[45].extract_text())"
+```
+
+Smart App Control de Windows llegó a bloquear los `.pyd` de scipy y scikit-learn (`ImportError: DLL load failed ... Una directiva de Control de aplicaciones bloqueó este archivo`). Los autores lo desactivaron el 29/09/2026 y volvió a funcionar. Si reaparece un error así, no es del código.
+
 ## Requisitos de formato de la entrega (del enunciado)
 
 - Cabecera con año, materia e integrantes (Renna y Esparza). Sección de conclusiones al final.
-- El informe **no debe incluir definiciones teóricas ni el significado de los parámetros de los métodos vistos en clase**. Las explicaciones didácticas pedidas arriba se dan en la conversación; en el notebook solo van la justificación de decisiones y la interpretación de resultados.
+- El informe **no debe incluir definiciones teóricas ni el significado de los parámetros de los métodos vistos en clase**. Las explicaciones didácticas pedidas arriba se dan en la conversación y en `RepasoParcial.md`, nunca en el notebook.
 - Pocos gráficos y representativos. Cada uno debe llevar una explicación de lo observado y si coincide con la hipótesis previa.
+
+### Redacción del notebook (regla de los autores)
+
+- **Los comentarios son solo sobre lo observado y si es coherente con la hipótesis previa, nada más.** No explicar cómo funciona un método, qué mide una métrica ni por qué "era previsible" un resultado. Se admite una frase corta para justificar una decisión (por qué se elige un valor, por qué se elimina una fila).
+- **Solo se comenta lo que se ve en el notebook.** Todo número citado tiene que poder leerse en una figura, una tabla o una salida impresa del propio notebook. No citar valores calculados aparte (rangos, medias por grupo, distancias mínimas, conteos de vecinos, etc.): los autores no pueden defender de dónde salen. Si un número hace falta, primero se muestra en una celda; si no, se describe lo que se ve ("queda pegado", "se superponen").
+- No agregar apartados que el enunciado no pide (por ejemplo, se quitó el de dependencia de la semilla en t-SNE).
+
+### Numeración de figuras y tablas
+
+- **Figuras:** numeración única y corrida en todo el notebook (`Figura 1`, `Figura 2`, ...). El número va en el título del gráfico: `plt.title("Figura 7. ...")`, o `plt.suptitle(...)` en las grillas y en el `pairplot` (ahí con `y=1.02`). Una grilla de paneles cuenta como una sola figura.
+- **Tablas:** numeración única y corrida, independiente de la de figuras. Cuenta como tabla todo `DataFrame` que se muestra y toda tabla escrita en markdown; no cuentan las salidas de texto (`value_counts()`, `isna().sum()`, `info()`, prints).
+  - `DataFrame`: `print("Tabla 3. ...")` como última línea antes de la expresión que lo muestra, para que el título quede justo arriba.
+  - Markdown: una línea `**Tabla 10.** ...` antes de la tabla.
+- En el texto se las cita por número ("en la Figura 2", "(Tabla 13)") en lugar de "el gráfico anterior".
+- Al insertar una figura o tabla en el medio hay que renumerar las siguientes y sus citas. Hoy el notebook llega hasta la **Figura 13** y la **Tabla 18** (fin de la consigna 4).
 
 ## Forma de trabajo
 
@@ -66,7 +97,7 @@ Las decisiones que modifican el dataset las toman los autores: consultarlas ante
 
 Convenciones del notebook:
 - Variables que se arrastran entre celdas: `df` (dataset limpio, 342 filas), `num_cols` (las 4 medidas numéricas), `X` (5 características), `y` (`Especie`) y `X_std` (`X` estandarizada). **Las consignas 2 a 6 trabajan sobre `X_std` y usan `y` solo para colorear y comparar.**
-- Los ids de celda llevan el prefijo del paso: `cab-`, `imp-`, `carga-`, `estr-`, `desc-`, `cat-`, `nul-`, `dup-`, `dist-`, `corr-`, `out-`, `cod-`, `std-`, `cierre-`.
+- Los ids de celda llevan el prefijo del paso: `cab-`, `cons-`, `conf-`, `imp-`, `carga-`, `estr-`, `desc-`, `cat-`, `nul-`, `dup-`, `dist-`, `corr-`, `out-`, `cod-`, `std-`, `cierre-` en la consigna 1, y un único prefijo por método desde la consigna 2 (`pca-`, `iso-`, `tsne-`), numerado en orden (`pca-01`, `pca-02`, ...).
 - Antes de cada gráfico va una celda markdown con la **hipótesis previa**, y después otra con la interpretación que la confirma o la refuta (lo pide el enunciado).
 - Se usa pandas 3: las columnas de texto tienen dtype `str` y no `object` como en los notebooks de clase.
 - **Nombres de las componentes:** `scikit-learn` numera las columnas de salida desde cero (`pca0`, `pca1`, ...). Apenas se ajusta un método de reducción, sus columnas se renombran con el prefijo del método y numeradas desde 1: `PC1`, `PC2`, ... en PCA; `ISO1`, `ISO2` en Isomap; `TSNE1`, `TSNE2` en t-SNE.
@@ -139,26 +170,23 @@ Ojo al interpretar: `reconstruction_error()` solo es comparable entre distintos 
 | 4 | Variación de iteraciones: grilla 2x2 con 300, 500, 1000 y 2000 (perplejidad 15) | Hecho |
 | 5 | Variación de componentes: KL con 2 y 3, sin figura | Hecho |
 | 6 | Gráfico 2D final y comparación con PCA e Isomap | Hecho |
-| 7 | Dependencia de la semilla (3 valores de `random_state`) | Hecho |
 
-Configuración elegida (decisión de los autores): **`perplexity=15`, `max_iter=1000`, `n_components=2`**. Con 15 los seis grupos (3 especies × 2 sexos) quedan separados, con un contacto puntual entre un grupo de Adelie y uno de Chinstrap (distancia mínima 0.90, del orden de la distancia entre vecinos dentro de un grupo; solo 3 puntos de 342 tienen su vecino más cercano en la otra especie). Gentoo queda aislada a casi 37. Con 30 y 50 Adelie y Chinstrap se fusionan.
+El apartado de dependencia de la semilla (3 valores de `random_state`) **se quitó a pedido de los autores**: no volver a agregarlo.
 
-KL medidos: iteraciones 0.549 / 0.383 / 0.361 / 0.353 (300 / 500 / 1000 / 2000); componentes 0.361 (2) y 0.265 (3); semillas 0.369 / 0.359 / 0.361.
+Configuración elegida (decisión de los autores): **`perplexity=15`, `max_iter=1000`, `n_components=2`**. Con 15 se ven seis grupos compactos, dos por especie, con Gentoo aislada y un contacto puntual entre un grupo de Adelie y uno de Chinstrap. Con 30 y 50 Adelie y Chinstrap se juntan. En el notebook esto se describe solo visualmente: **no citar distancias mínimas ni conteos de vecinos**, que no se calculan ahí.
+
+KL medidos: perplejidad 0.492 / 0.361 / 0.228 / 0.125 (5 / 15 / 30 / 50); iteraciones 0.549 / 0.383 / 0.361 / 0.353 (300 / 500 / 1000 / 2000); componentes 0.361 (2) y 0.265 (3).
 
 **Cuidados:**
 - En sklearn 1.9 el parámetro es **`max_iter`**, no `n_iter`. El mínimo (250) devuelve un KL centinela gigantesco porque la optimización termina durante la fase inicial.
 - El KL **no** es comparable entre perplejidades distintas (la perplejidad define la referencia); sí entre iteraciones y entre componentes.
-- t-SNE es el paso más lento: el notebook completo pasó de ~75 s a ~114 s.
+- t-SNE es el paso más lento del notebook, que completo tarda alrededor de 1 minuto.
 
 Consignas 5 y 6: sin empezar.
 
 ### PDFs de teoría (`tp1/teoria/Mineria_Datos_U2.pdf` y `U3.pdf`)
 
-Los autores agregaron las filminas de las unidades. **Hay que tenerlas en cuenta junto con los notebooks.** Se leen con `pypdf` (fijado en `requirements.txt`):
-
-```powershell
-.entorno\Scripts\python.exe -c "from pypdf import PdfReader; print(PdfReader('tp1/teoria/Mineria_Datos_U2.pdf').pages[45].extract_text())"
-```
+Los autores agregaron las filminas de las unidades. **Hay que tenerlas en cuenta junto con los notebooks.** Se leen con `pypdf` (comando en la sección **Entorno**).
 
 Lo revisado de la U2 (71 páginas) **confirma** lo hecho en las consignas 2 a 4, y aporta:
 - PCA (pág. 25): estandarizar siempre antes; el signo de los autovalores puede invertirse según el software.
@@ -167,9 +195,6 @@ Lo revisado de la U2 (71 páginas) **confirma** lo hecho en las consignas 2 a 4,
 - Comparación PCA / Isomap / t-SNE / UMAP (pág. 69-70).
 
 La U3 (58 páginas) todavía no se revisó: hacerlo al empezar la consigna 5 (K-means, Silhouette y GAP).
-
-**Entorno:** Smart App Control de Windows llegó a bloquear los `.pyd` de scipy y scikit-learn (`ImportError: DLL load failed ... Una directiva de Control de aplicaciones bloqueó este archivo`). Los autores lo desactivaron el 29/09/2026 y volvió a funcionar. Si reaparece un error así, no es del código.
-
 ### Decisiones de limpieza tomadas
 
 | Problema | Decisión | Justificación |
