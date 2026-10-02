@@ -69,6 +69,7 @@ Smart App Control de Windows llegó a bloquear los `.pyd` de scipy y scikit-lear
 
 - **Los comentarios son solo sobre lo observado y si es coherente con la hipótesis previa, nada más.** No explicar cómo funciona un método, qué mide una métrica ni por qué "era previsible" un resultado. Se admite una frase corta para justificar una decisión (por qué se elige un valor, por qué se elimina una fila).
 - **Solo se comenta lo que se ve en el notebook.** Todo número citado tiene que poder leerse en una figura, una tabla o una salida impresa del propio notebook. No citar valores calculados aparte (rangos, medias por grupo, distancias mínimas, conteos de vecinos, etc.): los autores no pueden defender de dónde salen. Si un número hace falta, primero se muestra en una celda; si no, se describe lo que se ve ("queda pegado", "se superponen").
+- **"Proyección" solo para PCA**, que es lineal. Los resultados de Isomap y t-SNE no son proyecciones: se los llama "representación en dos dimensiones" o "el gráfico de Isomap / t-SNE".
 - No agregar apartados que el enunciado no pide (por ejemplo, se quitó el de dependencia de la semilla en t-SNE).
 
 ### Numeración de figuras y tablas
@@ -78,7 +79,7 @@ Smart App Control de Windows llegó a bloquear los `.pyd` de scipy y scikit-lear
   - `DataFrame`: `print("Tabla 3. ...")` como última línea antes de la expresión que lo muestra, para que el título quede justo arriba.
   - Markdown: una línea `**Tabla 10.** ...` antes de la tabla.
 - En el texto se las cita por número ("en la Figura 2", "(Tabla 13)") en lugar de "el gráfico anterior".
-- Al insertar una figura o tabla en el medio hay que renumerar las siguientes y sus citas. Hoy el notebook llega hasta la **Figura 17** y la **Tabla 22** (fin de la consigna 5).
+- Al insertar una figura o tabla en el medio hay que renumerar las siguientes y sus citas. Hoy el notebook llega hasta la **Figura 20** y la **Tabla 26** (fin de la consigna 6).
 
 ## Forma de trabajo
 
@@ -98,7 +99,7 @@ Las decisiones que modifican el dataset las toman los autores: consultarlas ante
 
 Convenciones del notebook:
 - Variables que se arrastran entre celdas: `df` (dataset limpio, 342 filas), `num_cols` (las 4 medidas numéricas), `X` (5 características), `y` (`Especie`) y `X_std` (`X` estandarizada). **Las consignas 2 a 6 trabajan sobre `X_std` y usan `y` solo para colorear y comparar.**
-- Los ids de celda llevan el prefijo del paso: `cab-`, `cons-`, `conf-`, `imp-`, `carga-`, `estr-`, `desc-`, `cat-`, `nul-`, `dup-`, `dist-`, `corr-`, `out-`, `cod-`, `std-`, `cierre-` en la consigna 1, y un único prefijo por método desde la consigna 2 (`pca-`, `iso-`, `tsne-`), numerado en orden (`pca-01`, `pca-02`, ...).
+- Los ids de celda llevan el prefijo del paso: `cab-`, `cons-`, `conf-`, `imp-`, `carga-`, `estr-`, `desc-`, `cat-`, `nul-`, `dup-`, `dist-`, `corr-`, `out-`, `cod-`, `std-`, `cierre-` en la consigna 1, y un único prefijo por método desde la consigna 2 (`pca-`, `iso-`, `tsne-`, `km-`, `jer-`, y `conc-` para las conclusiones), numerado en orden (`pca-01`, `pca-02`, ...).
 - Antes de cada gráfico va una celda markdown con la **hipótesis previa**, y después otra con la interpretación que la confirma o la refuta (lo pide el enunciado).
 - Se usa pandas 3: las columnas de texto tienen dtype `str` y no `object` como en los notebooks de clase.
 - **Nombres de las componentes:** `scikit-learn` numera las columnas de salida desde cero (`pca0`, `pca1`, ...). Apenas se ajusta un método de reducción, sus columnas se renombran con el prefijo del método y numeradas desde 1: `PC1`, `PC2`, ... en PCA; `ISO1`, `ISO2` en Isomap; `TSNE1`, `TSNE2` en t-SNE.
@@ -223,7 +224,41 @@ Resultados (con `random_state=42` y `np.random.seed(42)`):
 
 Para el 3D se probaron varias combinaciones de atributos; la que mejor distingue los seis clusters con la vista por defecto es x = longitud del culmen, y = masa corporal, z = profundidad del culmen.
 
-Consigna 6: sin empezar. Usa Silhouette + GAP con `AgglomerativeClustering(n_clusters=k, linkage='ward')` (U3 celdas 83-88), con las mismas correcciones al GAP.
+### Consigna 6: clustering jerárquico (terminada)
+
+Celdas `jer-01` a `jer-22`. Imports agregados: `AgglomerativeClustering`, `dendrogram` y `linkage`.
+
+| Paso | Contenido | Estado |
+|---|---|---|
+| 1 | Hipótesis previa: 6 clusters, como K-means | Hecho |
+| 2 | `Z = linkage(X_std, "ward")` + dendrograma truncado (`lastp`, `p=20`) con `plt.axhline(y=9)` (U3 celdas 51 y 53) → Figura 18 | Hecho |
+| 3 | Silhouette para k=2..10 con `calculate_silhouette(X_scaled, k, linkage='ward')` (U3 celdas 87-88; `max_k=10` en vez de 15 para igualar el rango del GAP) → Figura 19 | Hecho |
+| 4 | GAP para k=1..10 con `calculate_intra_cluster_dispersion(X, k, linkage='ward')` (U3 celdas 84-85), corregida → Figura 20 | Hecho |
+| 5 | `resultados_jer` con Silhouette y GAP por k → Tabla 23 | Hecho |
+| 6 | `etiquetas_6` y `etiquetas_7` cruzadas con especie y sexo → Tablas 24 y 25 | Hecho |
+| 7 | Elección del número de clusters y resumen → Tabla 26 | Hecho |
+
+Resultados (`np.random.seed(42)`):
+
+| k | Silhouette | GAP |
+|---|---|---|
+| 4 | 0.501 | 1.325 |
+| 5 | 0.511 | 1.488 |
+| **6** | **0.515** | 1.677 |
+| **7** | 0.465 | **1.684** |
+| 8 | 0.409 | 1.663 |
+
+- **El óptimo por GAP es 7, pero se concluye 6** (decisión de los autores): es el máximo de Silhouette, es el corte del dendrograma (las fusiones saltan de ~6.3 a ~11.9), el GAP de 6 y 7 difiere en 0.007, y el séptimo cluster solo parte en dos a los machos de Gentoo (33 y 32).
+- **k=6 = especie × sexo**: Gentoo machos 65 / hembras 58, Adelie machos 73 / hembras 78, Chinstrap machos 34 / hembras 29. 5 hembras de Chinstrap quedan con las hembras de Adelie. Mismo resultado que K-means (5 fuera de su grupo en ambos, aunque no son los mismos pingüinos).
+- En el dendrograma truncado aparece una etiqueta `168` sin paréntesis: es una muestra suelta (su índice), no un grupo de 168.
+
+**Error adicional del código de clase** (U3 celdas 83-84): la dispersión se calcula como `X_np[labels] - centroids[labels]`, que usa las etiquetas como números de fila. Se corrige a `X_np - centroids[labels]`. Sin la corrección el GAP da valores sin sentido. `AgglomerativeClustering` es determinista y no lleva `random_state`.
+
+### Conclusiones (terminadas)
+
+Celda `conc-01`, la última del notebook: sección `## Conclusiones` que pide el enunciado. Recorre datos, reducción de la dimensionalidad, clustering, las hipótesis y el efecto de `Sexo`, citando figuras y tablas. Si se cambia algún resultado de las consignas, hay que revisarla.
+
+**El TP1 está completo.** Las celdas de las consignas 5 y 6 se generaron con scripts temporales que no quedaron en el repo; para modificarlas, editar el `.ipynb` y re-ejecutar.
 
 ### PDFs de teoría (`tp1/teoria/Mineria_Datos_U2.pdf` y `U3.pdf`)
 
@@ -240,7 +275,7 @@ De la U3 (58 páginas) se revisó lo de K-means e índices:
 - GAP (pág. 41): la referencia es una distribución uniforme sobre el rectángulo que contiene a los datos. Silhouette (pág. 42-43): rango de −1 a 1 y fórmula (b − a) / max(a, b).
 - Pág. 47: GAP con `gap_statistic.OptimalK` para K-means y para jerárquico.
 
-Falta revisar la parte de clustering jerárquico al empezar la consigna 6.
+- Clustering jerárquico (pág. 28-37): aglomerativo y divisivo, dendrograma, enlaces `single`, `complete`, `average` y `centroid`, y cómo leer la altura de las uniones. Ejemplo en Python (pág. 45-46): dendrograma con `ward` y `AgglomerativeClustering(n_clusters=4, metric='euclidean', linkage='ward')`.
 ### Decisiones de limpieza tomadas
 
 | Problema | Decisión | Justificación |

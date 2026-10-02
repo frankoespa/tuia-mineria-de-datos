@@ -21,9 +21,10 @@ Cada vez que aparece un tema nuevo en un TP, se agrega acá con su explicación.
 13. [Isomap](#13-isomap)
 14. [t-SNE](#14-t-sne)
 15. [Clustering y K-means](#15-clustering-y-k-means)
-16. [Cómo funciona scikit-learn](#16-cómo-funciona-scikit-learn)
-17. [Preguntas típicas de parcial](#17-preguntas-típicas-de-parcial)
-18. [Temas que todavía no vimos](#18-temas-que-todavía-no-vimos)
+16. [Clustering jerárquico](#16-clustering-jerárquico)
+17. [Cómo funciona scikit-learn](#17-cómo-funciona-scikit-learn)
+18. [Preguntas típicas de parcial](#18-preguntas-típicas-de-parcial)
+19. [Temas que todavía no vimos](#19-temas-que-todavía-no-vimos)
 
 ---
 
@@ -416,7 +417,7 @@ Isomap usa la **geodésica**, y por eso capta estructuras curvas que PCA no ve.
 
 | | Qué pasa | Riesgo |
 |---|---|---|
-| **Muy chico** (3, 5) | Solo conecta lo más cercano: conserva mucho detalle **local** | El grafo puede quedar **partido en pedazos** entre los que no hay camino, y la proyección se deforma |
+| **Muy chico** (3, 5) | Solo conecta lo más cercano: conserva mucho detalle **local** | El grafo puede quedar **partido en pedazos** entre los que no hay camino, y la representación se deforma |
 | **Intermedio** | Equilibrio entre estructura local y global | Es lo que se busca |
 | **Muy grande** (50) | Conecta puntos que no son realmente vecinos, con atajos que "atraviesan la montaña" | Las distancias geodésicas se parecen a las rectas y **el resultado se vuelve parecido a PCA**: se pierde lo no lineal |
 
@@ -426,7 +427,7 @@ Si `n_neighbors` es muy chico, pueden quedar grupos de puntos **sin ningún cami
 
 > `The number of connected components of the neighbors graph is 4 > 1`
 
-No es un error: sklearn completa el grafo por su cuenta para poder seguir. Pero las distancias entre esos bloques quedan **inventadas**, así que la proyección resultante no es confiable. **Ante ese aviso, hay que subir `n_neighbors`.**
+No es un error: sklearn completa el grafo por su cuenta para poder seguir. Pero las distancias entre esos bloques quedan **inventadas**, así que la representación resultante no es confiable. **Ante ese aviso, hay que subir `n_neighbors`.**
 
 ### Los avisos que aparecen al correr Isomap (matrices dispersas)
 
@@ -637,7 +638,94 @@ Los dos índices coinciden en **k=6**, aunque por poco. No son las 3 especies: s
 - Es sensible a los valores atípicos, que arrastran a los centroides.
 - Depende de las posiciones iniciales (por eso la semilla).
 
-## 16. Cómo funciona scikit-learn
+## 16. Clustering jerárquico
+
+### La idea
+
+K-means arma k grupos de una sola vez. El clustering jerárquico arma **un árbol** de grupos: muestra cómo se van juntando los datos, desde cada muestra por separado hasta un único grupo con todo. Después uno decide **a qué altura cortar** el árbol, y de eso sale la cantidad de clusters.
+
+Hay dos tipos:
+
+| Tipo | Cómo trabaja |
+|---|---|
+| **Aglomerativo** (el que usamos) | De abajo hacia arriba: empieza con cada muestra como un cluster y va **uniendo** los dos más parecidos |
+| **Divisivo** | De arriba hacia abajo: empieza con todo junto y va **dividiendo** |
+
+### El algoritmo aglomerativo, paso a paso
+
+1. Cada pingüino es un cluster (342 clusters).
+2. Se buscan los dos clusters más cercanos y se unen (quedan 341).
+3. Se repite hasta que queda uno solo.
+
+**Analogía:** un árbol genealógico al revés. Primero se juntan los hermanos, después los primos, después las familias, hasta llegar a un único antepasado.
+
+### El enlace (`linkage`): cómo se mide la distancia entre dos grupos
+
+Entre dos puntos la distancia es obvia. Entre dos **grupos** hay que elegir un criterio:
+
+| Enlace | Distancia entre dos clusters | Característica |
+|---|---|---|
+| `single` | La de sus dos puntos **más cercanos** | Poco estable, arma cadenas alargadas |
+| `complete` | La de sus dos puntos **más lejanos** | Grupos compactos |
+| `average` | El **promedio** entre todos los pares | Intermedio |
+| `centroid` | La de sus **centroides** | — |
+| **`ward`** (el que usamos) | Une los dos clusters cuya fusión **menos aumenta la dispersión interna** | Grupos compactos y parejos; es el que usa clase |
+
+`ward` busca lo mismo que K-means (grupos apretados alrededor de su centro), y por eso los dos métodos dieron resultados tan parecidos.
+
+### El dendrograma y cómo leerlo
+
+Es el dibujo del árbol.
+
+- **Eje horizontal:** las muestras (o grupos de muestras, si está truncado).
+- **Eje vertical:** la distancia a la que se unieron dos grupos.
+- **Una unión baja** significa que esos grupos eran muy parecidos. **Una unión alta**, que eran muy distintos.
+
+**Cómo se elige la cantidad de clusters:** se traza una línea horizontal y se cuentan las ramas verticales que corta. Conviene cortar donde hay un **tramo vertical largo sin uniones**, porque significa que los grupos de abajo son bien distintos entre sí.
+
+En nuestro dendrograma las últimas uniones ocurren a alturas 6.3, **11.9**, 13.9, 19.5, 25.1 y 40.1. Entre 6.3 y 11.9 no pasa nada: cortando en cualquier altura de ese tramo (usamos 9) quedan **6 ramas**.
+
+**Dendrograma truncado:** con 342 hojas el eje horizontal no se lee. `truncate_mode='lastp', p=20` muestra solo las últimas 20 ramas, y el número entre paréntesis es cuántas muestras hay debajo de cada una. Un número **sin** paréntesis es una muestra suelta (su índice), no una cantidad.
+
+### En sklearn y scipy
+
+Se usan dos herramientas distintas para lo mismo:
+
+- `scipy`: `linkage(X_std, "ward")` arma el árbol completo y `dendrogram(Z)` lo dibuja.
+- `sklearn`: `AgglomerativeClustering(n_clusters=k, linkage='ward').fit_predict(X_std)` devuelve directamente el cluster de cada muestra para un k dado. Es como cortar el árbol para que queden k ramas.
+
+**No lleva semilla:** a diferencia de K-means, no hay nada al azar. Siempre da el mismo resultado.
+
+### Silhouette y GAP en jerárquico
+
+Son los mismos índices que en K-means; solo cambia el método que arma los grupos.
+
+| k | Silhouette | GAP |
+|---|---|---|
+| 5 | 0.511 | 1.488 |
+| **6** | **0.515** | 1.677 |
+| **7** | 0.465 | **1.684** |
+| 8 | 0.409 | 1.663 |
+
+Acá los índices **no coinciden**: Silhouette dice 6 y GAP dice 7. Pero la diferencia del GAP entre 6 y 7 es de 0.007, es decir, nada. Mirando qué hace el séptimo cluster, solo parte en dos a los machos de Gentoo, una división que no corresponde a nada conocido. Por eso concluimos que **6 representa mejor los datos**, aunque el óptimo "por GAP" sea 7.
+
+**La lección:** un índice no decide solo. Cuando la curva es plana, el máximo es casi una casualidad, y hay que mirar los otros índices y qué grupos se forman.
+
+**El error del código de clase:** para calcular la dispersión restaba `X_np[labels] - centroids[labels]`. `X_np[labels]` no es "los puntos": usa las etiquetas (0, 1, 2...) como números de fila, así que agarra siempre las primeras filas de la tabla. Lo correcto es `X_np - centroids[labels]`: a cada punto, restarle el centroide de **su** cluster.
+
+### Jerárquico contra K-means
+
+| | K-means | Jerárquico (ward) |
+|---|---|---|
+| Hay que dar k de antemano | Sí | No: se decide al cortar el árbol |
+| Resultado | Una partición | Un árbol con todos los niveles |
+| Depende del azar | Sí (semilla) | No |
+| Costo con muchos datos | Bajo | Alto |
+| En nuestros datos | 6 clusters, 5 pingüinos fuera de su grupo | 6 clusters, 5 pingüinos fuera de su grupo |
+
+Los dos llegaron a los mismos seis grupos (especie × sexo). Los 5 que quedan fuera no son exactamente los mismos pingüinos, pero en ambos casos son de Adelie o de Chinstrap, las dos especies más parecidas.
+
+## 17. Cómo funciona scikit-learn
 
 Todos los métodos se usan igual, y por eso conviene entender el patrón una sola vez:
 
@@ -664,7 +752,7 @@ Así el nombre de la columna coincide con el número de componente y los gráfic
 
 ---
 
-## 17. Preguntas típicas de parcial
+## 18. Preguntas típicas de parcial
 
 **¿Por qué hay que estandarizar antes de PCA o de un clustering?**
 Porque trabajan con varianzas y distancias. Sin estandarizar, la variable con los números más grandes domina el resultado solo por su unidad de medida.
@@ -732,14 +820,25 @@ Porque es no supervisado y solo ve distancias. Al incluir `Sexo` como caracterí
 **¿El número de cluster significa algo?**
 No. Las etiquetas 0, 1, 2... son arbitrarias; hay que cruzarlas con lo que se conoce de los datos (tabla cruzada).
 
+**¿Cómo se elige el número de clusters en un dendrograma?**
+Trazando una línea horizontal donde haya un tramo vertical largo sin uniones y contando las ramas que corta.
+
+**¿Qué significa la altura de una unión en el dendrograma?**
+La distancia entre los dos grupos que se unen. Baja: eran parecidos. Alta: eran distintos.
+
+**¿Qué es el enlace `ward`?**
+El criterio que une, en cada paso, los dos clusters cuya fusión menos aumenta la dispersión interna. Da grupos compactos, parecidos a los de K-means.
+
+**¿Qué hacer si Silhouette y GAP indican números distintos?**
+Mirar cuánta diferencia hay entre los valores, qué dicen los otros indicadores (dendrograma) y qué grupos se forman con cada k. A nosotros GAP dio 7 por 0.007 y elegimos 6.
+
 **¿Media o mediana para imputar?**
 La mediana, si hay asimetría o valores extremos, porque no se deja arrastrar por ellos.
 
 ---
 
-## 18. Temas que todavía no vimos
+## 19. Temas que todavía no vimos
 
 Se van a agregar a este archivo, con la misma explicación para principiantes, cuando los trabajemos:
 
-- **Clustering jerárquico y dendrograma** (consigna 6), con Silhouette y GAP aplicados a ese método
 - Vistos en clase pero fuera del TP1: MDS, UMAP, DBSCAN, HDBSCAN, división en entrenamiento y prueba (TP2)
