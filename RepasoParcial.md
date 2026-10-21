@@ -1,6 +1,9 @@
 # Repaso para el parcial — Minería de Datos
 
-Explicaciones para principiantes de **todos** los conceptos que vamos aplicando en los trabajos prácticos, con los ejemplos de nuestros propios datos (pingüinos).
+Explicaciones para principiantes de **todos** los conceptos que vamos aplicando en los trabajos prácticos, con los ejemplos de nuestros propios datos.
+
+- **Secciones 1 a 17:** lo del TP1, con el conjunto de pingüinos (no supervisado).
+- **Secciones 18 en adelante:** lo del TP2, con las empresas y los medicamentos (supervisado).
 
 Cada vez que aparece un tema nuevo en un TP, se agrega acá con su explicación.
 
@@ -23,8 +26,16 @@ Cada vez que aparece un tema nuevo en un TP, se agrega acá con su explicación.
 15. [Clustering y K-means](#15-clustering-y-k-means)
 16. [Clustering jerárquico](#16-clustering-jerárquico)
 17. [Cómo funciona scikit-learn](#17-cómo-funciona-scikit-learn)
-18. [Preguntas típicas de parcial](#18-preguntas-típicas-de-parcial)
-19. [Temas que todavía no vimos](#19-temas-que-todavía-no-vimos)
+18. [Aprendizaje supervisado](#18-aprendizaje-supervisado)
+19. [Entrenamiento y test](#19-entrenamiento-y-test)
+20. [Fuga de datos](#20-fuga-de-datos-data-leakage)
+21. [Validación cruzada y GridSearchCV](#21-validación-cruzada-y-gridsearchcv)
+22. [Árboles de decisión](#22-árboles-de-decisión)
+23. [Métricas de regresión](#23-métricas-de-regresión)
+24. [Preguntas típicas de parcial](#24-preguntas-típicas-de-parcial)
+25. [Lo que nos corrigió el profesor en el TP1](#25-lo-que-nos-corrigió-el-profesor-en-el-tp1)
+26. [Temas que todavía no vimos](#26-temas-que-todavía-no-vimos)
+27. [Resumen de una carilla](#27-resumen-de-una-carilla)
 
 ---
 
@@ -242,7 +253,18 @@ Convertir etiquetas en números para que el algoritmo pueda operar.
 
 **Variable binaria (dos categorías):** alcanza una sola columna con 0 y 1. Nosotros usamos FEMALE = 0 y MALE = 1. Qué número le toca a cada una es arbitrario y no cambia los resultados.
 
-**Más de dos categorías:** codificarlas como 1, 2, 3 es peligroso, porque el algoritmo interpretaría que hay un orden y que 3 está "más lejos" de 1 que de 2. Para eso existe el *one-hot encoding*, que crea una columna por categoría con 0 o 1. (No lo necesitamos en el TP1.)
+**Más de dos categorías:** hay que distinguir si la variable tiene orden o no.
+
+| | Ejemplo | Cómo se codifica |
+|---|---|---|
+| **Ordinal** (tiene orden) | `BP`: Bajo < Normal < Alto | `OrdinalEncoder` con el orden explícito: 0, 1, 2 |
+| **Nominal** (no tiene orden) | `State`: California, Florida, New York | **One-hot**: una columna 0/1 por categoría |
+
+**Por qué one-hot para las nominales.** Codificar los estados como 0, 1 y 2 le estaría diciendo al algoritmo que Florida (1) está "en el medio" entre California (0) y New York (2), y que California está el doble de lejos de New York que de Florida. Eso es inventado. Con one-hot, `State` se reemplaza por tres columnas (`State_California`, `State_Florida`, `State_New York`) donde cada empresa tiene un 1 en la suya y 0 en las otras: todas quedan a la misma distancia entre sí.
+
+A los **árboles** esto casi no les afecta, porque parten por umbrales. A **k-NN** sí, porque mide distancias: con la codificación 0/1/2 las distancias entre estados serían falsas.
+
+⚠️ El codificador también se ajusta **solo con el entrenamiento** (ver la sección 20).
 
 **Cuidado con `.map()`:** convierte en nulo, sin avisar, cualquier valor que no esté en el diccionario. Por eso antes de aplicarlo conviene verificar que no quede nada afuera:
 
@@ -348,7 +370,9 @@ Si no, la variable con los números más grandes (la masa) se lleva toda la vari
 |---|---|---|---|
 | **Varianza acumulada** | Quedarse con las necesarias para llegar al 75-80% | PC1 + PC2 = 84.6% | **2** |
 | **Kaiser** | Conservar las de **eigenvalue > 1** | 2.87, **1.38**, 0.48, 0.18, 0.11 | **2** |
-| **Codo (scree)** | Cortar donde la curva se quiebra y se aplana | Quiebre en PC3 | **2** |
+| **Codo (scree)** | Quedarse hasta la componente del quiebre, **incluida** | Quiebre en PC3 | **3** |
+
+> ⚠️ En el TP1 entregado pusimos **2** en esa última casilla, razonando que si el quiebre está en PC3 se conservan "las anteriores". El profesor lo marcó como error: **la componente del quiebre se incluye**, así que ese criterio daba 3 (ver sección 25). La elección final de 2 componentes siguió siendo válida, porque alcanza con justificar uno de los tres criterios y los otros dos daban 2.
 
 **Qué es un eigenvalue (valor propio):** la varianza de esa componente medida en "unidades de variable original". Como estandarizamos, cada variable original aporta exactamente 1. Por eso Kaiser dice: *si una componente vale menos de 1, aporta menos que una sola variable original y no justifica conservarla*.
 
@@ -358,11 +382,64 @@ Diferencia entre las dos columnas que devuelve sklearn:
 
 > ⚠️ El notebook de clase U2 aplica Kaiser (celda 98) como "varianza explicada ≥ 0.1", que **no** es el criterio de Kaiser enunciado en la celda 91. Con nuestros datos los dos dan 2 componentes, pero en el parcial conviene usar **eigenvalue > 1**.
 
+### De eigenvalue a porcentaje: la cuenta
+
+Los dos números que devuelve sklearn están ligados:
+
+| | Qué es | Nuestros valores |
+|---|---|---|
+| `explained_variance_` | El **eigenvalue**: la varianza de esa componente | 2.87, 1.38, 0.48, 0.18, 0.11 |
+| `explained_variance_ratio_` | Esa misma varianza como **proporción del total** | 0.572, 0.275, 0.096, 0.037, 0.021 |
+
+La cuenta es una división. Los 5 eigenvalues suman 5.02 (con datos estandarizados, la suma da aproximadamente la cantidad de variables, porque cada una aporta varianza 1):
+
+```
+PC1: 2.87 / 5.02 = 0.572  →  57.2%
+PC2: 1.38 / 5.02 = 0.275  →  27.5%
+```
+
+Por eso Kaiser compara contra **1**: una componente con eigenvalue menor que 1 aporta menos que una variable original suelta.
+
+### ⚠️ El criterio del codo: dónde se corta exactamente
+
+**Este punto nos lo corrigió el profesor en el TP1.** Nosotros escribimos que el quiebre estaba en la tercera componente y conservamos **2**; la corrección fue que había que tomar **3**.
+
+**La regla: la componente donde se produce el quiebre se incluye.**
+
+```
+varianza
+  │
+0.57 ●
+  │   ＼
+0.27 ●  ＼          ← la caída fuerte termina ACÁ
+  │     ＼
+0.10 ●────●────●    ← a partir de acá la curva es plana
+     1  2  3  4  5
+           ↑
+       el codo: se conservan 1, 2 y 3
+```
+
+El codo es el punto donde la curva **deja de caer y se aplana**. Ese punto marca la última componente que todavía aporta algo, así que entra.
+
+Lo mismo vale para el codo en K-means (sección 15): el k del quiebre se incluye.
+
+### Errores típicos con PCA
+
+| Error | Por qué está mal |
+|---|---|
+| No estandarizar antes | La variable con los números más grandes se lleva toda la varianza |
+| Interpretar PC1 como "una variable" | Es una **mezcla** de todas, con pesos: hay que leer las cargas |
+| Creer que más varianza explicada = mejor separación de clases | PCA maximiza varianza, **no** separación. Nos pasó: PC3, con 9.6%, era la que distinguía Adelie de Chinstrap |
+| Comparar eigenvalues entre datasets | Dependen de la cantidad de variables y de la escala |
+| Olvidar que el signo es arbitrario | Un mismo análisis puede dar el gráfico espejado; no cambia nada |
+
 ### Los gráficos de PCA
 
 **a) Varianza explicada y acumulada.** Las barras muestran cuánto aporta cada componente; la línea roja, cuánto se lleva acumulado. Se busca el primer punto de la línea que cruza el 75-80%.
 
-**b) Gráfico del codo (scree).** La varianza de cada componente dibujada como curva que baja. Se busca **el quiebre**: el punto donde deja de caer bruscamente y se aplana. Se conservan las componentes **anteriores** al codo. Se llama así porque la curva parece un brazo doblado.
+**b) Gráfico del codo (scree).** La varianza de cada componente dibujada como curva que baja. Se busca **el quiebre**: el punto donde deja de caer bruscamente y se aplana. Se conservan las componentes **hasta la del quiebre, incluyéndola**. Se llama así porque la curva parece un brazo doblado.
+
+En nuestra curva (0.57, 0.27, 0.10, 0.04, 0.02) el quiebre está en la tercera, porque de ahí en adelante los valores quedan casi alineados: el criterio da **3 componentes**. La tercera es, justamente, la que separa Adelie de Chinstrap.
 
 **c) Scatter de PC1 contra PC2 coloreado por especie.** Cada punto es un pingüino en sus coordenadas nuevas. **PCA no conoce las especies**: los colores se agregan después. Si los colores quedan agrupados, significa que PCA encontró sola una estructura que coincide con las especies.
 
@@ -408,6 +485,22 @@ Isomap usa la **geodésica**, y por eso capta estructuras curvas que PCA no ve.
 1. **Arma el grafo de vecinos.** A cada punto lo conecta con sus `n_neighbors` más cercanos.
 2. **Calcula las distancias geodésicas**: el camino más corto entre cada par de puntos, pero solo pudiendo viajar por las conexiones del grafo.
 3. **Ubica los puntos en 2 dimensiones** tratando de respetar lo mejor posible esas distancias.
+
+### La distancia geodésica, con un ejemplo
+
+Supongamos cuatro puntos y un grafo donde cada uno se conectó con sus vecinos más cercanos:
+
+```
+   A ──2── B ──3── C ──2── D
+   └──────────12──────────┘
+```
+
+- **Distancia euclídea** entre A y D: **12**, la línea recta.
+- **Distancia geodésica** entre A y D: se viaja por el grafo, A → B → C → D = 2 + 3 + 2 = **7**.
+
+Isomap usa el 7. Si los puntos estuvieran sobre una superficie curva, ese camino refleja mucho mejor cuán "lejos" están realmente dentro de la estructura de los datos.
+
+El algoritmo que busca el camino más corto entre todos los pares es Dijkstra o Floyd-Warshall (filmina 37 de la unidad 2).
 
 ### Los dos parámetros
 
@@ -490,7 +583,9 @@ Pensalo como armar una foto grupal: no importa que las distancias estén a escal
 
 ### El KL (divergencia de Kullback-Leibler)
 
-Es la medida de **cuánto se diferencian las dos tablas**, y lo que el algoritmo minimiza. KL = 0 significa que el mapa reproduce las vecindades a la perfección; cuanto más chico, mejor copiado.
+Es la medida de **cuánto se diferencian las dos tablas** (la de vecindades en el espacio original y la del plano), y es lo que el algoritmo minimiza moviendo los puntos. `scikit-learn` lo deja en `tsne.kl_divergence_`. KL = 0 significa que el mapa reproduce las vecindades a la perfección; cuanto más chico, mejor copiado.
+
+> ⚠️ **No se vio en clase.** El profesor objetó que lo usáramos en el TP1 para elegir la cantidad de componentes sin explicar qué es (sección 25). Sirve para entender qué optimiza t-SNE, pero **en una entrega no se justifica una decisión con una medida que no se vio**: las decisiones se toman con los criterios de clase y con lo que se observa en los gráficos.
 
 **Cuándo se puede comparar:**
 
@@ -512,7 +607,9 @@ Es la misma trampa que el error de reconstrucción de Isomap entre distintos `n_
 | Intermedio (15) | Equilibrio | Seis grupos compactos y separados |
 | Alto (30-50) | Los grupos se fusionan | Adelie y Chinstrap se pegan y terminan mezclándose |
 
-**`max_iter` (iteraciones).** Cuántas veces mueve los puntos. Lo habitual es del orden de 1000. Si se corta antes de converger, aparecen formas raras y "pellizcadas", con grupos poco definidos. Nuestros números: KL 0.549 (300), 0.383 (500), 0.361 (1000), 0.353 (2000). A partir de 1000 deja de mejorar.
+**`max_iter` (iteraciones).** Cuántas veces mueve los puntos. Lo habitual es del orden de 1000. Si se corta antes de converger, aparecen formas raras y "pellizcadas", con grupos poco definidos. Eso se ve en el gráfico: con 300 iteraciones nuestros grupos quedaron extendidos y mal definidos, y entre 1000 y 2000 el dibujo es prácticamente el mismo (sin mirar el KL, que fue 0.549, 0.383, 0.361 y 0.353 para 300, 500, 1000 y 2000).
+
+**Cómo se barren los dos parámetros.** Perplejidad e iteraciones se prueban de a uno, dejando el otro fijo, y al final se elige **la combinación**: una figura variando la perplejidad con las iteraciones fijas, otra variando las iteraciones con la perplejidad fija. En los dos casos hay que **decir en el texto cuál es el valor fijo**; ponerlo solo en el título de la figura no alcanzó (sección 25).
 
 ⚠️ En `scikit-learn` moderno el parámetro se llama **`max_iter`**; antes era `n_iter`. El mínimo admitido es 250, pero no debe usarse: ahí la optimización termina durante la fase inicial (*early exaggeration*) y el KL informado es un valor centinela gigantesco, no un error real.
 
@@ -529,6 +626,25 @@ Esto suele ser pregunta de parcial:
 3. **Las distancias entre grupos no son confiables.** Que dos grupos aparezcan lejos no significa que sean muy distintos.
 
 Lo que sí se puede afirmar: **que los grupos existen y están diferenciados**.
+
+### ⚠️ Cuidado con el KL en un informe
+
+**Esto nos lo marcó el profesor en el TP1.** Usamos el KL para justificar decisiones, y la observación fue que **no se vio en clase**.
+
+La regla que queda: **para justificar una decisión, usar solo criterios vistos en clase** (varianza acumulada, Kaiser, codo, Silhouette, GAP) y lo que se observa en los gráficos. Si una métrica no se vio, no sirve ni usarla ni explicarla, porque el enunciado además prohíbe incluir teoría en el informe.
+
+El KL sigue siendo útil para **entender** qué está haciendo t-SNE, pero no para apoyar una elección en la entrega.
+
+### Errores típicos con t-SNE
+
+| Error | Por qué está mal |
+|---|---|
+| Leer las distancias entre grupos | t-SNE expande lo denso y comprime lo disperso: no son proporcionales a nada |
+| Comparar tamaños de los grupos | Por lo mismo: todos tienden a parecer del mismo tamaño |
+| Interpretar los ejes | `TSNE1` y `TSNE2` no significan nada |
+| Correrlo una sola vez | Es aleatorio: conviene repetir y ver si la estructura se mantiene |
+| Decir "proyección" | Proyectar es lo que hace PCA, que es lineal. En t-SNE e Isomap se dice "representación en dos dimensiones" |
+| Usar perplejidad mayor que la cantidad de puntos | El algoritmo se comporta de forma imprevisible |
 
 ### Comparación de los tres métodos
 
@@ -574,9 +690,11 @@ El **centroide** es el pingüino "promedio" de su cluster: un valor por cada car
 
 La **inercia** (`kmeans.inertia_`) es la suma de las distancias al cuadrado de cada punto a su centroide. Mide qué tan **apretados** están los grupos: cuanto menor, más compactos.
 
-El problema es que **siempre baja al aumentar k** (con un cluster por punto sería 0), así que no se puede elegir "el k con menor inercia". Se grafica contra k y se busca el **codo**: el punto donde deja de bajar rápido.
+El problema es que **siempre baja al aumentar k** (con un cluster por punto sería 0), así que no se puede elegir "el k con menor inercia". Se grafica contra k y se busca el **codo**: el punto donde deja de bajar rápido. Igual que en PCA, **el k del quiebre se incluye**.
 
-En nuestros datos: 1710 (k=1), 907, 593, 403, 301, **233 (k=6)**, 217, 203... Baja de a poco hasta 6 y después se aplana. No hay un codo nítido, y por eso hacen falta índices más precisos.
+En nuestros datos: 1710 (k=1), 907, 593, 403, 301, 233, 217, 203... Lo que se mira es cuánto baja en cada paso: 803, 314, 190, 102, 68 y 16. El quiebre se lee **alrededor de k=4 o 5**, porque de ahí en adelante las caídas ya son chicas. No es un codo nítido, y por eso hacen falta índices más precisos.
+
+> ⚠️ En el TP1 escribimos que la inercia "baja de forma pronunciada hasta k=6" (celda `km-04`). El profesor marcó que el quiebre está en 4 o 5, y aclaró que está bien pasar a otros criterios cuando el codo no alcanza (sección 25).
 
 ### El coeficiente de Silhouette
 
@@ -596,6 +714,36 @@ Silhouette = (b − a) / max(a, b). Va de −1 a 1:
 `silhouette_score` devuelve el **promedio** de todos los puntos. Se calcula para varios k y se elige **el más alto**. Empieza en k=2 porque con un solo cluster no hay "vecino".
 
 En nuestros datos: 0.443 (k=2), 0.450, 0.501, 0.513, **0.515 (k=6)**, 0.467, 0.412... El máximo es k=6, pero k=4 y k=5 quedan casi empatados.
+
+#### Silhouette calculado a mano
+
+Un punto cualquiera, con dos clusters:
+
+```
+  Cluster A (el suyo)        Cluster B (el vecino)
+     ● ● ●                        ○ ○ ○
+       ↑ nuestro punto
+```
+
+1. **a** = distancia promedio a los puntos **de su propio** cluster. Supongamos **2**.
+2. **b** = distancia promedio a los puntos del cluster **vecino más cercano**. Supongamos **6**.
+3. Se aplica la fórmula (filmina 42 de la unidad 3):
+
+```
+s = (b − a) / max(a, b) = (6 − 2) / 6 = 4/6 = 0.67
+```
+
+Un 0.67 indica que el punto está bastante mejor acompañado en su cluster que en el vecino.
+
+**Los tres casos límite:**
+
+| Situación | Cuentas | s | Interpretación |
+|---|---|---|---|
+| Muy cerca de los suyos, lejos del otro | a=1, b=9 | **0.89** | Bien clasificado |
+| A igual distancia de ambos | a=5, b=5 | **0** | En el borde, ambiguo |
+| Más cerca del cluster vecino que del propio | a=8, b=3 | **−0.63** | Probablemente mal asignado |
+
+El `silhouette_score` del conjunto es el promedio de los `s` de todos los puntos. Nuestro máximo fue **0.515** con k=6.
 
 ### El estadístico GAP
 
@@ -617,6 +765,23 @@ En nuestros datos: 0.35, 0.72, 1.00, 1.26, 1.44, **1.61 (k=6)**, 1.59, 1.56, 1.5
 2. La referencia salía de `np.random.rand`, que da números entre 0 y 1. Nuestros datos estandarizados van de −2 a 3: la referencia quedaba amontonada en un rincón, su inercia era chiquita, el GAP daba **negativo** y elegía siempre k=10. La corrección es estirar esos números al rango de cada columna: `np.random.rand(...) * (máximo − mínimo) + mínimo`.
 
 Además fijamos `np.random.seed(42)`, porque los puntos de referencia son al azar y sin semilla el GAP cambia en cada corrida.
+
+### ⚠️ El codo en K-means: el k del quiebre se incluye
+
+**El profesor también nos corrigió esto.** Dijimos que el quiebre estaba en k=6; su devolución fue que se produce en **k=4 o 5**.
+
+Es la misma regla que en PCA: el codo es donde la curva **deja de caer bruscamente**, y ese k entra. Mirando nuestra tabla de inercia:
+
+| k | Inercia | Cuánto bajó |
+|---|---|---|
+| 2 | 907.2 | — |
+| 3 | 593.3 | −314 |
+| 4 | 403.1 | −190 |
+| 5 | 300.9 | −102 |
+| 6 | 233.2 | −68 |
+| 7 | 216.7 | −17 |
+
+Las caídas se achican mucho entre k=4 y k=5: ahí está el codo. Aclaró además que **está bien pasar a otros criterios si el codo no alcanza**, que es lo que hicimos al elegir 6 por Silhouette y GAP.
 
 ### Qué nos dio: 6 clusters, no 3
 
@@ -672,6 +837,31 @@ Entre dos puntos la distancia es obvia. Entre dos **grupos** hay que elegir un c
 | **`ward`** (el que usamos) | Une los dos clusters cuya fusión **menos aumenta la dispersión interna** | Grupos compactos y parejos; es el que usa clase |
 
 `ward` busca lo mismo que K-means (grupos apretados alrededor de su centro), y por eso los dos métodos dieron resultados tan parecidos.
+
+#### Un paso del algoritmo, con números
+
+Cuatro puntos y sus distancias:
+
+```
+        B      C      D
+  A    2.0    6.0    9.0
+  B           5.0    8.0
+  C                  3.0
+```
+
+1. **Primera fusión:** la distancia más chica es 2.0, entre A y B. Se unen en el grupo **{A,B}**.
+2. **Recalcular distancias** del grupo nuevo a los demás. Acá importa el enlace:
+
+| Enlace | Distancia de {A,B} a C | Criterio |
+|---|---|---|
+| `single` (mínimo) | min(6.0, 5.0) = **5.0** | El par más cercano |
+| `complete` (máximo) | max(6.0, 5.0) = **6.0** | El par más lejano |
+| `average` | (6.0 + 5.0)/2 = **5.5** | El promedio |
+
+3. **Siguiente fusión:** ahora la menor es 3.0, entre C y D → grupo **{C,D}**.
+4. Quedan dos grupos, que se unen al final.
+
+El dendrograma dibuja exactamente esa secuencia, con la altura de cada unión igual a la distancia a la que ocurrió.
 
 ### El dendrograma y cómo leerlo
 
@@ -752,7 +942,602 @@ Así el nombre de la columna coincide con el número de componente y los gráfic
 
 ---
 
-## 18. Preguntas típicas de parcial
+## 18. Aprendizaje supervisado
+
+### La diferencia con lo que veníamos haciendo
+
+Imaginen dos formas de enseñarle frutas a un chico:
+
+1. **Le mostramos frutas diciéndole el nombre de cada una.** "Esto es una manzana, esto es una pera, esto es una manzana..." Después le damos una fruta nueva y le preguntamos qué es. → **Supervisado**: aprendió con las respuestas a la vista.
+2. **Le damos una bolsa de frutas mezcladas y le pedimos que arme montoncitos** con las que se parecen entre sí. Nunca le dijimos cómo se llaman. → **No supervisado**: encontró estructura por su cuenta.
+
+El TP1 era el caso 2: PCA, Isomap, t-SNE y los clustering nunca vieron la especie del pingüino. El TP2 es el caso 1.
+
+| | No supervisado (TP1) | Supervisado (TP2) |
+|---|---|---|
+| ¿El modelo ve la respuesta? | **Nunca** | **Sí, mientras entrena** |
+| Qué busca | Estructura escondida | Una regla para predecir |
+| Cómo se evalúa | Índices internos (Silhouette) | Comparando predicción contra realidad |
+| Ejemplos | PCA, K-means, jerárquico | Árboles, Naive Bayes, k-NN, SVM |
+
+### El vocabulario, que conviene tener clarísimo
+
+| Término | Qué significa | En nuestro TP2 |
+|---|---|---|
+| **Característica** (*feature*), predictor, variable de entrada | Lo que el modelo usa para decidir | `RyD_Spend`, `Edad`, `BP`... |
+| **Variable objetivo** (*target*), clase, etiqueta | Lo que hay que predecir | `Profit` (Parte A), `Droga` (Parte B) |
+| **`X`** | La tabla con todas las características | 996 × 6 en la Parte A |
+| **`y`** | La columna con la respuesta | 996 valores de ganancia |
+| **Muestra** / instancia / observación | Una fila | Una empresa, un paciente |
+| **Modelo** | La regla aprendida | El árbol con sus preguntas y umbrales |
+| **Entrenar** (`fit`) | Que el modelo mire `X` e `y` y arme la regla | — |
+| **Predecir** (`predict`) | Aplicar la regla a datos nuevos | — |
+
+### Parámetros contra hiperparámetros
+
+Esta distinción suele ser pregunta de parcial.
+
+| | **Parámetros** | **Hiperparámetros** |
+|---|---|---|
+| Quién los fija | **El algoritmo**, solo, al entrenar | **Nosotros**, antes de entrenar |
+| Ejemplo en un árbol | Qué variable usa cada nodo y en qué umbral corta | `max_depth`, `min_samples_leaf` |
+| Ejemplo en k-NN | (no tiene: guarda los datos) | `n_neighbors`, `metric` |
+| Cómo se eligen | Se aprenden de los datos | Probando combinaciones (`GridSearchCV`) |
+
+Metáfora: los hiperparámetros son **las perillas del horno** (temperatura, tiempo) que uno elige antes de cocinar; los parámetros son **cómo queda la torta por dentro**, que surge del proceso.
+
+### Los dos tipos de problema supervisado
+
+| | **Regresión** | **Clasificación** |
+|---|---|---|
+| Qué predice | Un **número** | Una **categoría** |
+| Nuestro caso | `Profit`: 118.675, 92.300... | `Droga`: una de 5 etiquetas |
+| ¿Tiene sentido promediar la respuesta? | Sí | No |
+| ¿Tiene sentido decir "se equivocó por 300"? | Sí | No: o acierta o no |
+| Métricas | MAE, MSE, RMSE | Exactitud, precisión, exhaustividad |
+
+**Cómo reconocerlo en un enunciado:** si la respuesta es un número que podría tomar infinitos valores, es regresión. Si es una de unas pocas opciones, es clasificación. Ojo con las trampas: predecir "cuántos hijos tiene una familia" (0, 1, 2, 3) es regresión aunque sean números enteros; predecir "nivel: bajo, medio, alto" es clasificación aunque exista un orden.
+
+### El flujo completo de un trabajo supervisado
+
+```
+1. Cargar y explorar los datos           (EDA)
+2. Limpiar                                (nulos, duplicados, outliers)
+3. SEPARAR en entrenamiento y test        ← el paso que cambia todo
+4. Preparar, aprendiendo solo del train   (codificar, escalar)
+5. Elegir hiperparámetros con el train    (validación cruzada)
+6. Entrenar el modelo final con el train
+7. Evaluar UNA SOLA VEZ con el test
+```
+
+Los pasos 3 a 7 son nuevos del TP2. El orden **no es negociable**: cada vez que se adelanta el paso 4 antes del 3, aparece la fuga de datos (sección 20).
+
+---
+
+## 19. Entrenamiento y test
+
+### El problema, con una metáfora
+
+Un profesor le da a un alumno 100 ejercicios resueltos para estudiar. Llega el examen y le toma **esos mismos 100 ejercicios**.
+
+El alumno que entendió saca 9. Pero el que se aprendió las respuestas de memoria, sin entender nada, saca 10. El examen no sirvió para distinguirlos.
+
+Eso pasa si entrenamos y evaluamos con los mismos datos: **el modelo que memoriza gana siempre**, y no es el que queremos. Lo que nos interesa es que funcione con una empresa que nunca vio.
+
+A esa capacidad se la llama **generalización**, y es el concepto central de todo el aprendizaje supervisado.
+
+### La solución
+
+Antes de entrenar, se apartan algunas filas y se guardan bajo llave:
+
+```
+   996 empresas
+        │
+        ├──── 796 (80%) → ENTRENAMIENTO: el modelo aprende acá
+        │
+        └──── 200 (20%) → TEST: guardado, se usa una sola vez al final
+```
+
+**El test no se toca para nada más.** No se mira para elegir hiperparámetros, no se usa para decidir qué variables sacar, no se usa para ajustar el escalador. Es el examen final.
+
+### `train_test_split`, parámetro por parámetro
+
+```python
+Xtrn, Xtst, ytrn, ytst = train_test_split(X, y, test_size=0.2,
+                                          random_state=63, shuffle=True)
+```
+
+| Parámetro | Qué hace | Qué pasa si se omite |
+|---|---|---|
+| `test_size=0.2` | Reserva el 20% para test | Por defecto 0.25 |
+| `random_state=63` | Fija el sorteo de qué filas van a cada lado | **Cada corrida da filas distintas**, y los resultados cambian: imposible reproducir el informe |
+| `shuffle=True` | Mezcla antes de cortar (viene activado) | Si el archivo está ordenado (por ejemplo, por clase), el test podría quedar con una sola categoría |
+| `stratify=y` | Conserva la proporción de clases en ambos lados | Con clases raras, pueden quedar casi todas de un lado |
+
+**Qué es `random_state` en criollo:** la computadora no sabe sortear de verdad; usa una fórmula que produce números que *parecen* al azar. La semilla es el punto de partida de esa fórmula. Con la misma semilla, el mismo "sorteo". Es como barajar un mazo siempre con el mismo movimiento exacto: parece desordenado, pero da siempre el mismo orden.
+
+Por eso el enunciado pide `random_state=63` en todo: para que el corrector obtenga exactamente nuestros números.
+
+### Devuelve cuatro cosas, en ese orden
+
+```python
+Xtrn, Xtst, ytrn, ytst = train_test_split(X, y, ...)
+#  │     │     │     └── respuestas del test (se comparan al final)
+#  │     │     └──────── respuestas del entrenamiento (el modelo las ve)
+#  │     └────────────── características del test
+#  └──────────────────── características del entrenamiento
+```
+
+Un error clásico es confundir el orden y recibir `Xtrn, ytrn, Xtst, ytst`. Siempre es **primero las dos X, después las dos y**.
+
+### Estratificación, con números
+
+`Droga` tiene 5 clases muy desparejas: DrogaY 91, DrogaX 54, DrogaA 23, DrogaC 16, DrogaB 16.
+
+Si el test es el 20% (40 pacientes) y se sortea sin estratificar, podría tocar que **ninguno** sea de DrogaB. Entonces:
+- No se puede medir si el modelo reconoce esa clase.
+- Y si por azar quedan todas en entrenamiento, el modelo la aprende pero nunca se lo evalúa.
+
+Con `stratify=y`, sklearn sortea **dentro de cada clase por separado** y arma el test respetando las proporciones: de 16 DrogaB, unas 3 van al test.
+
+**Regla:** en clasificación, estratificar siempre. En regresión no aplica (no hay clases que mantener).
+
+### Por qué el TP pide dos particiones
+
+El enunciado pide 80/20 **y** 70/30 para ver si las conclusiones aguantan al cambiar cuánto se entrena.
+
+| | Entrena con | Test de | Consecuencia |
+|---|---|---|---|
+| 80/20 | Más datos | 200 filas | Mejor modelo, medición más inestable |
+| 70/30 | Menos datos | 299 filas | Modelo quizá peor, medición más confiable |
+
+Es un compromiso: cuanto más grande el test, más confiable la medición, pero menos datos quedan para aprender.
+
+**Cuidado al interpretar:** si una partición da mejores métricas, eso **no** significa que sea "la mejor partición". Son dos sorteos distintos: con un test chico, un par de casos difíciles alcanza para mover el promedio.
+
+### Cuando aparece un tercer conjunto: validación
+
+Algunos notebooks de la cátedra parten en **tres**:
+
+```
+Datos → ENTRENAMIENTO ──→ el modelo aprende
+      → VALIDACIÓN   ──→ se prueban hiperparámetros acá
+      → TEST         ──→ medición final, una sola vez
+```
+
+La idea es la misma: si uno elige hiperparámetros mirando el test, el test se contamina. La validación cruzada (sección 21) resuelve lo mismo sin tener que apartar un tercer conjunto.
+
+---
+
+## 20. Fuga de datos (*data leakage*)
+
+**Es el error conceptual más grave del TP2**, y la filmina 70 de la unidad 4 lo marca especialmente.
+
+### La metáfora
+
+Un profesor prepara el examen. Para que sea "representativo", calcula el promedio de notas de todo el curso... **incluyendo las notas del examen que todavía no tomó**. Imposible, claro. Pero eso es exactamente lo que hacemos si calculamos la media para estandarizar usando también las filas del test.
+
+Otra forma de verlo: el test tiene que ser **una caja cerrada**. Todo lo que hagamos antes de abrirla debe poder hacerse sin espiar adentro.
+
+### Qué significa "ajustar" una transformación
+
+Varias transformaciones **aprenden números de los datos**:
+
+| Transformación | Qué aprende | Dónde lo guarda |
+|---|---|---|
+| `StandardScaler` | La media y el desvío de cada columna | `scaler.mean_`, `scaler.scale_` |
+| `OneHotEncoder` / `OrdinalEncoder` | Qué categorías existen | `enc.categories_` |
+| `SimpleImputer` | El valor con el que rellena | `imputer.statistics_` |
+| `Winsorizer` | Los límites del IQR | — |
+| `KBinsDiscretizer` | Dónde cortar los intervalos | `est.bin_edges_` |
+
+Si cualquiera de esos números se calcula con los datos del test, el test dejó de ser una caja cerrada.
+
+### La regla, y cómo se escribe
+
+```python
+# 1. PRIMERO separar
+Xtrn, Xtst, ytrn, ytst = train_test_split(X, y, test_size=0.2, random_state=63)
+
+# 2. El escalador APRENDE solo del entrenamiento
+scaler = StandardScaler()
+scaler.fit(Xtrn)            # ← acá mira los datos y calcula media y desvío
+
+# 3. Se APLICA a los dos
+Xtrn_std = scaler.transform(Xtrn)
+Xtst_std = scaler.transform(Xtst)   # ← usa la media del TRAIN, no la suya
+```
+
+⚠️ **`fit_transform` sobre el test es el error clásico.** `fit_transform(Xtst)` recalcularía la media con el test. Sobre el test va **siempre** `transform` a secas.
+
+### Cómo se detecta
+
+**1. Mirando el test estandarizado.** Si está bien hecho, el test **no** queda con media 0 y desvío 1. Esta es la tabla real de nuestro TP2:
+
+| | media entrenamiento | desvío entrenamiento | media test | desvío test |
+|---|---|---|---|---|
+| RyD_Spend | 0.0 | 1.001 | **0.086** | **1.047** |
+| Administration | 0.0 | 1.001 | **0.007** | **1.138** |
+| MarketingSpend | 0.0 | 1.001 | **0.097** | **1.057** |
+
+Si las cuatro columnas dieran 0 y 1, el escalador se ajustó con todo junto: fuga.
+
+**2. Métricas demasiado buenas.** Un modelo que en test da casi perfecto suele ser señal de que algo se filtró.
+
+### Las otras formas de fuga
+
+| Forma | Qué pasa | Cómo se evita |
+|---|---|---|
+| **Duplicados repartidos** | Una fila idéntica queda en train y en test: el modelo es evaluado con algo que ya vio | Eliminarlos **antes** de partir |
+| **Elegir hiperparámetros con el test** | Probar 36 combinaciones y quedarse con la mejor *en test* convierte al test en parte del entrenamiento | Validación cruzada (sección 21) |
+| **Elegir variables con el test** | Descartar columnas mirando su correlación calculada sobre todos los datos | Decidirlo con el entrenamiento |
+| **Datos temporales mal partidos** | Entrenar con datos de mañana para predecir lo de ayer | Partir por fecha, no al azar |
+
+### Por qué importa tanto
+
+Porque **la fuga no da error**. El código corre, las métricas salen y encima salen mejores. El problema aparece recién cuando el modelo se usa en la realidad y rinde mucho peor de lo prometido.
+
+---
+
+## 21. Validación cruzada y GridSearchCV
+
+### El problema
+
+Hay que elegir hiperparámetros. ¿Profundidad 3, 5 o 10? Para saberlo hay que probar y comparar. Pero:
+
+- Si comparamos **en entrenamiento**, gana siempre el árbol más grande: memoriza mejor.
+- Si comparamos **en test**, lo contaminamos y deja de ser una medición imparcial.
+
+Hace falta un tercer lugar donde probar.
+
+### La solución: k-fold
+
+Se parte **el entrenamiento** en k pedazos iguales (*folds*). Con k = 5:
+
+```
+Entrenamiento: [ A | B | C | D | E ]
+
+Vuelta 1:  entrena con B C D E   → evalúa con A
+Vuelta 2:  entrena con A C D E   → evalúa con B
+Vuelta 3:  entrena con A B D E   → evalúa con C
+Vuelta 4:  entrena con A B C E   → evalúa con D
+Vuelta 5:  entrena con A B C D   → evalúa con E
+
+Resultado = promedio de las 5 evaluaciones
+```
+
+**Metáfora:** en vez de un simulacro de examen, se hacen cinco, rotando qué parte de los apuntes se tapa. El promedio dice mucho más que un único simulacro, donde podría haber tocado justo el tema que uno sabía.
+
+**Ventajas:** cada fila se usa para evaluar exactamente una vez, se aprovechan todos los datos y la estimación es más estable. **Costo:** entrenar k veces en vez de una.
+
+**Por qué 5 o 10:** la filmina 43 de la unidad 4 lo dice directamente: "K típicamente 5 o 10". Con k muy chico, cada evaluación usa pocos datos; con k muy grande (k = n, llamado *leave-one-out*), hay que entrenar n veces.
+
+**Versión estratificada:** en clasificación, sklearn usa automáticamente `StratifiedKFold`, que arma los folds respetando la proporción de clases.
+
+### GridSearchCV: la grilla
+
+*Grid* quiere decir grilla o rejilla: todas las combinaciones posibles de los valores que uno propone.
+
+```python
+grilla = {"max_depth": [3, 5, 10, None],        # 4 valores
+          "min_samples_leaf": [1, 5, 10],        # 3 valores
+          "min_samples_split": [2, 5, 10]}       # 3 valores
+```
+
+Eso son 4 × 3 × 3 = **36 combinaciones**. Con `cv=5`, cada una se entrena 5 veces: **180 ajustes** en total. Por eso la búsqueda tarda bastante más que entrenar un solo modelo.
+
+```python
+busqueda = GridSearchCV(DecisionTreeRegressor(random_state=63),
+                        grilla, cv=5, scoring="neg_mean_squared_error")
+busqueda.fit(Xtrn, ytrn)      # ← solo el entrenamiento
+```
+
+Al terminar, `GridSearchCV` **reentrena la mejor combinación con todo el entrenamiento** y la deja lista en `best_estimator_`.
+
+| Atributo | Qué devuelve |
+|---|---|
+| `best_params_` | El diccionario con la combinación ganadora |
+| `best_estimator_` | El modelo ya entrenado, listo para `predict` |
+| `best_score_` | El puntaje promedio de la ganadora en validación cruzada |
+| `cv_results_` | La tabla completa de las 36 combinaciones, para justificar |
+
+### Los puntajes negativos
+
+sklearn tiene una regla única: **un score siempre se maximiza, más alto es mejor**. Con la exactitud funciona (0.95 > 0.80). Con los errores no, porque ahí más bajo es mejor.
+
+Para no tener dos reglas, sklearn le cambia el signo a los errores. Por eso existe `neg_mean_squared_error`: es el MSE multiplicado por −1.
+
+| Combinación | Puntaje de sklearn | MSE real |
+|---|---|---|
+| Peor | −30.244.068 | 30.244.068 |
+| **Mejor** | **−5.020.219** | **5.020.219** |
+
+−5.020.219 es mayor que −30.244.068 (está más cerca del cero), así que "elegir el más alto" sigue funcionando. Para leerlo hay que darlo vuelta:
+
+```python
+np.sqrt(-busqueda.best_score_)   # el - lo pasa a positivo, la raíz lo lleva a RMSE
+```
+
+### Los empates
+
+Es normal que varias combinaciones den exactamente el mismo puntaje. Suele pasar cuando un hiperparámetro **no llega a actuar**: si el árbol deja de crecer solo en profundidad 7, poner `max_depth=10` o no poner límite da el mismo árbol.
+
+Que los primeros puestos estén muy cerca (en nuestro caso, 2.241 contra 2.261, menos del 1%) dice algo útil: **la elección de hiperparámetros no es crítica en ese problema**. Conviene escribirlo en el informe.
+
+### El esquema completo
+
+```
+       ┌──────────────── DATOS ────────────────┐
+       │                                        │
+   ENTRENAMIENTO (80%)                      TEST (20%)
+       │                                        │
+   GridSearchCV:                            guardado
+   corta en 5 folds, prueba                 bajo llave
+   36 combinaciones, elige                      │
+       │                                        │
+   mejor modelo ────────── predict ────────────→│
+                                                 │
+                                          MAE / MSE / RMSE
+```
+
+---
+
+## 22. Árboles de decisión
+
+### La idea
+
+Un árbol de decisión es el juego de las 20 preguntas. Para estimar la ganancia de una empresa:
+
+> ¿Gasta en I+D menos de 82.150? → **Sí** → ¿Menos de 40.895? → **Sí** → ¿Menos de 20.963? → **Sí** → *la ganancia estimada es 57.695*
+
+Cada pregunta parte los datos en dos. Al final de cada camino hay una respuesta.
+
+```
+                  ¿RyD_Spend <= 82.150?
+                   /                  \
+                 sí                    no
+                 /                      \
+     ¿RyD <= 40.895?              ¿RyD <= 119.900?
+       /        \                    /         \
+    ...        ...                 ...         ...
+```
+
+### El vocabulario del árbol
+
+| Término | Qué es |
+|---|---|
+| **Nodo raíz** | La primera pregunta, arriba de todo. Contiene todas las muestras |
+| **Nodo interno** | Cualquier pregunta intermedia |
+| **Rama** | Cada salida de una pregunta (sí / no) |
+| **Hoja** | El final del camino. No pregunta nada: da la respuesta |
+| **Profundidad** | La cantidad de preguntas del camino más largo |
+| **División** (*split*) | El acto de partir un nodo en dos |
+
+**Qué responde una hoja:**
+- **Regresión:** el **promedio** de las muestras que cayeron ahí.
+- **Clasificación:** la clase **mayoritaria** de las que cayeron ahí.
+
+### Cómo elige cada pregunta (lo importante)
+
+El árbol prueba **todos los cortes posibles de todas las variables** y se queda con el que deja los dos grupos resultantes lo más **homogéneos** posible. Homogéneo significa "parecidos entre sí en la respuesta".
+
+Para medir eso hay dos familias de medidas según el problema.
+
+#### En clasificación: Gini y entropía
+
+Las dos miden **impureza**: cuán mezclado está un nodo.
+
+- **Nodo puro** (todos de la misma clase) → impureza **0**.
+- **Nodo mitad y mitad** → impureza **máxima**.
+
+**Gini** se calcula como `1 − Σ pᵢ²`, donde `pᵢ` es la proporción de cada clase.
+
+*Ejemplo hecho a mano.* Un nodo con 10 pacientes: 6 de DrogaY y 4 de DrogaX.
+
+```
+p(Y) = 6/10 = 0.6        p(X) = 4/10 = 0.4
+Gini = 1 − (0.6² + 0.4²) = 1 − (0.36 + 0.16) = 1 − 0.52 = 0.48
+```
+
+Si el nodo fuera 10 de DrogaY y 0 de DrogaX:
+
+```
+Gini = 1 − (1² + 0²) = 1 − 1 = 0      ← nodo puro
+```
+
+**Entropía** mide lo mismo con otra fórmula (`−Σ pᵢ·log₂(pᵢ)`) y va de 0 a 1 en el caso de dos clases. Gini es el criterio por defecto de sklearn; en la práctica dan árboles muy parecidos, y Gini es un poco más rápido de calcular.
+
+#### Cómo se compara un corte: la función de costo
+
+No alcanza con mirar un nodo hijo: hay que mirar los dos, **pesados por cuántas muestras tiene cada uno**.
+
+*Ejemplo de las filminas (pág. 24-28), con 20 personajes, 10 "malos" y 10 "buenos":*
+
+| Corte | Hijo izquierdo | Hijo derecho | Costo |
+|---|---|---|---|
+| **A** | 4 rojos, 0 verdes (Gini 0) | 6 rojos, 10 verdes (Gini 0.47) | 0.375 |
+| **B** | 2 rojos, 0 verdes (Gini 0) | 8 rojos, 10 verdes (Gini 0.49) | 0.446 |
+
+El costo sale de promediar las impurezas pesando por el tamaño: `(4/20)×0 + (16/20)×0.47 = 0.375`. **Gana el corte A**, que tiene menor costo.
+
+El árbol repite esto en cada nodo, con todos los cortes posibles. Ese procedimiento se llama **CART**.
+
+#### En regresión: el error cuadrático
+
+No hay clases, así que "homogéneo" significa **respuestas parecidas entre sí**. Se mide con el error cuadrático medio dentro del nodo: cuánto se alejan los valores de su propio promedio.
+
+En la Figura 4 de nuestro TP2 esto se ve numéricamente: el `squared_error` baja de 1.555 millones en la raíz a 416 y 352 millones en el nivel siguiente. Cada corte deja grupos con ganancias más parecidas.
+
+### Cómo se lee un nodo en `plot_tree`
+
+Cada cajita tiene cuatro líneas:
+
+```
+┌──────────────────────────────┐
+│ RyD_Spend <= 82150.5         │  ← la pregunta (las hojas no la tienen)
+│ squared_error = 1555005087   │  ← impureza: qué tan dispares son las respuestas
+│ samples = 796                │  ← cuántas muestras llegaron
+│ value = 117928.4             │  ← la respuesta del nodo (promedio)
+└──────────────────────────────┘
+```
+
+**Izquierda siempre es "sí"** (se cumple la condición), derecha es "no". En clasificación, en lugar de `squared_error` aparece `gini`, y `value` muestra el recuento por clase, más una línea `class =` con la mayoritaria.
+
+El **color** indica el valor predicho: más intenso, más alto (regresión) o más puro (clasificación).
+
+### Sobreajuste y subajuste
+
+| | Qué pasa | Error en entrenamiento | Error en test |
+|---|---|---|---|
+| **Subajuste** | El árbol es tan simple que no capta el patrón | Alto | Alto |
+| **Justo** | Capta el patrón, ignora el ruido | Bajo | Bajo |
+| **Sobreajuste** | Memoriza hasta el ruido | **Casi 0** | Alto |
+
+Un árbol sin límites sigue partiendo hasta dejar **una hoja por muestra**: ahí acierta el 100% en entrenamiento, pero aprendió las particularidades de esas filas, no la regla general.
+
+**Metáfora del alumno:** el que subajusta estudió solo los títulos; el que sobreajusta se aprendió los ejercicios de memoria, palabra por palabra, y se cuelga si cambian un número.
+
+#### Sesgo y varianza
+
+Es la forma técnica de decir lo mismo, con la metáfora del tiro al blanco:
+
+| | Qué es | Dardos |
+|---|---|---|
+| **Sesgo** alto | El modelo simplifica demasiado | Todos juntos, pero lejos del centro |
+| **Varianza** alta | El modelo es hipersensible a los datos | Desparramados por todo el tablero |
+
+Subajuste = mucho sesgo. Sobreajuste = mucha varianza. Hay que buscar el punto medio, y en árboles eso se controla con los hiperparámetros y la poda.
+
+### Los hiperparámetros, uno por uno
+
+| Parámetro | Qué controla | Valor chico | Valor grande |
+|---|---|---|---|
+| `max_depth` | Cuántas preguntas encadena como máximo | Árbol simple: riesgo de subajuste | Árbol profundo: riesgo de sobreajuste |
+| `min_samples_leaf` | Mínimo de muestras que debe quedar **en una hoja** | Hojas con 1 caso: sobreajuste | Hojas grandes: árbol simple |
+| `min_samples_split` | Mínimo de muestras para **intentar partir** un nodo | Parte casi siempre | Corta antes: árbol simple |
+| `criterion` | La medida de impureza | `gini` (defecto) o `entropy` | — |
+| `ccp_alpha` | Poda posterior | 0: no poda nada | Poda agresiva |
+| `class_weight` | Compensar clases desbalanceadas | — | `'balanced'` da más peso a las raras |
+
+**La diferencia entre `min_samples_leaf` y `min_samples_split`**, que se confunden: el primero mira **el resultado** (ninguna hoja puede quedar con menos de ese número); el segundo mira **antes de partir** (un nodo con menos de ese número ni lo intenta).
+
+### Prepoda y poscada (poda)
+
+| | Cuándo actúa | Cómo |
+|---|---|---|
+| **Prepoda** | Mientras crece | `max_depth`, `min_samples_leaf`, `min_samples_split` |
+| **Poda** (*post-pruning*) | Después, sobre el árbol ya crecido | `ccp_alpha` |
+
+La poda deja crecer el árbol entero y después **corta las ramas que menos aportan**: las que casi no reducen el error pero agregan complejidad. `ccp_alpha` regula cuán exigente es ese corte: con 0 no poda nada, y cuanto más grande, más ramas elimina. Se usa en la Parte B del TP2.
+
+### Importancia de las variables
+
+`feature_importances_` indica cuánto contribuyó cada variable a reducir la impureza en todas sus divisiones. Suma 1 entre todas.
+
+En nuestro árbol de regresión:
+
+| Variable | Importancia |
+|---|---|
+| RyD_Spend | **0.9890** |
+| MarketingSpend | 0.0065 |
+| Administration | 0.0045 |
+| Las tres de State | 0.0000 |
+
+Importancia 0 significa que el árbol **nunca** la usó para dividir. Ojo: si dos variables están muy correlacionadas (como `RyD_Spend` y `MarketingSpend`, con 0.98), el árbol usa una y la otra queda con importancia baja, aunque sea igual de informativa.
+
+### Ventajas y desventajas
+
+**A favor:**
+- **Se puede leer y explicar**: es su gran virtud. Se puede mostrar el árbol y seguir el camino de una predicción.
+- No necesita escalado (por eso los notebooks de la unidad 4 no estandarizan).
+- Acepta variables numéricas y categóricas.
+- Resiste los outliers: parte por umbrales, así que un valor altísimo no "tira" del modelo como en una regresión lineal.
+
+**En contra:**
+- Sobreajusta con facilidad si no se lo limita.
+- **Inestable**: cambiar unas pocas filas puede dar un árbol bastante distinto.
+- Sus fronteras son escalonadas (cortes paralelos a los ejes), así que aproxima mal una relación diagonal.
+
+---
+
+## 23. Métricas de regresión
+
+Las tres responden lo mismo —cuánto se equivoca el modelo— pero tratan distinto a los errores grandes.
+
+### Ejemplo hecho a mano
+
+Cinco empresas, con su ganancia real y la estimada:
+
+| Empresa | Real | Estimado | Error | \|Error\| | Error² |
+|---|---|---|---|---|---|
+| 1 | 100.000 | 99.000 | −1.000 | 1.000 | 1.000.000 |
+| 2 | 120.000 | 120.500 | +500 | 500 | 250.000 |
+| 3 | 90.000 | 89.800 | −200 | 200 | 40.000 |
+| 4 | 150.000 | 149.700 | −300 | 300 | 90.000 |
+| 5 | 80.000 | 90.000 | +10.000 | 10.000 | **100.000.000** |
+
+**MAE** = promedio de la columna |Error| = (1.000 + 500 + 200 + 300 + 10.000) / 5 = **2.400**
+
+**MSE** = promedio de la columna Error² = 101.380.000 / 5 = **20.276.000**
+
+**RMSE** = √20.276.000 = **4.503**
+
+Miren lo que pasó: cuatro empresas tienen errores chiquitos y una se desvió 10.000. El MAE dice 2.400; el RMSE dice 4.503, casi el doble. **El caso feo pesa mucho más en el RMSE.**
+
+### Por qué se elevan al cuadrado los errores
+
+Dos motivos:
+
+1. **Para que no se cancelen.** Si una predicción se pasa por 1.000 y otra se queda corta por 1.000, el promedio simple daría 0 y parecería perfecto. El cuadrado (o el valor absoluto) lo evita.
+2. **Para castigar más los errores grandes.** Equivocarse por 10.000 cuenta 100 veces más que por 1.000, no 10 veces. En muchos problemas eso tiene sentido: un error enorme hace más daño que varios chicos.
+
+### Las tres, comparadas
+
+| | Fórmula | Unidades | Sensible a errores grandes | ¿Se interpreta directo? |
+|---|---|---|---|---|
+| **MAE** | promedio de \|real − predicho\| | Las de la variable | Poco | **Sí**: "en promedio me equivoco por tanto" |
+| **MSE** | promedio de (real − predicho)² | **Al cuadrado** | Mucho | No: está en pesos² |
+| **RMSE** | √MSE | Las de la variable | Mucho | Sí |
+
+**Por qué suele usarse RMSE y no MSE:** está en las mismas unidades que la variable, así que se puede comparar con su escala. El MSE queda en "pesos al cuadrado", que no significa nada intuitivo.
+
+**Por qué igual se calcula el MSE:** es la función que los modelos minimizan internamente, porque es derivable (el valor absoluto del MAE no lo es en el cero).
+
+### La brecha entre MAE y RMSE es información
+
+El RMSE **siempre** es mayor o igual que el MAE. Lo informativo es cuánto:
+
+| Relación | Qué significa |
+|---|---|
+| RMSE ≈ MAE | Todos los errores son parecidos |
+| RMSE bastante mayor | Hay unos pocos errores grandes entre muchos chicos |
+
+En nuestro TP2 (80/20): MAE 997 y RMSE 3.585, más del triple. Eso anticipa lo que después muestra la Figura 5: casi todos los puntos pegados a la diagonal, y un puñado lejos.
+
+### Cómo saber si un error es "bueno"
+
+**Un MAE de 997 no significa nada por sí solo.** Hay que compararlo con la escala de la variable:
+
+- Ganancia media: 118.675 → el error es **menos del 1%**. Muy bueno.
+- Si la variable promediara 2.000, ese mismo error sería del 50%. Malísimo.
+
+Siempre hay que relativizar. Una forma rápida es comparar el RMSE con el **desvío estándar** de la variable objetivo: si el RMSE es mucho menor, el modelo explica bastante; si se le parece, el modelo no es mejor que predecir siempre el promedio.
+
+### R²
+
+El **coeficiente de determinación** (filmina 67 de la unidad 4) mide qué proporción de la variabilidad de la variable objetivo logra explicar el modelo.
+
+| Valor | Significa |
+|---|---|
+| **1** | Perfecto: explica toda la variabilidad |
+| **0** | No es mejor que predecir siempre el promedio |
+| **Negativo** | Peor que predecir el promedio |
+
+Es cómodo porque no depende de las unidades, así que permite comparar problemas distintos. El enunciado del TP2 no lo pide, pero es el `scoring` por defecto de sklearn para regresores.
+
+---
+
+## 24. Preguntas típicas de parcial
 
 **¿Por qué hay que estandarizar antes de PCA o de un clustering?**
 Porque trabajan con varianzas y distancias. Sin estandarizar, la variable con los números más grandes domina el resultado solo por su unidad de medida.
@@ -761,7 +1546,10 @@ Porque trabajan con varianzas y distancias. Sin estandarizar, la variable con lo
 La proporción de la variabilidad total de los datos que captura esa componente.
 
 **¿Cuántas componentes conservo?**
-Las que indique el criterio elegido: varianza acumulada del 75-80%, eigenvalue > 1 (Kaiser) o el quiebre del codo. Alcanza con **uno** de los tres, justificándolo.
+Las que indique el criterio elegido: varianza acumulada del 75-80%, eigenvalue > 1 (Kaiser) o el codo. Alcanza con **uno** de los tres, justificándolo.
+
+**En el método del codo, ¿la componente del quiebre se incluye?**
+**Sí.** Se conservan todas hasta la del quiebre, incluyéndola. Vale igual para elegir el k de K-means. Es lo que nos corrigió el profesor en el TP1 (sección 25).
 
 **¿Qué es un eigenvalue en PCA?**
 La varianza de la componente. Con datos estandarizados, uno mayor que 1 significa que esa componente aporta más que una variable original.
@@ -800,7 +1588,7 @@ Porque parte de una configuración aleatoria. La calidad (el KL) se mantiene, pe
 No. t-SNE expande las zonas densas y comprime las dispersas, así que ni las distancias entre grupos ni sus tamaños relativos son interpretables.
 
 **¿Por qué no se puede usar el KL para elegir la perplejidad?**
-Porque la perplejidad define la tabla de vecindades contra la que se mide el error: al cambiarla se compara contra otra referencia. Solo sirve para comparar iteraciones o componentes.
+Porque la perplejidad define la tabla de vecindades contra la que se mide el error: al cambiarla se compara contra otra referencia. Solo sirve para comparar iteraciones o componentes. De todos modos el KL no se vio en clase y no conviene usarlo para justificar decisiones en una entrega (sección 25).
 
 **¿Qué método elegirías para cada cosa?**
 PCA si se necesita interpretar qué variables pesan y cuánta información se conserva; t-SNE si solo se quiere ver si existen grupos; Isomap si la estructura es curva y se quiere conservar la noción de distancia.
@@ -832,13 +1620,183 @@ El criterio que une, en cada paso, los dos clusters cuya fusión menos aumenta l
 **¿Qué hacer si Silhouette y GAP indican números distintos?**
 Mirar cuánta diferencia hay entre los valores, qué dicen los otros indicadores (dendrograma) y qué grupos se forman con cada k. A nosotros GAP dio 7 por 0.007 y elegimos 6.
 
+**¿Por qué hay que separar en entrenamiento y test?**
+Para medir si el modelo generaliza. Evaluarlo con los datos con los que aprendió premia al que memoriza.
+
+**¿Qué es la fuga de datos y cómo se evita?**
+Que información del test se filtre al entrenamiento. Se evita separando primero y ajustando todas las transformaciones (escalado, codificación, imputación, discretización) **solo con el entrenamiento**.
+
+**¿Cómo se comprueba que el escalado se hizo bien?**
+El entrenamiento queda con media 0 y desvío 1; el test, no exactamente. Si el test también diera 0 y 1, el escalador se habría ajustado con todos los datos.
+
+**¿Para qué sirve la validación cruzada si ya tengo un conjunto de test?**
+Para elegir hiperparámetros sin tocar el test. Si se eligiera mirando el test, dejaría de ser una medición imparcial.
+
+**¿Qué hace `GridSearchCV`?**
+Prueba todas las combinaciones de una grilla, evalúa cada una por validación cruzada dentro del entrenamiento y devuelve la mejor.
+
+**¿Cómo decide un árbol por dónde cortar?**
+Prueba todos los cortes posibles y elige el que deja los dos grupos más homogéneos: por error cuadrático en regresión, por Gini o entropía en clasificación.
+
+**¿Qué diferencia hay entre Gini y entropía?**
+Las dos miden impureza de un nodo: 0 si es puro. Gini es el criterio por defecto de sklearn; en la práctica dan resultados muy parecidos.
+
+**¿Cómo se evita que un árbol sobreajuste?**
+Limitando su crecimiento (`max_depth`, `min_samples_leaf`, `min_samples_split`) o podándolo después (`ccp_alpha`).
+
+**¿Por qué los árboles no necesitan estandarización?**
+Porque parten por umbrales sobre cada variable por separado; cambiar la escala no altera el orden de los valores ni, por lo tanto, los cortes.
+
+**¿Qué significa que MAE y RMSE estén muy separados?**
+Que hay unas pocas predicciones con error grande entre muchas muy buenas: el RMSE castiga más esos casos.
+
+**¿Por qué el MSE no se interpreta directamente?**
+Porque queda en unidades al cuadrado. Para leerlo en las unidades de la variable se usa el RMSE.
+
 **¿Media o mediana para imputar?**
 La mediana, si hay asimetría o valores extremos, porque no se deja arrastrar por ellos.
 
 ---
 
-## 19. Temas que todavía no vimos
+## 25. Lo que nos corrigió el profesor en el TP1
+
+El TP1 se aprobó con **7**. La devolución llegó el 16/10/2026, con el trabajo ya entregado, así que el notebook no se modificó: lo que sigue es para no repetirlo en el TP2 ni en el parcial.
+
+**Lo que estuvo bien:** el análisis descriptivo, el tratamiento de nulos y duplicados, Isomap entero, y la justificación de cuántas componentes conservar en PCA.
+
+**1. El codo incluye el punto del quiebre.** Nuestra frase "el quiebre se produce en la tercera componente, por lo que conservamos las anteriores: 2 componentes" está mal: por ese criterio eran **3**. Lo mismo en K-means, donde escribimos que la inercia bajaba de forma pronunciada hasta k=6 y el quiebre en realidad se lee en 4 o 5. Es la corrección más importante, porque es una regla y no una interpretación. Aclaró que, cuando el codo no alcanza, está bien seguir con Silhouette y GAP: el k=6 final no fue objetado.
+
+**2. Los barridos de parámetros se declaran completos.** Para t-SNE pidió una figura variando la perplejidad con las iteraciones fijas y otra variando las iteraciones con la perplejidad fija, para terminar eligiendo **la mejor combinación** de los dos. Eso fue lo que hicimos (perplejidad con `max_iter=1000`, iteraciones con `perplexity=15`), pero los valores fijos quedaron escritos solo en el título de las figuras y el texto decía "con el resto de los parámetros fijos". Conclusión práctica: **el valor fijo va en el texto**, y el cierre del barrido nombra la combinación elegida, no un parámetro a la vez.
+
+**3. No se decide con métricas que no se vieron en clase.** Usamos el KL para elegir la cantidad de componentes de t-SNE sin explicar qué es ni qué significa que baje. Y explicarlo tampoco era salida, porque el enunciado prohíbe incluir teoría en el informe. Lo que corresponde es decidir con los criterios de clase y con lo que se ve en los gráficos.
+
+**4. Hay que mostrar cómo quedan los grupos, en todos los métodos.** En K-means cruzamos los clusters con especie y sexo (Tablas 20 y 21) y además los graficamos en 3D con los centroides (Figura 17). En el jerárquico quedaron las tablas (24 y 25) pero no el gráfico, y lo marcó como que no mostramos los grupos. Cada método de clustering cierra con la composición de sus clusters **y** su visualización.
+
+**Lo transversal:** tres de las cuatro observaciones son de redacción, no de código. Los cálculos estaban bien; lo que falló fue cómo se leyó el gráfico (1), qué se dejó sin aclarar (2) y qué se usó para justificar (3).
+
+---
+
+## 26. Temas que todavía no vimos
 
 Se van a agregar a este archivo, con la misma explicación para principiantes, cuando los trabajemos:
 
-- Vistos en clase pero fuera del TP1: MDS, UMAP, DBSCAN, HDBSCAN, división en entrenamiento y prueba (TP2)
+**Del TP2, todavía sin usar:**
+- Poda de árboles con `ccp_alpha` (Parte B, actividad 4)
+- Métricas de clasificación: precisión, exhaustividad, exactitud, macro contra micro (actividad 4)
+- Matriz de confusión (actividad 4)
+- Desbalance de clases (actividad 3)
+- Naive Bayes y discretización por cuantiles (actividad 5)
+- k-NN: distancias, elección de k (actividad 6)
+
+**Vistos en clase pero fuera de los TPs:** MDS, UMAP, DBSCAN, HDBSCAN y SVM (unidad 5).
+
+---
+
+## 27. Resumen de una carilla
+
+Para repasar el día antes. Todo lo de acá está explicado en detalle en las secciones anteriores.
+
+### Los dos mundos
+
+| | **No supervisado** (unidades 2 y 3) | **Supervisado** (unidades 4 y 5) |
+|---|---|---|
+| ¿Ve la respuesta? | No | Sí, al entrenar |
+| Objetivo | Encontrar estructura | Predecir |
+| Métodos | PCA, Isomap, t-SNE, K-means, jerárquico | Árboles, Naive Bayes, k-NN, SVM |
+| Evaluación | Silhouette, GAP | MAE/RMSE (regresión), exactitud/precisión/exhaustividad (clasificación) |
+
+### Preparación de datos: el orden
+
+```
+1. Explorar  →  2. Limpiar  →  3. SEPARAR train/test  →  4. Codificar  →  5. Escalar
+                                      ↑
+                 todo lo que aprende algo de los datos va DESPUÉS de acá,
+                 y se ajusta (fit) SOLO con el entrenamiento
+```
+
+- **Estandarizar** (z-score): `(valor − media) / desvío` → media 0, desvío 1.
+- **Siempre antes** de PCA, Isomap, t-SNE, K-means, jerárquico y k-NN. **No hace falta** en árboles.
+- **Categóricas:** con orden → `OrdinalEncoder`; sin orden → one-hot.
+- **Comprobación de que no hubo fuga:** el test **no** debe quedar con media 0 y desvío 1.
+
+### Reducción de la dimensionalidad
+
+| | PCA | Isomap | t-SNE |
+|---|---|---|---|
+| Tipo | Lineal | No lineal | No lineal |
+| Preserva | Varianza (global) | Distancias geodésicas | Vecindades (local) |
+| Parámetro clave | — | `n_neighbors` | `perplexity` (5-50) |
+| Ejes interpretables | **Sí** (cargas) | No | No |
+| Determinista | Sí | Sí | **No** |
+| Cuidado | — | k chico: grafo desconectado; k grande: atajos | No leer tamaños ni distancias entre grupos |
+
+**Cuántas componentes en PCA, los 3 criterios:**
+1. **Varianza acumulada:** llegar al 75-80%.
+2. **Kaiser:** eigenvalues > 1.
+3. **Codo:** donde la curva se aplana. ⚠️ **La componente del quiebre se incluye.**
+
+Alcanza con justificar **uno**.
+
+### Clustering
+
+| | K-means | Jerárquico |
+|---|---|---|
+| Cómo funciona | Asignar al centroide más cercano y recalcular, hasta estabilizar | Unir de a dos los grupos más parecidos |
+| Hay que fijar k antes | Sí | No: se corta el dendrograma después |
+| Determinista | No (`random_state`) | Sí |
+| Salida extra | Centroides, inercia | Dendrograma |
+
+**Cómo elegir k:**
+- **Codo:** inercia contra k; se corta donde se aplana. ⚠️ **El k del quiebre se incluye.**
+- **Silhouette:** `s = (b − a) / max(a, b)`, de −1 a 1. Más alto, mejor. Se busca el máximo.
+- **GAP:** compara la dispersión real contra la de datos aleatorios uniformes **en el rango de cada variable**. Se busca el máximo.
+
+**Enlaces del jerárquico:** `single` (mínimo), `complete` (máximo), `average` (promedio), `ward` (el que menos aumenta la dispersión interna; el más usado).
+
+### Supervisado: el esquema
+
+```
+   ENTRENAMIENTO (80%)                    TEST (20%)
+         │                                     │
+   GridSearchCV con cv=5:                  guardado
+   prueba combinaciones,                   bajo llave
+   elige por validación cruzada                │
+         │                                     │
+   mejor modelo ───────── predict ────────────→│
+                                          métricas finales
+```
+
+- **`random_state=63`** en todo (lo pide el enunciado del TP2).
+- **`stratify=y`** en clasificación, para conservar la proporción de clases.
+- Los puntajes `neg_...` de sklearn son negativos: se dan vuelta para leerlos.
+
+### Árboles de decisión
+
+- **Cómo elige un corte:** prueba todos y se queda con el que deja los hijos más homogéneos, pesando por cuántas muestras tiene cada uno.
+- **Impureza:** Gini `= 1 − Σpᵢ²` o entropía (clasificación); error cuadrático (regresión). Nodo puro = 0.
+- **Hoja:** responde el promedio (regresión) o la clase mayoritaria (clasificación).
+- **Hiperparámetros:** `max_depth`, `min_samples_leaf` (mínimo que queda en la hoja), `min_samples_split` (mínimo para intentar partir), `ccp_alpha` (poda posterior).
+- **Sobreajuste:** error casi 0 en entrenamiento y alto en test. **Subajuste:** alto en los dos.
+- **Ventaja principal:** se puede leer y explicar. **Desventaja:** inestable y sobreajusta fácil.
+
+### Métricas
+
+**Regresión:**
+
+| | Qué es | Unidades |
+|---|---|---|
+| MAE | Promedio de \|error\| | Las de la variable |
+| MSE | Promedio de error² | Al cuadrado |
+| RMSE | √MSE | Las de la variable |
+
+RMSE mucho mayor que MAE → hay pocos errores grandes entre muchos chicos. Siempre comparar el error con la escala de la variable.
+
+**Clasificación** (se ven en la Parte B del TP2): exactitud, precisión, exhaustividad, matriz de confusión; con clases desbalanceadas se reportan en **macro** (promedio por clase, sin pesar por tamaño).
+
+### Las trampas que ya nos costaron puntos
+
+1. **El codo incluye la componente o el k del quiebre.**
+2. **No usar métricas que no se vieron en clase** para justificar decisiones (nos pasó con el KL).
+3. **Mostrar siempre cómo quedan los grupos**, con tabla y gráfico, en todos los métodos de clustering.
+4. **Escribir los valores fijos** cuando se barre un parámetro ("perplejidad 15, variando las iteraciones").
+5. **Citar solo números que se ven** en una figura, tabla o salida del notebook.

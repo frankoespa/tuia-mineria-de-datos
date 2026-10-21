@@ -104,6 +104,86 @@ Convenciones del notebook:
 - Se usa pandas 3: las columnas de texto tienen dtype `str` y no `object` como en los notebooks de clase.
 - **Nombres de las componentes:** `scikit-learn` numera las columnas de salida desde cero (`pca0`, `pca1`, ...). Apenas se ajusta un método de reducción, sus columnas se renombran con el prefijo del método y numeradas desde 1: `PC1`, `PC2`, ... en PCA; `ISO1`, `ISO2` en Isomap; `TSNE1`, `TSNE2` en t-SNE.
 
+## Devolución del profesor sobre el TP1 (nota 7)
+
+Recibida el 16/10/2026, con el TP1 ya entregado. **Decisión de los autores: el TP1 no se corrige.** Las observaciones se aplican de acá en adelante (TP2 y parcial); los conceptos involucrados están en la sección 25 de `RepasoParcial.md`.
+
+Aprobado sin objeciones: el análisis descriptivo, el tratamiento de nulos y duplicados, Isomap, y la justificación de la cantidad de componentes de PCA.
+
+| Observación | Qué dijo | Criterio a aplicar de ahora en más |
+|---|---|---|
+| **Codo en PCA** | El quiebre está en la tercera componente, así que había que tomar **3**, no 2 | En el método del codo **la componente del quiebre se incluye**. El notebook dice "el quiebre se produce en la tercera componente, por lo que conservamos las anteriores" (celda `pca-13`): eso es lo que marcó mal |
+| **Codo en K-means** | El quiebre se produce en k=4 o 5, no en 6 como dice la celda `km-04`. Aclaró que está bien pasar a otros criterios si el codo no alcanza | Misma regla: el k del quiebre se incluye. El k=6 final, elegido por Silhouette y GAP, no fue objetado |
+| **Barridos de t-SNE** | Pidió variar la perplejidad con las iteraciones fijas y variar las iteraciones con la perplejidad fija, para elegir **la mejor combinación** de los dos parámetros; dijo que no aclaramos los valores fijos | Es lo que hicimos, pero los valores fijos figuraban solo en el `suptitle` de las Figuras 11 y 12 y el markdown decía "con el resto de los parámetros fijos". Hay que **escribir el valor fijo en el texto** de cada barrido y cerrar explicitando la combinación elegida |
+| **La medida KL** | No se vio en clase, y la usamos para elegir la cantidad de componentes sin explicar qué es ni qué significa que mejore | **No usar métricas que no se vieron en clase** para justificar decisiones. Explicarla tampoco era salida, porque el enunciado prohíbe incluir teoría: se decide con los criterios de clase y con lo que se observa en los gráficos |
+| **Clustering jerárquico** | "No imprimen cómo quedan los grupos" | Mostrar la composición de los clusters **en todos los métodos**, con tabla y gráfico. Las Tablas 24 y 25 sí los cruzan con especie y sexo, pero faltó la figura equivalente a la 17 de K-means |
+
+## TP2 (unidades 4 y 5)
+
+Enunciado: `tp2/TP2.pdf`. Entrega: `tp2/tp2_mineria_renna_esparza.ipynb`, un solo archivo.
+
+**Parte A, regresión** (`1000_Companies.csv`, estimar `Profit`): EDA y preparación con dos particiones (80/20 y 70/30); `DecisionTreeRegressor` explorando `max_depth`, `min_samples_leaf` y `min_samples_split`; gráfico del árbol; MAE, MSE y RMSE en ambos test.
+
+**Parte B, clasificación** (`drugType.csv`, estimar `Droga`): lo mismo con particiones **estratificadas**; `DecisionTreeClassifier` con poda `ccp_alpha` (árbol antes y después); Naive Bayes (discretización por cuantiles con 3 y 5 intervalos contra `GaussianNB`); k-NN (5 valores de `n_neighbors`, métricas euclidean y manhattan); tabla comparativa de los tres y elección justificada. Métricas: Precision y Recall **macro**, Accuracy y matriz de confusión.
+
+**`random_state=63` en todo** (constante `SEMILLA` en el notebook). Máximo 3-4 gráficos por actividad.
+
+### Datos
+
+| | `1000_Companies.csv` | `drugType.csv` |
+|---|---|---|
+| Tamaño | 1000 × 5 | 200 × 6 |
+| Objetivo | `Profit` (continua) | `Droga` (5 clases) |
+| Numéricas | RyD_Spend, Administration, MarketingSpend | Edad, Na_a_K |
+| Categóricas | State (nominal) | Sexo (binaria), BP y Colesterol (ordinales) |
+| Nulos | 0 | 0 |
+| Duplicados | 1 | 0 |
+| Particularidad | `Profit ≈ 0.871 × RyD_Spend + 48.403`: casi determinista. `RyD_Spend` y `MarketingSpend` correlacionan 0.98 entre sí | **Clases desbalanceadas**: DrogaY 91, DrogaX 54, DrogaA 23, DrogaC 16, DrogaB 16 |
+
+### Lo que impone la teoría de las unidades 4 y 5
+
+- **U4, filmina 70: estandarizar DESPUÉS de separar train/test.** El `fit` del escalador, del codificador, del imputador y del discretizador va **solo con el entrenamiento**; al test se le aplica `transform`. Es la diferencia central con el TP1.
+- **Los notebooks de árboles (U4) no estandarizan**: ni importan `StandardScaler`. Los de U5 (k-NN, Bayes) sí, porque usan distancias. Por eso en el TP2 se estandariza en la preparación (lo pide el enunciado y lo necesita la Parte B), pero **los árboles se entrenan con los valores originales**, para que los umbrales del gráfico se lean en las unidades de los datos.
+- **Patrón de preparación de la U5** (`U5_KNNClassifier_heart.ipynb`, celdas 14, 24 y 31): `train_test_split` → `enc.fit(Xtrn)` + `transform` en ambos → `scaler.fit(Xtrn[num_cols])` + `transform` en ambos. Solo se escalan las numéricas.
+- **Validación cruzada:** `GridSearchCV(cv=5)` se usa en U4 clasificación (`scoring='f1_weighted'`), U5 k-NN (`scoring='accuracy'`) y U5 SVM (sin `scoring`). El **único** que no la usa es U4 regresión, que parte en tres (train/val/test) y recorre la grilla con `itertools.product`. Las filminas 40-47 de la U4 explican k-fold y Monte Carlo, y dicen "K típicamente 5 o 10".
+- **Grilla de la U4 regresión** (celda 83), que es la que usamos: `max_depth: [3, 5, 10, None]`, `min_samples_split: [2, 5, 10]`, `min_samples_leaf: [1, 5, 10]`.
+- **Graficar árboles:** la teoría usa `export_graphviz` + `graphviz`, que **no está instalado**. Se usa `plot_tree` de sklearn, que los propios notebooks importan.
+
+### Convenciones propias del TP2
+
+- Prefijos de celda: `pa-` (Parte A) y `pb-` (Parte B), numerados en orden. `cab-`, `conf-` e `imp-` como en el TP1.
+- **Figuras y tablas se numeran desde 1**, independientes del TP1. Hoy el notebook llega a la **Figura 5** y la **Tabla 10** (fin de la actividad 2).
+- El kernel arranca en `tp2/`, así que los CSV se leen con ruta relativa.
+- Sin `n_jobs=-1` en `GridSearchCV`: en Windows deja tracebacks de joblib al cerrar los procesos y parecen errores en la entrega.
+
+### Estado
+
+| Actividad | Contenido | Estado |
+|---|---|---|
+| A1 | EDA, limpieza, codificación, particiones y estandarización | Hecho |
+| A2 | Árbol de regresión: `GridSearchCV`, Figura 4 (árbol), Figura 5 (estimado contra real), Tabla 10 (MAE/MSE/RMSE) | Hecho |
+| B1 | EDA de `drugType.csv`, desbalance, codificación, particiones estratificadas | Pendiente |
+| B2 | Árbol de clasificación con poda `ccp_alpha` | Pendiente |
+| B3 | Naive Bayes | Pendiente |
+| B4 | k-NN | Pendiente |
+| B5 | Comparación de los tres y conclusiones | Pendiente |
+
+**Decisiones de los autores en la Parte A:**
+
+| Problema | Decisión | Justificación |
+|---|---|---|
+| 1 fila duplicada | `drop_duplicates()` → 999 | Si quedara repartida entre train y test, el modelo sería evaluado con una fila que ya vio |
+| 3 filas con `Profit` atípico (las últimas del archivo: 997, 998, 999) | **Eliminadas** con el criterio IQR sobre `Profit` → 996 filas | Rompen la relación que siguen las otras 996 y, por ser la variable objetivo, distorsionan la medición del error |
+| 22 atípicos en `Administration` | **Se conservan** | Es un predictor, no el objetivo; los árboles parten por umbrales |
+| `State` | One-hot (3 columnas) | No tiene orden: codificarlo 0/1/2 daría distancias falsas en k-NN |
+| Búsqueda de hiperparámetros | `GridSearchCV(cv=5)` con la grilla de la U4 | Decisión de los autores; la herramienta se usa en 3 de los 4 notebooks de clase |
+
+**Resultados de la Parte A:** mejores parámetros 80/20 `max_depth=10, min_samples_leaf=1, min_samples_split=10` (141 hojas) y 70/30 `max_depth=10, min_samples_leaf=5, min_samples_split=2` (106 hojas). MAE 997.20 / 949.77; RMSE 3585.19 / 2890.49. `RyD_Spend` concentra el 98.9% de la importancia y las tres columnas de `State` quedan en 0.
+
+### Ejecutar el notebook del TP2
+
+Igual que el del TP1, con `PYTHONUTF8=1` obligatorio. Tarda unos 15 segundos.
+
 ## Estado del TP1
 
 ### Consigna 1: análisis exploratorio, limpieza y estandarización (terminada)
