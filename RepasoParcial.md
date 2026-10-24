@@ -1095,6 +1095,39 @@ Es un compromiso: cuanto más grande el test, más confiable la medición, pero 
 
 **Cuidado al interpretar:** si una partición da mejores métricas, eso **no** significa que sea "la mejor partición". Son dos sorteos distintos: con un test chico, un par de casos difíciles alcanza para mover el promedio.
 
+### El desbalance de clases
+
+Una clase está **desbalanceada** cuando aparece mucho más o mucho menos que las otras. En `drugType.csv`:
+
+| Droga | Pacientes | Porcentaje |
+|---|---|---|
+| DrogaY | 91 | **45.5%** |
+| DrogaX | 54 | 27.0% |
+| DrogaA | 23 | 11.5% |
+| DrogaC | 16 | **8.0%** |
+| DrogaB | 16 | **8.0%** |
+
+**Por qué importa.** Un modelo que prediga **siempre DrogaY**, sin mirar nada, acierta el 45.5% de las veces. Si solo miramos la exactitud, ese modelo inútil parece medio decente. Con desbalances extremos es peor: en un problema donde el 99% es "sano", predecir siempre "sano" da 99% de exactitud y no detecta ningún enfermo.
+
+**Las tres consecuencias prácticas:**
+
+1. **Estratificar las particiones** (`stratify=y`), para que las clases chicas aparezcan en ambos conjuntos.
+2. **No mirar solo la exactitud**: hay que ver el rendimiento **por clase** (precisión y exhaustividad, sección 24) y la matriz de confusión.
+3. **Reportar en macro**: el promedio simple entre clases, sin pesar por tamaño, para que DrogaB (8%) pese lo mismo que DrogaY (45%).
+
+Otra opción, que usa el notebook de la unidad 4, es `class_weight='balanced'`: hace que el modelo le dé más peso a los errores en las clases chicas durante el entrenamiento.
+
+### Cómo se comprueba que la estratificación funcionó
+
+Comparando el porcentaje de cada clase entre el conjunto completo y cada partición. Con nuestros datos:
+
+| Droga | Conjunto completo | Train 80/20 | Test 80/20 |
+|---|---|---|---|
+| DrogaY | 45.5% | 45.6% | 45.0% |
+| DrogaB | 8.0% | 8.1% | 7.5% |
+
+Las proporciones se mantienen. Sin estratificar, con 16 pacientes de DrogaB y un test de 40, podría haber quedado ninguno.
+
 ### Cuando aparece un tercer conjunto: validación
 
 Algunos notebooks de la cátedra parten en **tres**:
@@ -1368,6 +1401,83 @@ No hay clases, así que "homogéneo" significa **respuestas parecidas entre sí*
 
 En la Figura 4 de nuestro TP2 esto se ve numéricamente: el `squared_error` baja de 1.555 millones en la raíz a 416 y 352 millones en el nivel siguiente. Cada corte deja grupos con ganancias más parecidas.
 
+### De dónde sale un umbral como `RyD_Spend <= 82150.5`
+
+Una duda habitual: ¿cómo "sabe" el modelo qué pregunta hacer? **No lo sabe: las prueba todas y se queda con la mejor.** Es fuerza bruta.
+
+#### Paso 1: armar la lista de preguntas candidatas
+
+Para cada variable, ordena sus valores y toma el **punto medio entre cada par consecutivo**. Si dos empresas gastaron 81.836 y 82.465:
+
+```
+(81.836 + 82.465) / 2 = 82.150,5     ← un candidato
+```
+
+Por eso los umbrales terminan en ,5 o en decimales raros: son puntos medios, no valores que existan en los datos. Se parte por el medio para que el corte quede lo más lejos posible de ambas muestras.
+
+En nuestro nodo raíz, con 796 empresas y 6 columnas, salieron **2.382 cortes candidatos**.
+
+#### Paso 2: puntuar cada candidato
+
+Se parte el nodo y se mide cuán desparejos quedan los dos hijos, **pesando por cuántas muestras tiene cada uno**:
+
+```
+costo = (n_izq × impureza_izq + n_der × impureza_der) / n_total
+```
+
+La impureza es el error cuadrático (regresión) o Gini / entropía (clasificación).
+
+#### Paso 3: quedarse con el menor costo
+
+La cuenta real del nodo raíz de nuestro TP2:
+
+| | Empresas | Ganancia media | MSE |
+|---|---|---|---|
+| Izquierda (≤ 82.150,5) | 414 | 85.078 | 416.126.989 |
+| Derecha (> 82.150,5) | 382 | 153.531 | 352.183.105 |
+
+```
+costo = (414 × 416.126.989 + 382 × 352.183.105) / 796 = 385.440.351
+```
+
+El nodo **sin partir** tenía un MSE de 1.555.005.088. El corte lo baja a la cuarta parte: por eso vale la pena.
+
+**Comparación con otros cortes de la misma variable:**
+
+| Corte | Costo |
+|---|---|
+| **82.150,5** (el elegido) | **385.440.351** |
+| 82.618 | 385.463.508 |
+| 81.479 | 385.494.797 |
+| 120.000 (arbitrario) | 634.376.639 |
+
+Los umbrales cercanos dan costos casi iguales (el corte "no es mágico", hay toda una zona buena), pero uno lejano empeora mucho.
+
+**Comparación entre variables** (el mejor corte de cada una):
+
+| Variable | Su mejor umbral | Costo |
+|---|---|---|
+| **RyD_Spend** | 82.150,5 | **385.440.351** |
+| MarketingSpend | 225.993 | 410.041.306 |
+| Administration | 122.490 | 459.791.980 |
+| State_Florida | 0,5 | 1.550.411.063 |
+
+Las columnas de `State` casi no reducen el costo respecto del nodo sin partir (1.555 millones). Por eso terminaron con importancia **0**: el árbol nunca las eligió.
+
+#### Paso 4: repetir en cada hijo
+
+El mismo procedimiento se aplica a los 414 de la izquierda y a los 382 de la derecha, y así sucesivamente, hasta que un hiperparámetro lo frene (`max_depth`, `min_samples_leaf`...) o el nodo quede puro.
+
+#### Una propiedad importante: es un algoritmo voraz (*greedy*)
+
+Elige el mejor corte **en cada momento**, sin evaluar si uno peor ahora permitiría cortes mucho mejores más abajo. Es como jugar al ajedrez mirando solo la jugada siguiente.
+
+Consecuencia: **el árbol que se obtiene no es necesariamente el mejor árbol posible**, sino el que resulta de ir eligiendo bien paso a paso. Encontrar el óptimo global sería computacionalmente inviable.
+
+#### Y con las variables categóricas
+
+Para una columna binaria (0/1), como las de one-hot, el único corte posible es `<= 0.5`, que equivale a preguntar "¿es de este estado, sí o no?". Por eso en la tabla de arriba el umbral de `State_Florida` es 0,5.
+
 ### Cómo se lee un nodo en `plot_tree`
 
 Cada cajita tiene cuatro líneas:
@@ -1620,6 +1730,9 @@ El criterio que une, en cada paso, los dos clusters cuya fusión menos aumenta l
 **¿Qué hacer si Silhouette y GAP indican números distintos?**
 Mirar cuánta diferencia hay entre los valores, qué dicen los otros indicadores (dendrograma) y qué grupos se forman con cada k. A nosotros GAP dio 7 por 0.007 y elegimos 6.
 
+**¿Qué problema trae el desbalance de clases?**
+Que la exactitud engaña: predecir siempre la clase mayoritaria ya da un valor alto. Hay que estratificar, mirar las métricas por clase y reportarlas en macro.
+
 **¿Por qué hay que separar en entrenamiento y test?**
 Para medir si el modelo generaliza. Evaluarlo con los datos con los que aprendió premia al que memoriza.
 
@@ -1637,6 +1750,12 @@ Prueba todas las combinaciones de una grilla, evalúa cada una por validación c
 
 **¿Cómo decide un árbol por dónde cortar?**
 Prueba todos los cortes posibles y elige el que deja los dos grupos más homogéneos: por error cuadrático en regresión, por Gini o entropía en clasificación.
+
+**¿De dónde salen los umbrales con decimales, como 82.150,5?**
+Son los puntos medios entre valores consecutivos de la variable. El árbol genera un candidato por cada par de valores consecutivos y los evalúa todos.
+
+**¿Por qué se dice que el árbol es un algoritmo voraz?**
+Porque en cada nodo elige el mejor corte del momento, sin mirar si uno peor permitiría mejores cortes más abajo. No garantiza el árbol óptimo global.
 
 **¿Qué diferencia hay entre Gini y entropía?**
 Las dos miden impureza de un nodo: 0 si es puro. Gini es el criterio por defecto de sklearn; en la práctica dan resultados muy parecidos.
