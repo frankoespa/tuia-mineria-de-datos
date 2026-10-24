@@ -32,10 +32,11 @@ Cada vez que aparece un tema nuevo en un TP, se agrega acá con su explicación.
 21. [Validación cruzada y GridSearchCV](#21-validación-cruzada-y-gridsearchcv)
 22. [Árboles de decisión](#22-árboles-de-decisión)
 23. [Métricas de regresión](#23-métricas-de-regresión)
-24. [Preguntas típicas de parcial](#24-preguntas-típicas-de-parcial)
-25. [Lo que nos corrigió el profesor en el TP1](#25-lo-que-nos-corrigió-el-profesor-en-el-tp1)
-26. [Temas que todavía no vimos](#26-temas-que-todavía-no-vimos)
-27. [Resumen de una carilla](#27-resumen-de-una-carilla)
+24. [Métricas de clasificación](#24-métricas-de-clasificación)
+25. [Preguntas típicas de parcial](#25-preguntas-típicas-de-parcial)
+26. [Lo que nos corrigió el profesor en el TP1](#26-lo-que-nos-corrigió-el-profesor-en-el-tp1)
+27. [Temas que todavía no vimos](#27-temas-que-todavía-no-vimos)
+28. [Resumen de una carilla](#28-resumen-de-una-carilla)
 
 ---
 
@@ -1647,7 +1648,93 @@ Es cómodo porque no depende de las unidades, así que permite comparar problema
 
 ---
 
-## 24. Preguntas típicas de parcial
+## 24. Métricas de clasificación
+
+En regresión medíamos cuánto se desviaba un número. Acá la respuesta es una categoría: o se acierta o no.
+
+### La matriz de confusión
+
+Es el punto de partida de todo. Cruza **lo que era** (filas) contra **lo que el modelo dijo** (columnas):
+
+```
+                      PREDICHO
+                  DrogaX   DrogaC
+   REAL  DrogaX  [  11   ,    0  ]   ← 11 bien clasificados
+         DrogaC  [   3   ,    0  ]   ← 3 que eran C y dijo X
+```
+
+La **diagonal** son los aciertos. Todo lo que está fuera de la diagonal es un error, y la matriz dice exactamente **con qué se confundió cada clase**, que es lo que una métrica global no muestra.
+
+En nuestro TP2 las matrices del árbol son perfectamente diagonales: ni un caso fuera de lugar.
+
+### Los cuatro casos, en problemas de dos clases
+
+Pensando en una clase como "positiva":
+
+| | Predijo positivo | Predijo negativo |
+|---|---|---|
+| **Es positivo** | **VP** (verdadero positivo) | **FN** (falso negativo) |
+| **Es negativo** | **FP** (falso positivo) | **VN** (verdadero negativo) |
+
+### Las tres métricas
+
+**Exactitud** (*accuracy*): de todo lo que predije, ¿qué proporción acerté?
+
+```
+exactitud = aciertos / total = (VP + VN) / todo
+```
+
+Es la más intuitiva, pero **engaña con clases desbalanceadas**: predecir siempre DrogaY acierta el 45.5%.
+
+**Precisión** (*precision*): de los que **dije** que eran de esta clase, ¿cuántos lo eran?
+
+```
+precisión = VP / (VP + FP)        ← mira la COLUMNA de la matriz
+```
+
+**Exhaustividad** (*recall*): de los que **realmente** eran de esta clase, ¿a cuántos encontré?
+
+```
+exhaustividad = VP / (VP + FN)    ← mira la FILA de la matriz
+```
+
+**La metáfora del pescador.** Sale a pescar truchas con una red:
+- **Precisión:** de todo lo que sacó en la red, ¿qué proporción eran truchas? (si sacó botas y latas, bajó la precisión)
+- **Exhaustividad:** de todas las truchas que había en el río, ¿cuántas pescó? (si quedaron muchas, bajó la exhaustividad)
+
+Una red enorme pesca todas las truchas (exhaustividad 1) pero llena de basura (precisión baja). Una red diminuta que saca una sola trucha tiene precisión 1 y exhaustividad pésima. **Siempre hay tensión entre las dos.**
+
+**Cuál importa más depende del problema:**
+
+| Situación | Qué prioriza |
+|---|---|
+| Diagnosticar una enfermedad grave | **Exhaustividad**: es peor no detectar un enfermo |
+| Filtro de correo no deseado | **Precisión**: es peor mandar a spam un correo importante |
+
+**F1** combina ambas en un solo número (su media armónica). No lo pide el enunciado del TP2, pero `f1_weighted` se usa como criterio en la búsqueda de hiperparámetros.
+
+### Macro, micro y weighted
+
+Con más de dos clases, precisión y exhaustividad se calculan **por clase** y después hay que resumirlas:
+
+| Promedio | Cómo | Cuándo usarlo |
+|---|---|---|
+| **macro** | Promedio simple entre clases | Cuando **todas las clases importan igual**, aunque sean chicas |
+| **weighted** | Promedio pesado por la cantidad de cada clase | Cuando interesa el rendimiento global |
+| **micro** | Junta todos los casos y calcula una vez | Equivale a la exactitud en clasificación multiclase |
+
+*Ejemplo de por qué importa.* Supongamos 5 clases donde el modelo acierta todo salvo una clase chica de 16 casos, que falla por completo:
+
+- **weighted** apenas baja: esa clase pesa un 8%.
+- **macro** baja mucho: ese 0 pesa un quinto del promedio.
+
+Es exactamente lo que pasó con nuestro árbol podado: la exactitud cayó de 1.00 a 0.93, pero la **precisión macro se desplomó a 0.76**, porque DrogaC quedó en 0.
+
+**Por eso el enunciado pide macro:** con clases desbalanceadas, es la única forma de que un fallo en una clase chica se note.
+
+---
+
+## 25. Preguntas típicas de parcial
 
 **¿Por qué hay que estandarizar antes de PCA o de un clustering?**
 Porque trabajan con varianzas y distancias. Sin estandarizar, la variable con los números más grandes domina el resultado solo por su unidad de medida.
@@ -1766,6 +1853,15 @@ Limitando su crecimiento (`max_depth`, `min_samples_leaf`, `min_samples_split`) 
 **¿Por qué los árboles no necesitan estandarización?**
 Porque parten por umbrales sobre cada variable por separado; cambiar la escala no altera el orden de los valores ni, por lo tanto, los cortes.
 
+**¿Qué diferencia hay entre precisión y exhaustividad?**
+La precisión mira la columna de la matriz: de los que dije que eran de esta clase, cuántos lo eran. La exhaustividad mira la fila: de los que realmente eran, a cuántos encontré.
+
+**¿Por qué se reportan las métricas en macro y no en weighted?**
+Porque macro promedia las clases sin pesar por tamaño, así que un fallo en una clase chica se nota. Con weighted, una clase del 8% casi no mueve el resultado.
+
+**¿Por qué la exactitud no alcanza con clases desbalanceadas?**
+Porque predecir siempre la clase mayoritaria ya da un valor alto sin que el modelo haya aprendido nada.
+
 **¿Qué significa que MAE y RMSE estén muy separados?**
 Que hay unas pocas predicciones con error grande entre muchas muy buenas: el RMSE castiga más esos casos.
 
@@ -1777,7 +1873,7 @@ La mediana, si hay asimetría o valores extremos, porque no se deja arrastrar po
 
 ---
 
-## 25. Lo que nos corrigió el profesor en el TP1
+## 26. Lo que nos corrigió el profesor en el TP1
 
 El TP1 se aprobó con **7**. La devolución llegó el 16/10/2026, con el trabajo ya entregado, así que el notebook no se modificó: lo que sigue es para no repetirlo en el TP2 ni en el parcial.
 
@@ -1795,15 +1891,11 @@ El TP1 se aprobó con **7**. La devolución llegó el 16/10/2026, con el trabajo
 
 ---
 
-## 26. Temas que todavía no vimos
+## 27. Temas que todavía no vimos
 
 Se van a agregar a este archivo, con la misma explicación para principiantes, cuando los trabajemos:
 
 **Del TP2, todavía sin usar:**
-- Poda de árboles con `ccp_alpha` (Parte B, actividad 4)
-- Métricas de clasificación: precisión, exhaustividad, exactitud, macro contra micro (actividad 4)
-- Matriz de confusión (actividad 4)
-- Desbalance de clases (actividad 3)
 - Naive Bayes y discretización por cuantiles (actividad 5)
 - k-NN: distancias, elección de k (actividad 6)
 
@@ -1811,7 +1903,7 @@ Se van a agregar a este archivo, con la misma explicación para principiantes, c
 
 ---
 
-## 27. Resumen de una carilla
+## 28. Resumen de una carilla
 
 Para repasar el día antes. Todo lo de acá está explicado en detalle en las secciones anteriores.
 
