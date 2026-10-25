@@ -1494,6 +1494,22 @@ Cada cajita tiene cuatro líneas:
 
 **Izquierda siempre es "sí"** (se cumple la condición), derecha es "no". En clasificación, en lugar de `squared_error` aparece `gini`, y `value` muestra el recuento por clase, más una línea `class =` con la mayoritaria.
 
+Ejemplo de clasificación, la raíz de nuestro árbol de drogas:
+
+```
+┌──────────────────────────────┐
+│ Na_a_K <= 14.829             │  ← la pregunta
+│ gini = 0.694                 │  ← muy mezclado: hay 5 drogas
+│ samples = 160                │  ← todo el entrenamiento 80/20
+│ value = [18, 13, 13, 43, 73] │  ← cuántos de cada droga, en orden alfabético:
+│ class = DrogaY               │     DrogaA, DrogaB, DrogaC, DrogaX, DrogaY
+└──────────────────────────────┘
+```
+
+Una hoja con `gini = 0.0` y `value = [0, 0, 0, 0, 73]` es **pura**: los 73 pacientes son de la misma droga.
+
+**Ojo con las categóricas codificadas:** el árbol las ve como números. `BP <= 1.5` significa "Bajo (0) o Normal (1)" contra "Alto (2)", y `BP <= 0.5` es "Bajo" contra "Normal". Para leer el gráfico hay que tener a mano el orden con que se codificó.
+
 El **color** indica el valor predicho: más intenso, más alto (regresión) o más puro (clasificación).
 
 ### Sobreajuste y subajuste
@@ -1532,7 +1548,7 @@ Subajuste = mucho sesgo. Sobreajuste = mucha varianza. Hay que buscar el punto m
 
 **La diferencia entre `min_samples_leaf` y `min_samples_split`**, que se confunden: el primero mira **el resultado** (ninguna hoja puede quedar con menos de ese número); el segundo mira **antes de partir** (un nodo con menos de ese número ni lo intenta).
 
-### Prepoda y poscada (poda)
+### Prepoda y poda
 
 | | Cuándo actúa | Cómo |
 |---|---|---|
@@ -1540,6 +1556,21 @@ Subajuste = mucho sesgo. Sobreajuste = mucha varianza. Hay que buscar el punto m
 | **Poda** (*post-pruning*) | Después, sobre el árbol ya crecido | `ccp_alpha` |
 
 La poda deja crecer el árbol entero y después **corta las ramas que menos aportan**: las que casi no reducen el error pero agregan complejidad. `ccp_alpha` regula cuán exigente es ese corte: con 0 no poda nada, y cuanto más grande, más ramas elimina. Se usa en la Parte B del TP2.
+
+**De dónde salen los valores de `ccp_alpha` a probar.** No hace falta inventarlos: `arbol.cost_complexity_pruning_path(Xtrn, ytrn)` recorre el árbol ya crecido y devuelve **los valores exactos en los que el árbol cambia**. Entre dos de esos valores el árbol podado es el mismo, así que probar números intermedios no agrega nada.
+
+**Analogía:** un rosal. Con tijera suave (alpha chico) se cortan solo las ramitas que casi no dan flores; con tijera más fuerte, ramas cada vez más grandes; con la máxima, queda el tronco pelado. El "camino de poda" es la lista de puntos donde la tijera corta algo nuevo.
+
+En nuestro árbol de 6 hojas el camino dio 0, 0.0624, 0.0944 y 0.1442 (más un último valor que deja una sola hoja, que se descarta):
+
+| `ccp_alpha` | Hojas | Drogas que puede predecir | f1 de validación cruzada |
+|---|---|---|---|
+| **0** | 6 | 5 | **0.987** |
+| 0.0624 | 4 | 4 (desaparece DrogaC) | 0.907 |
+| 0.0944 | 3 | 3 | 0.794 |
+| 0.1442 | 2 | 2 | 0.705 |
+
+Cada valor se evalúa con validación cruzada sobre el entrenamiento, igual que cualquier otro hiperparámetro, y se elige el de mejor puntaje. Acá fue 0: **no podar**. Podar no siempre mejora: si el árbol ya es chico y cada hoja separa algo real, cortar significa perder información. La primera poda une la hoja de DrogaC con la de DrogaX, y una clase entera deja de existir para el modelo.
 
 ### Importancia de las variables
 

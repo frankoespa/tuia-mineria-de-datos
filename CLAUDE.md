@@ -152,7 +152,7 @@ Enunciado: `tp2/TP2.pdf`. Entrega: `tp2/tp2_mineria_renna_esparza.ipynb`, un sol
 ### Convenciones propias del TP2
 
 - Prefijos de celda: `pa-` (Parte A) y `pb-` (Parte B), numerados en orden. `cab-`, `conf-` e `imp-` como en el TP1.
-- **Figuras y tablas se numeran desde 1**, independientes del TP1. Hoy el notebook llega a la **Figura 5** y la **Tabla 10** (fin de la actividad 2).
+- **Figuras y tablas se numeran desde 1**, independientes del TP1. Hoy el notebook llega a la **Figura 11** y la **Tabla 18** (fin de la actividad 4).
 - El kernel arranca en `tp2/`, así que los CSV se leen con ruta relativa.
 - Sin `n_jobs=-1` en `GridSearchCV`: en Windows deja tracebacks de joblib al cerrar los procesos y parecen errores en la entrega.
 
@@ -162,11 +162,21 @@ Enunciado: `tp2/TP2.pdf`. Entrega: `tp2/tp2_mineria_renna_esparza.ipynb`, un sol
 |---|---|---|
 | A1 | EDA, limpieza, codificación, particiones y estandarización | Hecho |
 | A2 | Árbol de regresión: `GridSearchCV`, Figura 4 (árbol), Figura 5 (estimado contra real), Tabla 10 (MAE/MSE/RMSE) | Hecho |
-| B1 | EDA de `drugType.csv`, desbalance, codificación, particiones estratificadas | Pendiente |
-| B2 | Árbol de clasificación con poda `ccp_alpha` | Pendiente |
-| B3 | Naive Bayes | Pendiente |
-| B4 | k-NN | Pendiente |
-| B5 | Comparación de los tres y conclusiones | Pendiente |
+| B3 | EDA de `drugType.csv`, desbalance (Figura 6, Tabla 13), numéricas y categóricas por droga (Figuras 7 y 8), atípicos, codificación ordinal y particiones estratificadas (Tabla 15) | Hecho |
+| B4 | Árbol de clasificación: `GridSearchCV` con `f1_weighted` (Tabla 16), árbol sin podar (Figura 9), camino de `ccp_alpha` (Tabla 17), árbol podado (Figura 10), métricas (Tabla 18) y matrices de confusión (Figura 11) | Hecho |
+| B5 | Naive Bayes | En curso |
+| B6 | k-NN | Pendiente |
+| B7 | Comparación de los tres y conclusiones | Pendiente |
+
+**Numeración:** las secciones del notebook siguen el número de actividad del enunciado (A1-A2 y B3-B7), no una cuenta propia de la Parte B.
+
+**Resultados de la Parte B hasta ahora:**
+- `Na_a_K` separa por completo a DrogaY (mínimo 15.0 contra máximo 14.6 del resto); `BP` define dónde aparece cada una de las otras; `Edad` separa DrogaA de DrogaB; `Sexo` no aporta. Los 8 atípicos de `Na_a_K` son todos DrogaY y se conservan.
+- Codificación: `OrdinalEncoder` con orden explícito (`Sexo` F<M, `BP` Bajo<Normal<Alto, `Colesterol` Normal<Alto); `Droga` queda como texto. `preparar_pacientes(test_size)` devuelve sin escalar y escaladas (solo `Edad` y `Na_a_K`); el árbol usa las sin escalar.
+- Árbol: 27 de 36 combinaciones empatan en f1 de validación cruzada (0.9868 en 80/20); el árbol crece solo hasta profundidad 4 con 6 hojas puras. Cortes: `Na_a_K <= 14.829` → DrogaY; `BP <= 1.5`; `Edad <= 50.5` (A/B); `BP <= 0.5` (normal → DrogaX); `Colesterol <= 0.5` (X/C).
+- **Grilla del clasificador (decisión de los autores: se deja como está):** la misma de la regresión, porque el enunciado pide los mismos tres hiperparámetros; la del notebook de clase no los incluye. Se evaluó agregar `class_weight: [None, 'balanced']` (lo usa la U4): empata en f1 (0.9868 / 0.9729) y da 1.0 en test, pero arma árboles más grandes (9 y 8 hojas contra 6). También se vio que el f1 por profundidad es 0.628 / 0.767 / 0.860 / 0.987 / 0.987 (1 a 5): el árbol se satura en 4. Ninguno de los dos cambios se aplicó.
+- Poda (solo en 80/20): `ccp_alpha` en 0 / 0.0624 / 0.0944 / 0.1442 da f1 0.987 / 0.907 / 0.794 / 0.705. Se elige **0, no podar**: con 0.0624 se van `BP <= 0.5` y `Colesterol` y DrogaC deja de predecirse (hoja de 56 con 13 DrogaC).
+- Test: exactitud, precisión macro y exhaustividad macro **1.0 en las dos particiones**; matrices diagonales.
 
 **Decisiones de los autores en la Parte A:**
 
