@@ -33,10 +33,11 @@ Cada vez que aparece un tema nuevo en un TP, se agrega acá con su explicación.
 22. [Árboles de decisión](#22-árboles-de-decisión)
 23. [Métricas de regresión](#23-métricas-de-regresión)
 24. [Métricas de clasificación](#24-métricas-de-clasificación)
-25. [Preguntas típicas de parcial](#25-preguntas-típicas-de-parcial)
-26. [Lo que nos corrigió el profesor en el TP1](#26-lo-que-nos-corrigió-el-profesor-en-el-tp1)
-27. [Temas que todavía no vimos](#27-temas-que-todavía-no-vimos)
-28. [Resumen de una carilla](#28-resumen-de-una-carilla)
+25. [Naive Bayes](#25-naive-bayes)
+26. [Preguntas típicas de parcial](#26-preguntas-típicas-de-parcial)
+27. [Lo que nos corrigió el profesor en el TP1](#27-lo-que-nos-corrigió-el-profesor-en-el-tp1)
+28. [Temas que todavía no vimos](#28-temas-que-todavía-no-vimos)
+29. [Resumen de una carilla](#29-resumen-de-una-carilla)
 
 ---
 
@@ -1765,7 +1766,113 @@ Es exactamente lo que pasó con nuestro árbol podado: la exactitud cayó de 1.0
 
 ---
 
-## 25. Preguntas típicas de parcial
+## 25. Naive Bayes
+
+### La idea: dar vuelta la pregunta
+
+Lo que queremos saber es **"dado este paciente, ¿qué droga le corresponde?"**. Eso es difícil de calcular directamente. Lo que sí es fácil de contar en los datos es lo contrario: **"de los pacientes que tomaron DrogaY, ¿qué proporción tenía presión alta?"**.
+
+El **teorema de Bayes** permite pasar de lo segundo a lo primero. En criollo:
+
+```
+probabilidad de la clase  ∝  (qué tan común es esa clase) × (qué tan típicos son estos
+                              síntomas en esa clase)
+```
+
+Se calcula ese número **para cada clase** y se elige la mayor. Nada más.
+
+### Por qué "ingenuo"
+
+Porque supone que **los atributos son independientes entre sí dentro de cada clase**. Es decir, asume que saber la presión no dice nada sobre el colesterol de ese paciente.
+
+Casi nunca es cierto: en nuestros datos de empresas, el gasto en investigación y el de marketing van de la mano. Esa es la parte "ingenua" (*naive*) del nombre.
+
+**Lo curioso es que funciona igual.** Aunque las probabilidades calculadas estén mal, lo único que importa es **cuál clase queda primera**, y el orden suele mantenerse. Es un modelo que acierta por las razones equivocadas.
+
+### Cómo clasifica, paso a paso
+
+Supongamos un paciente con presión alta y colesterol normal, y dos drogas candidatas.
+
+**1. Probabilidad de cada clase** (cuán común es), contando en el entrenamiento:
+
+```
+P(DrogaA) = 23/200 = 0.115
+P(DrogaY) = 91/200 = 0.455
+```
+
+**2. Probabilidad de cada síntoma dentro de cada clase:**
+
+```
+P(presión alta | DrogaA) = 23/23 = 1.00     ← todos los DrogaA tienen presión alta
+P(presión alta | DrogaY) = 38/91 = 0.42
+```
+
+**3. Se multiplica todo** (acá entra la suposición de independencia: se pueden multiplicar porque se asume que no se influyen):
+
+```
+DrogaA:  0.115 × 1.00 × ...
+DrogaY:  0.455 × 0.42 × ...
+```
+
+**4. Gana la más alta.**
+
+### El problema de la probabilidad cero
+
+Si en el entrenamiento **ninguna** DrogaC tuvo presión alta, entonces `P(presión alta | DrogaC) = 0`, y al multiplicar **todo el producto se hace 0**: esa clase queda descartada para siempre, aunque el resto de los síntomas coincida perfectamente.
+
+La solución es el **suavizado de Laplace**: se suma 1 a todos los conteos, de modo que ninguna probabilidad sea exactamente 0. En sklearn es el parámetro `alpha` (vale 1 por defecto).
+
+### Las variantes
+
+| Variante | Para qué datos | Qué supone |
+|---|---|---|
+| **GaussianNB** | Variables **continuas** | Que dentro de cada clase siguen una campana de Gauss |
+| **CategoricalNB** | Variables **categóricas** (o continuas discretizadas) | Cuenta frecuencias por categoría |
+| **MultinomialNB** | Conteos (texto, palabras) | Valores no negativos |
+| **BernoulliNB** | Variables binarias (0/1) | — |
+
+⚠️ `MultinomialNB` **no acepta valores negativos**, así que no se le pueden pasar datos estandarizados. En el notebook de la unidad 5 se lo entrena solo con las columnas categóricas por ese motivo.
+
+### Discretizar variables continuas
+
+Para usar `CategoricalNB` con variables como la edad, hay que convertirlas en categorías: cortarlas en intervalos.
+
+| Estrategia | Cómo corta | Resultado |
+|---|---|---|
+| **Igual ancho** (*equal-width*) | Intervalos del mismo tamaño | Algunos pueden quedar casi vacíos |
+| **Igual frecuencia** (*equal-frequency* o cuantiles) | Intervalos con la misma **cantidad de datos** | Anchos distintos, todos igual de poblados |
+
+El enunciado del TP2 pide la segunda, que en sklearn es `KBinsDiscretizer(strategy="quantile")`.
+
+**El costo de discretizar: se pierden los umbrales finos.** Nos pasó exactamente eso. En nuestros datos, `Na_a_K > 15` identifica DrogaY a la perfección, pero los cortes por cuantiles quedaron así:
+
+| Intervalos | Límites de `Na_a_K` |
+|---|---|
+| 3 | 6.27 — **11.42 — 18.3** — 38.25 |
+| 5 | 6.27 — 9.87 — **12.81 — 16.12** — 22.76 — 38.25 |
+
+El valor 15 **cae dentro de un intervalo** en los dos casos, de modo que pacientes de DrogaY quedan mezclados con pacientes de otras drogas en la misma categoría. Por eso:
+
+| Modelo | Exactitud (80/20) |
+|---|---|
+| Árbol de decisión | **1.0000** |
+| CategoricalNB, 5 intervalos | 0.9250 |
+| GaussianNB | 0.8500 |
+| CategoricalNB, 3 intervalos | 0.8250 |
+
+Con 5 intervalos el tramo problemático es más angosto (de 12.81 a 16.12 en lugar de 11.42 a 18.3), así que se mezclan menos pacientes y el resultado mejora.
+
+**Moraleja para el parcial:** cuando una clase se define por un umbral exacto, discretizar lo borronea. Los árboles, que buscan el umbral, tienen ventaja en esos casos.
+
+### Ventajas y desventajas
+
+**A favor:** es muy rápido (solo cuenta frecuencias), necesita pocos datos para entrenar, funciona bien con muchas variables y no tiene hiperparámetros que ajustar más allá de `alpha`.
+
+**En contra:** la suposición de independencia es casi siempre falsa; las probabilidades que devuelve no son confiables como tales (aunque el orden sí); y `GaussianNB` falla si las variables no se parecen a una campana.
+
+---
+
+## 26. Preguntas típicas de parcial
 
 **¿Por qué hay que estandarizar antes de PCA o de un clustering?**
 Porque trabajan con varianzas y distancias. Sin estandarizar, la variable con los números más grandes domina el resultado solo por su unidad de medida.
@@ -1884,6 +1991,18 @@ Limitando su crecimiento (`max_depth`, `min_samples_leaf`, `min_samples_split`) 
 **¿Por qué los árboles no necesitan estandarización?**
 Porque parten por umbrales sobre cada variable por separado; cambiar la escala no altera el orden de los valores ni, por lo tanto, los cortes.
 
+**¿Por qué Naive Bayes se llama "ingenuo"?**
+Porque supone que los atributos son independientes entre sí dentro de cada clase, algo que casi nunca se cumple. Igual suele clasificar bien, porque lo que importa es qué clase queda primera, no el valor exacto de la probabilidad.
+
+**¿Qué variante de Naive Bayes se usa en cada caso?**
+GaussianNB con variables continuas (asume campana de Gauss), CategoricalNB con categóricas o continuas discretizadas, MultinomialNB con conteos y BernoulliNB con binarias.
+
+**¿Qué es el suavizado de Laplace y para qué sirve?**
+Sumar 1 a todos los conteos para que ninguna probabilidad quede en 0. Sin él, una sola combinación no vista en el entrenamiento anula toda la clase al multiplicar.
+
+**¿Qué se pierde al discretizar una variable continua?**
+La precisión de los umbrales. Si una clase se define por un corte exacto y ese valor cae dentro de un intervalo, los casos de ambos lados quedan mezclados en la misma categoría.
+
 **¿Qué diferencia hay entre precisión y exhaustividad?**
 La precisión mira la columna de la matriz: de los que dije que eran de esta clase, cuántos lo eran. La exhaustividad mira la fila: de los que realmente eran, a cuántos encontré.
 
@@ -1904,7 +2023,7 @@ La mediana, si hay asimetría o valores extremos, porque no se deja arrastrar po
 
 ---
 
-## 26. Lo que nos corrigió el profesor en el TP1
+## 27. Lo que nos corrigió el profesor en el TP1
 
 El TP1 se aprobó con **7**. La devolución llegó el 16/10/2026, con el trabajo ya entregado, así que el notebook no se modificó: lo que sigue es para no repetirlo en el TP2 ni en el parcial.
 
@@ -1922,19 +2041,18 @@ El TP1 se aprobó con **7**. La devolución llegó el 16/10/2026, con el trabajo
 
 ---
 
-## 27. Temas que todavía no vimos
+## 28. Temas que todavía no vimos
 
 Se van a agregar a este archivo, con la misma explicación para principiantes, cuando los trabajemos:
 
 **Del TP2, todavía sin usar:**
-- Naive Bayes y discretización por cuantiles (actividad 5)
 - k-NN: distancias, elección de k (actividad 6)
 
 **Vistos en clase pero fuera de los TPs:** MDS, UMAP, DBSCAN, HDBSCAN y SVM (unidad 5).
 
 ---
 
-## 28. Resumen de una carilla
+## 29. Resumen de una carilla
 
 Para repasar el día antes. Todo lo de acá está explicado en detalle en las secciones anteriores.
 

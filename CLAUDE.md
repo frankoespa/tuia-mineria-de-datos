@@ -152,7 +152,7 @@ Enunciado: `tp2/TP2.pdf`. Entrega: `tp2/tp2_mineria_renna_esparza.ipynb`, un sol
 ### Convenciones propias del TP2
 
 - Prefijos de celda: `pa-` (Parte A) y `pb-` (Parte B), numerados en orden. `cab-`, `conf-` e `imp-` como en el TP1.
-- **Figuras y tablas se numeran desde 1**, independientes del TP1. Hoy el notebook llega a la **Figura 11** y la **Tabla 18** (fin de la actividad 4).
+- **Figuras y tablas se numeran desde 1**, independientes del TP1. Hoy el notebook llega a la **Figura 12** y la **Tabla 20** (fin de la actividad 5).
 - El kernel arranca en `tp2/`, así que los CSV se leen con ruta relativa.
 - Sin `n_jobs=-1` en `GridSearchCV`: en Windows deja tracebacks de joblib al cerrar los procesos y parecen errores en la entrega.
 
@@ -164,7 +164,7 @@ Enunciado: `tp2/TP2.pdf`. Entrega: `tp2/tp2_mineria_renna_esparza.ipynb`, un sol
 | A2 | Árbol de regresión: `GridSearchCV`, Figura 4 (árbol), Figura 5 (estimado contra real), Tabla 10 (MAE/MSE/RMSE) | Hecho |
 | B3 | EDA de `drugType.csv`, desbalance (Figura 6, Tabla 13), numéricas y categóricas por droga (Figuras 7 y 8), atípicos, codificación ordinal y particiones estratificadas (Tabla 15) | Hecho |
 | B4 | Árbol de clasificación: `GridSearchCV` con `f1_weighted` (Tabla 16), árbol sin podar (Figura 9), camino de `ccp_alpha` (Tabla 17), árbol podado (Figura 10), métricas (Tabla 18) y matrices de confusión (Figura 11) | Hecho |
-| B5 | Naive Bayes | En curso |
+| B5 | Naive Bayes: discretización por cuantiles (Tabla 19), comparación de los tres enfoques (Tabla 20) y matrices de confusión (Figura 12) | Hecho |
 | B6 | k-NN | Pendiente |
 | B7 | Comparación de los tres y conclusiones | Pendiente |
 
@@ -177,6 +177,7 @@ Enunciado: `tp2/TP2.pdf`. Entrega: `tp2/tp2_mineria_renna_esparza.ipynb`, un sol
 - **Grilla del clasificador (decisión de los autores: se deja como está):** la misma de la regresión, porque el enunciado pide los mismos tres hiperparámetros; la del notebook de clase no los incluye. Se evaluó agregar `class_weight: [None, 'balanced']` (lo usa la U4): empata en f1 (0.9868 / 0.9729) y da 1.0 en test, pero arma árboles más grandes (9 y 8 hojas contra 6). También se vio que el f1 por profundidad es 0.628 / 0.767 / 0.860 / 0.987 / 0.987 (1 a 5): el árbol se satura en 4. Ninguno de los dos cambios se aplicó.
 - Poda (solo en 80/20): `ccp_alpha` en 0 / 0.0624 / 0.0944 / 0.1442 da f1 0.987 / 0.907 / 0.794 / 0.705. Se elige **0, no podar**: con 0.0624 se van `BP <= 0.5` y `Colesterol` y DrogaC deja de predecirse (hoja de 56 con 13 DrogaC).
 - Test: exactitud, precisión macro y exhaustividad macro **1.0 en las dos particiones**; matrices diagonales.
+- **Naive Bayes (actividad 5):** `CategoricalNB` con 5 intervalos es el mejor (exactitud 0.9250 y 0.9167), seguido de `GaussianNB` (0.8500 en ambas) y `CategoricalNB` con 3 intervalos (0.8250 y 0.8500). Ninguno llega al árbol. Causa: los cortes por cuantiles de `Na_a_K` dejan el valor 15 **dentro** de un intervalo (11.42-18.3 con 3; 12.81-16.12 con 5), así que mezclan DrogaY con el resto. Todos los errores son DrogaY clasificada como otra droga: 3 en 80/20 y 5 en 70/30. La clase **no discretiza**, así que `KBinsDiscretizer` se usa porque lo pide el enunciado; el patrón de `GaussianNB` sobre datos escalados sí sale de la U5.
 
 **Decisiones de los autores en la Parte A:**
 
