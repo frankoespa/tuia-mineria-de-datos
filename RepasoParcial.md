@@ -35,10 +35,11 @@ Cada vez que aparece un tema nuevo en un TP, se agrega acá con su explicación.
 24. [Métricas de clasificación](#24-métricas-de-clasificación)
 25. [Naive Bayes](#25-naive-bayes)
 26. [k vecinos más cercanos (k-NN)](#26-k-vecinos-más-cercanos-k-nn)
-27. [Preguntas típicas de parcial](#27-preguntas-típicas-de-parcial)
-28. [Lo que nos corrigió el profesor en el TP1](#28-lo-que-nos-corrigió-el-profesor-en-el-tp1)
-29. [Temas que todavía no vimos](#29-temas-que-todavía-no-vimos)
-30. [Resumen de una carilla](#30-resumen-de-una-carilla)
+27. [Máquinas de soporte vectorial (SVM)](#27-máquinas-de-soporte-vectorial-svm)
+28. [Preguntas típicas de parcial](#28-preguntas-típicas-de-parcial)
+29. [Lo que nos corrigió el profesor en el TP1](#29-lo-que-nos-corrigió-el-profesor-en-el-tp1)
+30. [Temas que todavía no vimos](#30-temas-que-todavía-no-vimos)
+31. [Resumen de una carilla](#31-resumen-de-una-carilla)
 
 ---
 
@@ -1951,7 +1952,128 @@ Las dos particiones eligieron configuraciones distintas (3 vecinos con euclídea
 
 ---
 
-## 27. Preguntas típicas de parcial
+## 27. Máquinas de soporte vectorial (SVM)
+
+> Se vio en la unidad 5 pero no se usa en el TP2. **Entra en el parcial.**
+
+### La idea: la frontera más "ancha"
+
+Supongamos dos clases que se pueden separar con una línea. El problema es que **hay infinitas líneas posibles** que las separan bien. ¿Cuál conviene?
+
+```
+   ○ ○ ○            ○ ○ ○            ○ ○ ○
+  ─────────        ╱                   ╲
+   ● ● ●          ○○○ ● ● ●          ○ ○ ○ ● ● ●
+                    ● ● ●               ● ● ●
+  (a) centrada   (b) pegada a ○      (c) pegada a ●
+```
+
+SVM elige **la que pasa más lejos de los puntos de ambas clases**: la (a). La intuición es que una frontera con mucho espacio libre a los costados va a seguir funcionando con datos nuevos, mientras que una pegada a los puntos se equivoca ante la mínima variación.
+
+**Metáfora:** es como trazar el camino más ancho posible entre dos grupos de árboles. Mientras más ancho el camino, menos probable es chocar.
+
+### El vocabulario
+
+| Término | Qué es |
+|---|---|
+| **Hiperplano** | La frontera de decisión. En 2D es una recta, en 3D un plano, y en más dimensiones se lo llama así |
+| **Margen** | El ancho del "pasillo" libre a ambos lados de la frontera |
+| **Vectores de soporte** | Los puntos que tocan el borde del pasillo. **Son los únicos que importan**: definen la frontera |
+
+Esto último es clave: si se borrara cualquier punto que **no** sea vector de soporte, la frontera quedaría exactamente igual. El modelo se define solo con un puñado de casos, los que están en el límite.
+
+### El parámetro C: margen duro contra margen blando
+
+¿Y si los datos no se pueden separar perfectamente, porque hay algunos mezclados?
+
+SVM permite **errores a cambio de un margen más ancho**. El parámetro **C** regula ese intercambio:
+
+| C | Qué prioriza | Resultado |
+|---|---|---|
+| **C chico** (0.1) | Margen ancho | Tolera errores de clasificación. **Margen blando** |
+| **C grande** (1000) | No equivocarse | Margen angosto, pegado a los datos. **Margen duro** |
+
+**Metáfora del camino otra vez:** con C chico se acepta que algún árbol quede dentro del camino con tal de que sea ancho; con C grande se esquiva cada árbol, y el camino queda angosto y sinuoso.
+
+**C grande tiende al sobreajuste** (se adapta demasiado a los datos de entrenamiento) y C chico al subajuste. Se elige probando, como cualquier hiperparámetro.
+
+### El truco del kernel
+
+¿Y si las clases no se pueden separar con **ninguna** línea recta? Por ejemplo, una clase rodeando a la otra en círculo.
+
+La idea de SVM es **llevar los datos a más dimensiones**, donde sí se puedan separar con un plano:
+
+```
+   En 1D:  ● ● ○ ○ ○ ● ●        ← imposible separar con un punto
+
+   Elevando al cuadrado (2D):
+            ○ ○ ○                ← ahora SÍ: una recta horizontal los separa
+        ●           ●
+```
+
+Eso es el **truco del kernel** (*kernel trick*): una función que calcula las distancias *como si* los datos estuvieran en esa dimensión superior, **sin construirla realmente**. Por eso es eficiente.
+
+### Los kernels
+
+| Kernel | Cuándo usarlo | Parámetros propios |
+|---|---|---|
+| **lineal** | Clases separables con una recta o plano | — |
+| **poly** (polinomial) | Fronteras curvas | `degree` (grado), `coef0` |
+| **rbf** (radial) | El más usado; fronteras muy flexibles, tipo burbujas | `gamma` |
+| **sigmoid** | Poco frecuente | `gamma`, `coef0` |
+
+**Recomendación de la filmina 57:** empezar asumiendo que los datos son linealmente separables y probar el kernel lineal, que es el más simple; si no alcanza, pasar a los no lineales.
+
+**El parámetro `gamma`** (en rbf) controla cuán lejos llega la influencia de cada punto: `gamma` alto hace fronteras muy ajustadas a cada dato (sobreajuste), `gamma` bajo las suaviza.
+
+### Clasificación con más de dos clases
+
+El hiperplano separa **dos** grupos, así que para varias clases hay que combinar varios clasificadores. `scikit-learn` usa **uno contra uno** (*one-versus-one*): entrena un SVM para **cada par** de clases y decide por votación.
+
+Con n clases son n(n−1)/2 clasificadores. Con nuestras 5 drogas serían 10.
+
+### Cómo se usa
+
+```python
+from sklearn.svm import SVC
+
+modelo = SVC(kernel='rbf', C=1, gamma='scale')
+modelo.fit(Xtrn_std, ytrn)
+```
+
+La búsqueda de hiperparámetros del notebook de clase prueba dos familias a la vez:
+
+```python
+params_grid = [{'kernel': ['rbf'],    'gamma': [1e-3, 1e-4], 'C': [0.1, 1, 10, 100, 1000]},
+               {'kernel': ['linear'],                        'C': [0.1, 1, 10, 100, 1000]}]
+```
+
+⚠️ **SVM exige estandarizar**, por el mismo motivo que k-NN: trabaja con distancias al hiperplano, y sin escalar la variable de mayor rango domina. El notebook de clase siempre lo entrena sobre `Xtrn_std`.
+
+### Ventajas y desventajas
+
+**A favor:** funciona muy bien con fronteras complejas gracias a los kernels; es eficaz incluso con más variables que muestras; y al depender solo de los vectores de soporte, es robusto.
+
+**En contra:**
+- **Lento con muchos datos.**
+- **Difícil de ajustar:** elegir kernel, C y gamma requiere bastante prueba y error.
+- **No es interpretable**: no hay reglas que mostrar, como sí tiene un árbol.
+- No da probabilidades de forma directa.
+
+### Comparación con los otros clasificadores
+
+| | Árbol | Naive Bayes | k-NN | SVM |
+|---|---|---|---|---|
+| Qué busca | Umbrales que separen | Probabilidades por clase | Los vecinos parecidos | La frontera más ancha |
+| ¿Interpretable? | **Sí** | Más o menos | No | No |
+| ¿Necesita escalar? | No | No (Gaussian) | **Sí** | **Sí** |
+| Velocidad al entrenar | Rápido | **Muy rápido** | Instantáneo | Lento |
+| Velocidad al predecir | Rápido | Rápido | **Lento** | Rápido |
+| Hiperparámetros clave | profundidad, hojas | `alpha` | k, métrica | kernel, C, gamma |
+
+---
+
+## 28. Preguntas típicas de parcial
 
 **¿Por qué hay que estandarizar antes de PCA o de un clustering?**
 Porque trabajan con varianzas y distancias. Sin estandarizar, la variable con los números más grandes domina el resultado solo por su unidad de medida.
@@ -2070,6 +2192,18 @@ Limitando su crecimiento (`max_depth`, `min_samples_leaf`, `min_samples_split`) 
 **¿Por qué los árboles no necesitan estandarización?**
 Porque parten por umbrales sobre cada variable por separado; cambiar la escala no altera el orden de los valores ni, por lo tanto, los cortes.
 
+**¿Qué son los vectores de soporte?**
+Los puntos que tocan el borde del margen. Son los únicos que definen la frontera: borrar cualquier otro punto no la cambiaría.
+
+**¿Qué controla el parámetro C en SVM?**
+El equilibrio entre un margen ancho y la cantidad de errores tolerados. C chico da margen blando y ancho; C grande, margen duro y angosto, con más riesgo de sobreajuste.
+
+**¿Qué es el truco del kernel?**
+Una forma de separar clases no lineales calculando las distancias como si los datos estuvieran en una dimensión superior, sin construirla realmente.
+
+**¿Cómo hace SVM para clasificar más de dos clases?**
+Entrena un clasificador por cada par de clases (uno contra uno) y decide por votación. Con n clases son n(n−1)/2 clasificadores.
+
 **¿Por qué se dice que k-NN es un método perezoso?**
 Porque al entrenar solo guarda los datos: no construye ningún modelo. Todo el cálculo ocurre al predecir, midiendo la distancia a cada dato guardado.
 
@@ -2111,7 +2245,7 @@ La mediana, si hay asimetría o valores extremos, porque no se deja arrastrar po
 
 ---
 
-## 28. Lo que nos corrigió el profesor en el TP1
+## 29. Lo que nos corrigió el profesor en el TP1
 
 El TP1 se aprobó con **7**. La devolución llegó el 16/10/2026, con el trabajo ya entregado, así que el notebook no se modificó: lo que sigue es para no repetirlo en el TP2 ni en el parcial.
 
@@ -2129,17 +2263,24 @@ El TP1 se aprobó con **7**. La devolución llegó el 16/10/2026, con el trabajo
 
 ---
 
-## 29. Temas que todavía no vimos
+## 30. Temas que todavía no vimos
 
-Se van a agregar a este archivo, con la misma explicación para principiantes, cuando los trabajemos:
+**Todos los temas de los TPs y de las unidades 1 a 5 ya están explicados en este apunte.**
 
-**Del TP2, todavía sin usar:**
+Quedan afuera algunos métodos que aparecen mencionados en los notebooks de clase pero que no se desarrollaron ni en los trabajos prácticos ni en las filminas con profundidad:
 
-**Vistos en clase pero fuera de los TPs:** MDS, UMAP, DBSCAN, HDBSCAN y SVM (unidad 5).
+| Método | Dónde aparece | Qué es, en una línea |
+|---|---|---|
+| **MDS** | U2 | Reducción de dimensionalidad que preserva distancias, antecesor de Isomap |
+| **UMAP** | U2 | Alternativa a t-SNE, más rápida y que conserva mejor la estructura global |
+| **DBSCAN** | U3 | Clustering por densidad: no hay que fijar k y detecta ruido |
+| **HDBSCAN** | U3 | Versión jerárquica de DBSCAN |
+
+Si alguno entra en el parcial, se agregan con el mismo nivel de detalle.
 
 ---
 
-## 30. Resumen de una carilla
+## 31. Resumen de una carilla
 
 Para repasar el día antes. Todo lo de acá está explicado en detalle en las secciones anteriores.
 
@@ -2152,6 +2293,8 @@ Para repasar el día antes. Todo lo de acá está explicado en detalle en las se
 | Métodos | PCA, Isomap, t-SNE, K-means, jerárquico | Árboles, Naive Bayes, k-NN, SVM |
 | Evaluación | Silhouette, GAP | MAE/RMSE (regresión), exactitud/precisión/exhaustividad (clasificación) |
 
+**Regresión** predice un número; **clasificación**, una categoría.
+
 ### Preparación de datos: el orden
 
 ```
@@ -2162,9 +2305,19 @@ Para repasar el día antes. Todo lo de acá está explicado en detalle en las se
 ```
 
 - **Estandarizar** (z-score): `(valor − media) / desvío` → media 0, desvío 1.
-- **Siempre antes** de PCA, Isomap, t-SNE, K-means, jerárquico y k-NN. **No hace falta** en árboles.
 - **Categóricas:** con orden → `OrdinalEncoder`; sin orden → one-hot.
+- **Estratificar** (`stratify=y`) siempre en clasificación, sobre todo con clases desbalanceadas.
 - **Comprobación de que no hubo fuga:** el test **no** debe quedar con media 0 y desvío 1.
+
+### Quién necesita estandarización
+
+| Necesitan | No necesitan |
+|---|---|
+| PCA, Isomap, t-SNE | Árboles de decisión |
+| K-means, jerárquico | Naive Bayes (Gaussian) |
+| **k-NN**, **SVM** | |
+
+Evidencia del TP2: k-NN pasa de **0.9000 a 0.6500** de exactitud si no se estandariza.
 
 ### Reducción de la dimensionalidad
 
@@ -2188,17 +2341,16 @@ Alcanza con justificar **uno**.
 
 | | K-means | Jerárquico |
 |---|---|---|
-| Cómo funciona | Asignar al centroide más cercano y recalcular, hasta estabilizar | Unir de a dos los grupos más parecidos |
-| Hay que fijar k antes | Sí | No: se corta el dendrograma después |
+| Cómo funciona | Asignar al centroide más cercano y recalcular | Unir de a dos los grupos más parecidos |
+| Hay que fijar k antes | Sí | No: se corta el dendrograma |
 | Determinista | No (`random_state`) | Sí |
-| Salida extra | Centroides, inercia | Dendrograma |
 
 **Cómo elegir k:**
-- **Codo:** inercia contra k; se corta donde se aplana. ⚠️ **El k del quiebre se incluye.**
-- **Silhouette:** `s = (b − a) / max(a, b)`, de −1 a 1. Más alto, mejor. Se busca el máximo.
-- **GAP:** compara la dispersión real contra la de datos aleatorios uniformes **en el rango de cada variable**. Se busca el máximo.
+- **Codo:** inercia contra k. ⚠️ **El k del quiebre se incluye.**
+- **Silhouette:** `s = (b − a) / max(a, b)`, de −1 a 1. Se busca el **máximo**.
+- **GAP:** compara contra datos aleatorios uniformes **en el rango de cada variable**. Se busca el máximo.
 
-**Enlaces del jerárquico:** `single` (mínimo), `complete` (máximo), `average` (promedio), `ward` (el que menos aumenta la dispersión interna; el más usado).
+**Enlaces:** `single` (mínimo), `complete` (máximo), `average` (promedio), `ward` (el que menos aumenta la dispersión; el más usado).
 
 ### Supervisado: el esquema
 
@@ -2213,18 +2365,29 @@ Alcanza con justificar **uno**.
                                           métricas finales
 ```
 
-- **`random_state=63`** en todo (lo pide el enunciado del TP2).
-- **`stratify=y`** en clasificación, para conservar la proporción de clases.
 - Los puntajes `neg_...` de sklearn son negativos: se dan vuelta para leerlos.
+- Si muchas combinaciones empatan, la elección entre ellas es indistinta: conviene decirlo.
 
-### Árboles de decisión
+### Los cuatro clasificadores
 
-- **Cómo elige un corte:** prueba todos y se queda con el que deja los hijos más homogéneos, pesando por cuántas muestras tiene cada uno.
+| | Árbol | Naive Bayes | k-NN | SVM |
+|---|---|---|---|---|
+| Qué busca | Umbrales que separen | Probabilidades por clase | Los vecinos parecidos | La frontera más ancha |
+| ¿Interpretable? | **Sí** | Más o menos | No | No |
+| ¿Escalar? | No | No | **Sí** | **Sí** |
+| Entrenar | Rápido | **Muy rápido** | Instantáneo | Lento |
+| Predecir | Rápido | Rápido | **Lento** | Rápido |
+| Hiperparámetros | profundidad, hojas, `ccp_alpha` | `alpha` | k, métrica | kernel, C, gamma |
+| Supuesto fuerte | — | Independencia entre atributos | — | — |
+
+### Árboles
+
+- **Cómo elige un corte:** prueba todos los umbrales posibles (puntos medios entre valores consecutivos) y se queda con el que deja los hijos más homogéneos, pesando por su tamaño.
 - **Impureza:** Gini `= 1 − Σpᵢ²` o entropía (clasificación); error cuadrático (regresión). Nodo puro = 0.
 - **Hoja:** responde el promedio (regresión) o la clase mayoritaria (clasificación).
-- **Hiperparámetros:** `max_depth`, `min_samples_leaf` (mínimo que queda en la hoja), `min_samples_split` (mínimo para intentar partir), `ccp_alpha` (poda posterior).
 - **Sobreajuste:** error casi 0 en entrenamiento y alto en test. **Subajuste:** alto en los dos.
-- **Ventaja principal:** se puede leer y explicar. **Desventaja:** inestable y sobreajusta fácil.
+- **Poda** (`ccp_alpha`): simplifica el árbol ya crecido. Si vale 0, no poda.
+- Es **voraz**: elige el mejor corte de cada paso, no el mejor árbol posible.
 
 ### Métricas
 
@@ -2236,9 +2399,19 @@ Alcanza con justificar **uno**.
 | MSE | Promedio de error² | Al cuadrado |
 | RMSE | √MSE | Las de la variable |
 
-RMSE mucho mayor que MAE → hay pocos errores grandes entre muchos chicos. Siempre comparar el error con la escala de la variable.
+RMSE mucho mayor que MAE → pocos errores grandes entre muchos chicos. Siempre comparar el error con la escala de la variable.
 
-**Clasificación** (se ven en la Parte B del TP2): exactitud, precisión, exhaustividad, matriz de confusión; con clases desbalanceadas se reportan en **macro** (promedio por clase, sin pesar por tamaño).
+**Clasificación:**
+
+```
+precisión     = VP / (VP + FP)    ← de los que DIJE, cuántos eran   (columna)
+exhaustividad = VP / (VP + FN)    ← de los que ERAN, cuántos hallé  (fila)
+exactitud     = aciertos / total
+```
+
+- **Macro:** promedio simple entre clases → una clase chica pesa igual que una grande. **Es lo que se reporta con desbalance.**
+- **Weighted:** pesado por tamaño. **Micro:** equivale a la exactitud.
+- La **matriz de confusión** muestra con qué se confundió cada clase; la diagonal son los aciertos.
 
 ### Las trampas que ya nos costaron puntos
 
@@ -2247,3 +2420,10 @@ RMSE mucho mayor que MAE → hay pocos errores grandes entre muchos chicos. Siem
 3. **Mostrar siempre cómo quedan los grupos**, con tabla y gráfico, en todos los métodos de clustering.
 4. **Escribir los valores fijos** cuando se barre un parámetro ("perplejidad 15, variando las iteraciones").
 5. **Citar solo números que se ven** en una figura, tabla o salida del notebook.
+
+### Las ideas que más se repitieron en los dos TPs
+
+- **Una correlación alta no garantiza una relación utilizable** (`Administration` tenía 0.74 y era una nube).
+- **Mezclar grupos puede invertir una tendencia** (paradoja de Simpson).
+- **Incluir una variable cambia lo que encuentran los métodos**: `Sexo` partió en dos cada especie en el TP1 y desconectó el grafo de Isomap.
+- **Cuando una clase se define por un umbral exacto, los árboles ganan**: Bayes lo pierde al discretizar y k-NN al promediar vecinos.
