@@ -34,10 +34,11 @@ Cada vez que aparece un tema nuevo en un TP, se agrega acá con su explicación.
 23. [Métricas de regresión](#23-métricas-de-regresión)
 24. [Métricas de clasificación](#24-métricas-de-clasificación)
 25. [Naive Bayes](#25-naive-bayes)
-26. [Preguntas típicas de parcial](#26-preguntas-típicas-de-parcial)
-27. [Lo que nos corrigió el profesor en el TP1](#27-lo-que-nos-corrigió-el-profesor-en-el-tp1)
-28. [Temas que todavía no vimos](#28-temas-que-todavía-no-vimos)
-29. [Resumen de una carilla](#29-resumen-de-una-carilla)
+26. [k vecinos más cercanos (k-NN)](#26-k-vecinos-más-cercanos-k-nn)
+27. [Preguntas típicas de parcial](#27-preguntas-típicas-de-parcial)
+28. [Lo que nos corrigió el profesor en el TP1](#28-lo-que-nos-corrigió-el-profesor-en-el-tp1)
+29. [Temas que todavía no vimos](#29-temas-que-todavía-no-vimos)
+30. [Resumen de una carilla](#30-resumen-de-una-carilla)
 
 ---
 
@@ -1872,7 +1873,85 @@ Con 5 intervalos el tramo problemático es más angosto (de 12.81 a 16.12 en lug
 
 ---
 
-## 26. Preguntas típicas de parcial
+## 26. k vecinos más cercanos (k-NN)
+
+### La idea: preguntarle a los parecidos
+
+Para decidir qué droga corresponde a un paciente nuevo, k-NN busca a los **k pacientes más parecidos** del entrenamiento y hace que voten: la droga que más se repite entre ellos es la respuesta.
+
+**Metáfora:** llegás a un barrio nuevo y querés saber a qué club le va la gente. Preguntás a los 5 vecinos más cercanos y vas con la mayoría.
+
+### Lo raro de k-NN: no "aprende" nada
+
+Es un método **perezoso** (*lazy*). En el `fit` **solo guarda los datos**; no construye ninguna regla, ningún árbol, ninguna fórmula. Todo el trabajo ocurre en el `predict`, cuando mide la distancia del caso nuevo a **todos** los datos guardados.
+
+| | Árbol / Bayes | k-NN |
+|---|---|---|
+| Entrenar | Lento (construye el modelo) | **Instantáneo** (guarda y listo) |
+| Predecir | Instantáneo | **Lento** (calcula todas las distancias) |
+| ¿Hay modelo que mirar? | Sí | **No**: los datos *son* el modelo |
+
+Por eso también se lo llama **no paramétrico**: no resume los datos en parámetros.
+
+### Las distancias
+
+| Distancia | Cómo mide | Imagen mental |
+|---|---|---|
+| **Euclídea** (p=2) | La línea recta entre dos puntos | Lo que vuela un pájaro |
+| **Manhattan** (p=1) | La suma de las diferencias en cada variable | Lo que camina un taxi por una ciudad cuadriculada |
+
+*Ejemplo.* Entre un punto en (0, 0) y otro en (3, 4):
+
+```
+euclídea  = √(3² + 4²) = √25 = 5
+Manhattan = |3| + |4|  = 7
+```
+
+Las dos son casos particulares de la **distancia de Minkowski**, que generaliza con un parámetro `p`.
+
+### Elegir k
+
+| k | Qué pasa | Riesgo |
+|---|---|---|
+| **k = 1** | Copia la clase del vecino más cercano | **Sobreajuste**: un solo dato raro decide |
+| **k intermedio** | Vota un grupo chico de parecidos | Es lo que se busca |
+| **k muy grande** | Vota medio conjunto | **Subajuste**: termina ganando siempre la clase mayoritaria |
+
+Una regla práctica que menciona la filmina 26 de la unidad 5: empezar probando **k ≈ √n**, con n la cantidad de datos de entrenamiento, y después ajustar probando varios valores.
+
+**Conviene que k sea impar** en problemas de dos clases, para evitar empates en la votación.
+
+### ⚠️ k-NN exige estandarizar
+
+Es el punto más importante del método. Como todo se decide por distancias, **la variable con los números más grandes domina el cálculo**.
+
+Lo comprobamos en el TP2 con el mismo modelo y los mismos datos:
+
+| | Exactitud en test |
+|---|---|
+| Variables **estandarizadas** | **0.9000** |
+| Variables **sin estandarizar** | 0.6500 |
+
+De 40 pacientes, pasa de 4 errores a 14. El motivo: `Edad` va de 15 a 74 y las variables codificadas valen 0, 1 o 2. Sin estandarizar, dos pacientes con 20 años de diferencia parecen lejísimos aunque compartan todo lo demás, y la presión arterial casi no influye.
+
+### Ventajas y desventajas
+
+**A favor:** es simple de entender, no supone nada sobre la forma de los datos, y sirve igual para fronteras entre clases muy irregulares.
+
+**En contra:**
+- **Lento al predecir** con muchos datos: hay que medir contra todos.
+- **Exige escalado**, como se vio arriba.
+- **Sufre la maldición de la dimensionalidad**: con muchas variables, todos los puntos terminan a distancias parecidas y la noción de "vecino cercano" pierde sentido.
+- **No es interpretable**: no hay reglas para mostrar, solo "estos 3 vecinos votaron así".
+- Le afecta el desbalance: con k grande, la clase mayoritaria gana por peso.
+
+### Lo que nos dio
+
+Las dos particiones eligieron configuraciones distintas (3 vecinos con euclídea en una, 9 con Manhattan en la otra) y la exactitud en validación cruzada se movió apenas entre 0.84 y 0.89. Con 160 pacientes de entrenamiento, cada caso individual mueve la medición medio punto, así que esas diferencias no alcanzan para preferir una configuración sobre otra.
+
+---
+
+## 27. Preguntas típicas de parcial
 
 **¿Por qué hay que estandarizar antes de PCA o de un clustering?**
 Porque trabajan con varianzas y distancias. Sin estandarizar, la variable con los números más grandes domina el resultado solo por su unidad de medida.
@@ -1991,6 +2070,15 @@ Limitando su crecimiento (`max_depth`, `min_samples_leaf`, `min_samples_split`) 
 **¿Por qué los árboles no necesitan estandarización?**
 Porque parten por umbrales sobre cada variable por separado; cambiar la escala no altera el orden de los valores ni, por lo tanto, los cortes.
 
+**¿Por qué se dice que k-NN es un método perezoso?**
+Porque al entrenar solo guarda los datos: no construye ningún modelo. Todo el cálculo ocurre al predecir, midiendo la distancia a cada dato guardado.
+
+**¿Por qué k-NN necesita estandarización y los árboles no?**
+Porque k-NN decide por distancias y la variable con los números más grandes domina el cálculo. Los árboles parten por umbrales en cada variable por separado, así que la escala no los afecta.
+
+**¿Qué pasa si k es muy chico o muy grande?**
+Muy chico sobreajusta: un único dato raro decide la clase. Muy grande subajusta: termina votando siempre la clase mayoritaria.
+
 **¿Por qué Naive Bayes se llama "ingenuo"?**
 Porque supone que los atributos son independientes entre sí dentro de cada clase, algo que casi nunca se cumple. Igual suele clasificar bien, porque lo que importa es qué clase queda primera, no el valor exacto de la probabilidad.
 
@@ -2023,7 +2111,7 @@ La mediana, si hay asimetría o valores extremos, porque no se deja arrastrar po
 
 ---
 
-## 27. Lo que nos corrigió el profesor en el TP1
+## 28. Lo que nos corrigió el profesor en el TP1
 
 El TP1 se aprobó con **7**. La devolución llegó el 16/10/2026, con el trabajo ya entregado, así que el notebook no se modificó: lo que sigue es para no repetirlo en el TP2 ni en el parcial.
 
@@ -2041,18 +2129,17 @@ El TP1 se aprobó con **7**. La devolución llegó el 16/10/2026, con el trabajo
 
 ---
 
-## 28. Temas que todavía no vimos
+## 29. Temas que todavía no vimos
 
 Se van a agregar a este archivo, con la misma explicación para principiantes, cuando los trabajemos:
 
 **Del TP2, todavía sin usar:**
-- k-NN: distancias, elección de k (actividad 6)
 
 **Vistos en clase pero fuera de los TPs:** MDS, UMAP, DBSCAN, HDBSCAN y SVM (unidad 5).
 
 ---
 
-## 29. Resumen de una carilla
+## 30. Resumen de una carilla
 
 Para repasar el día antes. Todo lo de acá está explicado en detalle en las secciones anteriores.
 
