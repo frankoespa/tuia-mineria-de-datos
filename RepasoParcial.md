@@ -1189,7 +1189,7 @@ Xtst_std = scaler.transform(Xtst)   # ← usa la media del TRAIN, no la suya
 
 ### Cómo se detecta
 
-**1. Mirando el test estandarizado.** Si está bien hecho, el test **no** queda con media 0 y desvío 1. Esta es la tabla real de nuestro TP2:
+**1. Mirando el test estandarizado.** Si está bien hecho, el test **no** queda con media 0 y desvío 1. Estos son valores reales de nuestros datos (la tabla no quedó en el notebook):
 
 | | media entrenamiento | desvío entrenamiento | media test | desvío test |
 |---|---|---|---|---|
@@ -1403,7 +1403,7 @@ El árbol repite esto en cada nodo, con todos los cortes posibles. Ese procedimi
 
 No hay clases, así que "homogéneo" significa **respuestas parecidas entre sí**. Se mide con el error cuadrático medio dentro del nodo: cuánto se alejan los valores de su propio promedio.
 
-En la Figura 4 de nuestro TP2 esto se ve numéricamente: el `squared_error` baja de 1.555 millones en la raíz a 416 y 352 millones en el nivel siguiente. Cada corte deja grupos con ganancias más parecidas.
+En la Figura 4 de nuestro TP2 se puede leer en cada nodo: el `squared_error` baja de 1.555 millones en la raíz a 416 y 352 millones en el nivel siguiente. Cada corte deja grupos con ganancias más parecidas.
 
 ### De dónde sale un umbral como `RyD_Spend <= 82150.5`
 
@@ -1560,20 +1560,22 @@ Subajuste = mucho sesgo. Sobreajuste = mucha varianza. Hay que buscar el punto m
 
 La poda deja crecer el árbol entero y después **corta las ramas que menos aportan**: las que casi no reducen el error pero agregan complejidad. `ccp_alpha` regula cuán exigente es ese corte: con 0 no poda nada, y cuanto más grande, más ramas elimina. Se usa en la Parte B del TP2.
 
-**De dónde salen los valores de `ccp_alpha` a probar.** No hace falta inventarlos: `arbol.cost_complexity_pruning_path(Xtrn, ytrn)` recorre el árbol ya crecido y devuelve **los valores exactos en los que el árbol cambia**. Entre dos de esos valores el árbol podado es el mismo, así que probar números intermedios no agrega nada.
+**De dónde salen los valores de `ccp_alpha` a probar.** En el TP2 armamos una lista propia y la pasamos a `GridSearchCV`, igual que cualquier otra grilla. Muchos valores pueden dar el mismo árbol: el árbol solo cambia al pasar ciertos puntos. (`scikit-learn` tiene `cost_complexity_pruning_path`, que devuelve exactamente esos puntos, pero **no se vio en clase y no se usó en el TP**.)
 
-**Analogía:** un rosal. Con tijera suave (alpha chico) se cortan solo las ramitas que casi no dan flores; con tijera más fuerte, ramas cada vez más grandes; con la máxima, queda el tronco pelado. El "camino de poda" es la lista de puntos donde la tijera corta algo nuevo.
+**Analogía:** un rosal. Con tijera suave (alpha chico) se cortan solo las ramitas que casi no dan flores; con tijera más fuerte, ramas cada vez más grandes; con la máxima, queda el tronco pelado. Mientras la tijera no llegue a la fuerza necesaria para la próxima rama, el árbol no cambia.
 
-En nuestro árbol de 6 hojas el camino dio 0, 0.0624, 0.0944 y 0.1442 (más un último valor que deja una sola hoja, que se descarta):
+En nuestro árbol de 6 hojas (Tabla 16 del TP2):
 
 | `ccp_alpha` | Hojas | Drogas que puede predecir | f1 de validación cruzada |
 |---|---|---|---|
-| **0** | 6 | 5 | **0.987** |
-| 0.0624 | 4 | 4 (desaparece DrogaC) | 0.907 |
-| 0.0944 | 3 | 3 | 0.794 |
-| 0.1442 | 2 | 2 | 0.705 |
+| **0** | 6 | 5 | **0.9868** |
+| 0.01 | 6 | 5 | 0.9868 |
+| 0.05 | 6 | 5 | 0.9868 |
+| 0.07 | 4 | 4 (desaparece DrogaC) | 0.8705 |
+| 0.1 | 3 | 3 | 0.7665 |
+| 0.15 | 2 | 2 | 0.6283 |
 
-Cada valor se evalúa con validación cruzada sobre el entrenamiento, igual que cualquier otro hiperparámetro, y se elige el de mejor puntaje. Acá fue 0: **no podar**. Podar no siempre mejora: si el árbol ya es chico y cada hoja separa algo real, cortar significa perder información. La primera poda une la hoja de DrogaC con la de DrogaX, y una clase entera deja de existir para el modelo.
+Cada valor se evalúa con validación cruzada sobre el entrenamiento, igual que cualquier otro hiperparámetro, y se elige el de mejor puntaje. Acá empatan 0, 0.01 y 0.05, que dan el mismo árbol, y nos quedamos con 0: **no podar**. Podar no siempre mejora: si el árbol ya es chico y cada hoja separa algo real, cortar significa perder información. Con 0.07 los 56 pacientes de presión baja o normal quedan en una sola hoja de DrogaX, 13 de ellos de DrogaC, y una clase entera deja de existir para el modelo.
 
 ### Importancia de las variables
 
@@ -1926,7 +1928,7 @@ Una regla práctica que menciona la filmina 26 de la unidad 5: empezar probando 
 
 Es el punto más importante del método. Como todo se decide por distancias, **la variable con los números más grandes domina el cálculo**.
 
-Lo comprobamos en el TP2 con el mismo modelo y los mismos datos:
+Lo comprobamos mientras hacíamos el TP2, con el mismo modelo y los mismos datos (esta comparación no quedó en el notebook porque el enunciado no la pide):
 
 | | Exactitud en test |
 |---|---|
@@ -2317,7 +2319,7 @@ Para repasar el día antes. Todo lo de acá está explicado en detalle en las se
 | K-means, jerárquico | Naive Bayes (Gaussian) |
 | **k-NN**, **SVM** | |
 
-Evidencia del TP2: k-NN pasa de **0.9000 a 0.6500** de exactitud si no se estandariza.
+Evidencia de nuestros datos (prueba que no quedó en el notebook): k-NN pasa de **0.9000 a 0.6500** de exactitud si no se estandariza.
 
 ### Reducción de la dimensionalidad
 
@@ -2423,7 +2425,7 @@ exactitud     = aciertos / total
 
 ### Las ideas que más se repitieron en los dos TPs
 
-- **Una correlación alta no garantiza una relación utilizable** (`Administration` tenía 0.74 y era una nube).
+- **Una correlación alta no garantiza una relación utilizable** (`Administration` tenía 0.74: la mayoría forma una recta muy empinada, pero con muchos puntos dispersos alrededor).
 - **Mezclar grupos puede invertir una tendencia** (paradoja de Simpson).
 - **Incluir una variable cambia lo que encuentran los métodos**: `Sexo` partió en dos cada especie en el TP1 y desconectó el grafo de Isomap.
 - **Cuando una clase se define por un umbral exacto, los árboles ganan**: Bayes lo pierde al discretizar y k-NN al promediar vecinos.

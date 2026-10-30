@@ -70,7 +70,9 @@ Smart App Control de Windows llegó a bloquear los `.pyd` de scipy y scikit-lear
 - **Los comentarios son solo sobre lo observado y si es coherente con la hipótesis previa, nada más.** No explicar cómo funciona un método, qué mide una métrica ni por qué "era previsible" un resultado. Se admite una frase corta para justificar una decisión (por qué se elige un valor, por qué se elimina una fila).
 - **Solo se comenta lo que se ve en el notebook.** Todo número citado tiene que poder leerse en una figura, una tabla o una salida impresa del propio notebook. No citar valores calculados aparte (rangos, medias por grupo, distancias mínimas, conteos de vecinos, etc.): los autores no pueden defender de dónde salen. Si un número hace falta, primero se muestra en una celda; si no, se describe lo que se ve ("queda pegado", "se superponen").
 - **"Proyección" solo para PCA**, que es lineal. Los resultados de Isomap y t-SNE no son proyecciones: se los llama "representación en dos dimensiones" o "el gráfico de Isomap / t-SNE".
-- No agregar apartados que el enunciado no pide (por ejemplo, se quitó el de dependencia de la semilla en t-SNE).
+- No agregar apartados que el enunciado no pide (por ejemplo, se quitó el de dependencia de la semilla en t-SNE; en el TP2, la comparación de escalado en k-NN, la Tabla 7 de estandarización y las barras de exactitud).
+- **Escribir como estudiantes:** primera persona ("pensábamos que", "en la Figura 3 vemos que"), frases cortas y pocas negritas. Sin muletillas ("es decir", "ahora bien", "justamente", "por completo") ni explicaciones de causas que el notebook no muestra.
+- **Código al estilo de la cátedra:** `enumerate` con `axes.flatten()[i-1]`, `ConfusionMatrixDisplay.from_predictions` con `cmap=plt.cm.Blues` y funciones chicas como `tableResult`. Antes de usar un método o parámetro, buscarlo en `teoria/`; si no está y hace falta, justificarlo en una línea. En el TP2 quedan fuera de clase `KBinsDiscretizer`, `CategoricalNB` y `ccp_alpha` (los pide el enunciado), `OneHotEncoder` (filmina 28 de la U5), `pd.crosstab`, `get_depth()`, `get_n_leaves()` y `neg_mean_squared_error`.
 
 ### Numeración de figuras y tablas
 
@@ -152,7 +154,7 @@ Enunciado: `tp2/TP2.pdf`. Entrega: `tp2/tp2_mineria_renna_esparza.ipynb`, un sol
 ### Convenciones propias del TP2
 
 - Prefijos de celda: `pa-` (Parte A) y `pb-` (Parte B), numerados en orden. `cab-`, `conf-` e `imp-` como en el TP1.
-- **Figuras y tablas se numeran desde 1**, independientes del TP1. El notebook llega a la **Figura 15** y la **Tabla 23**, más la celda `conc-01` de conclusiones. **El TP2 está completo.**
+- **Figuras y tablas se numeran desde 1**, independientes del TP1. El notebook llega a la **Figura 14** y la **Tabla 22**, más la celda `conc-01` de conclusiones. **El TP2 está completo.**
 - El kernel arranca en `tp2/`, así que los CSV se leen con ruta relativa.
 - Sin `n_jobs=-1` en `GridSearchCV`: en Windows deja tracebacks de joblib al cerrar los procesos y parecen errores en la entrega.
 
@@ -161,12 +163,12 @@ Enunciado: `tp2/TP2.pdf`. Entrega: `tp2/tp2_mineria_renna_esparza.ipynb`, un sol
 | Actividad | Contenido | Estado |
 |---|---|---|
 | A1 | EDA, limpieza, codificación, particiones y estandarización | Hecho |
-| A2 | Árbol de regresión: `GridSearchCV`, Figura 4 (árbol), Figura 5 (estimado contra real), Tabla 10 (MAE/MSE/RMSE) | Hecho |
-| B3 | EDA de `drugType.csv`, desbalance (Figura 6, Tabla 13), numéricas y categóricas por droga (Figuras 7 y 8), atípicos, codificación ordinal y particiones estratificadas (Tabla 15) | Hecho |
-| B4 | Árbol de clasificación: `GridSearchCV` con `f1_weighted` (Tabla 16), árbol sin podar (Figura 9), camino de `ccp_alpha` (Tabla 17), árbol podado (Figura 10), métricas (Tabla 18) y matrices de confusión (Figura 11) | Hecho |
-| B5 | Naive Bayes: discretización por cuantiles (Tabla 19), comparación de los tres enfoques (Tabla 20) y matrices de confusión (Figura 12) | Hecho |
-| B6 | k-NN: `GridSearchCV` sobre 5 valores de `n_neighbors` y 2 métricas (Tabla 21), curva de exactitud (Figura 13), efecto del escalado, métricas (Tabla 22) y matrices (Figura 14) | Hecho |
-| B7 | Comparación de los tres (Tabla 23, Figura 15), elección justificada y sección de conclusiones (`conc-01`) | Hecho |
+| A2 | Árbol de regresión: `GridSearchCV`, Figura 4 (árbol), Figura 5 (estimado contra real), Tabla 9 (MAE/MSE/RMSE) | Hecho |
+| B3 | EDA de `drugType.csv`, desbalance (Figura 6, Tabla 12), numéricas y categóricas por droga (Figuras 7 y 8), atípicos, codificación ordinal y particiones estratificadas (Tabla 14) | Hecho |
+| B4 | Árbol de clasificación: `GridSearchCV` con `f1_weighted` (Tabla 15), árbol sin podar (Figura 9), grilla de `ccp_alpha` (Tabla 16), árbol podado (Figura 10), métricas (Tabla 17) y matrices de confusión (Figura 11) | Hecho |
+| B5 | Naive Bayes: discretización por cuantiles (Tabla 18), comparación de las configuraciones (Tabla 19) y matrices de confusión (Figura 12) | Hecho |
+| B6 | k-NN: `GridSearchCV` sobre 5 valores de `n_neighbors` y 2 métricas (Tabla 20), curva de exactitud (Figura 13), métricas (Tabla 21) y matrices (Figura 14) | Hecho |
+| B7 | Comparación de los tres (Tabla 22), elección justificada y sección de conclusiones (`conc-01`) | Hecho |
 
 **Numeración:** las secciones del notebook siguen el número de actividad del enunciado (A1-A2 y B3-B7), no una cuenta propia de la Parte B.
 
@@ -175,13 +177,13 @@ Enunciado: `tp2/TP2.pdf`. Entrega: `tp2/tp2_mineria_renna_esparza.ipynb`, un sol
 - Codificación: `OrdinalEncoder` con orden explícito (`Sexo` F<M, `BP` Bajo<Normal<Alto, `Colesterol` Normal<Alto); `Droga` queda como texto. `preparar_pacientes(test_size)` devuelve sin escalar y escaladas (solo `Edad` y `Na_a_K`); el árbol usa las sin escalar.
 - Árbol: 27 de 36 combinaciones empatan en f1 de validación cruzada (0.9868 en 80/20); el árbol crece solo hasta profundidad 4 con 6 hojas puras. Cortes: `Na_a_K <= 14.829` → DrogaY; `BP <= 1.5`; `Edad <= 50.5` (A/B); `BP <= 0.5` (normal → DrogaX); `Colesterol <= 0.5` (X/C).
 - **Grilla del clasificador (decisión de los autores: se deja como está):** la misma de la regresión, porque el enunciado pide los mismos tres hiperparámetros; la del notebook de clase no los incluye. Se evaluó agregar `class_weight: [None, 'balanced']` (lo usa la U4): empata en f1 (0.9868 / 0.9729) y da 1.0 en test, pero arma árboles más grandes (9 y 8 hojas contra 6). También se vio que el f1 por profundidad es 0.628 / 0.767 / 0.860 / 0.987 / 0.987 (1 a 5): el árbol se satura en 4. Ninguno de los dos cambios se aplicó.
-- Poda (solo en 80/20): `ccp_alpha` en 0 / 0.0624 / 0.0944 / 0.1442 da f1 0.987 / 0.907 / 0.794 / 0.705. Se elige **0, no podar**: con 0.0624 se van `BP <= 0.5` y `Colesterol` y DrogaC deja de predecirse (hoja de 56 con 13 DrogaC).
+- Poda (solo en 80/20): grilla propia en `GridSearchCV`, sin `cost_complexity_pruning_path` porque no se vio en clase. `ccp_alpha` en 0 / 0.01 / 0.05 / 0.07 / 0.1 / 0.15 da f1 0.9868 / 0.9868 / 0.9868 / 0.8705 / 0.7665 / 0.6283. Se elige **0, no podar**: con 0.07 (Figura 10) se van `BP <= 0.5` y `Colesterol` y DrogaC deja de predecirse (hoja de 56 con 13 DrogaC).
 - Test: exactitud, precisión macro y exhaustividad macro **1.0 en las dos particiones**; matrices diagonales.
-- **Naive Bayes (actividad 5):** `CategoricalNB` con 5 intervalos es el mejor (exactitud 0.9250 y 0.9167), seguido de `GaussianNB` (0.8500 en ambas) y `CategoricalNB` con 3 intervalos (0.8250 y 0.8500). Ninguno llega al árbol. Causa: los cortes por cuantiles de `Na_a_K` dejan el valor 15 **dentro** de un intervalo (11.42-18.3 con 3; 12.81-16.12 con 5), así que mezclan DrogaY con el resto. Todos los errores son DrogaY clasificada como otra droga: 3 en 80/20 y 5 en 70/30. La clase **no discretiza**, así que `KBinsDiscretizer` se usa porque lo pide el enunciado; el patrón de `GaussianNB` sobre datos escalados sí sale de la U5.
+- **Naive Bayes (actividad 5):** `CategoricalNB` con 5 intervalos es el mejor (exactitud 0.9250 y 0.9167), seguido de `GaussianNB` (0.8500 en ambas) y `CategoricalNB` con 3 intervalos (0.8250 y 0.8500). Ninguno llega al árbol. Observación: los cortes por cuantiles de `Na_a_K` dejan el valor 15 **dentro** de un intervalo (11.42-18.3 con 3; 12.81-16.12 con 5), así que mezclan DrogaY con el resto. Todos los errores son DrogaY clasificada como otra droga: 3 en 80/20 y 5 en 70/30. La clase **no discretiza**, así que `KBinsDiscretizer` se usa porque lo pide el enunciado; el patrón de `GaussianNB` sobre datos escalados sí sale de la U5.
 
 **Resultados de k-NN y comparación final:**
-- k-NN (actividad 6): mejores configuraciones distintas por partición (3 vecinos euclídea en 80/20, 9 Manhattan en 70/30), exactitud 0.9000 y 0.9167. La elección es inestable: en la 80/20 dos combinaciones empatan en 0.8875 y siete quedan en 0.8688. **El escalado es decisivo: 0.9000 escalado contra 0.6500 sin escalar.**
-- Comparación (actividad 7): el árbol gana en las tres métricas y en las dos particiones (1.0 contra 0.89-0.94). Entre Bayes y k-NN no hay diferencia clara. Se elige el árbol también por interpretabilidad. En los tres modelos los errores se concentran en DrogaY, la clase definida por un umbral exacto.
+- k-NN (actividad 6): mejores configuraciones distintas por partición (3 vecinos euclídea en 80/20, 9 Manhattan en 70/30), exactitud 0.9000 y 0.9167. La elección es inestable: en la 80/20 dos combinaciones empatan en 0.8875 y seis quedan en 0.8688. La comparación con y sin escalado (0.9000 contra 0.6500) **se quitó del notebook** a pedido de los autores; queda en `RepasoParcial.md`.
+- Comparación (actividad 7): el árbol gana en las tres métricas y en las dos particiones (1.0 contra 0.8859-0.9667). Entre Bayes y k-NN no hay diferencia clara. Se elige el árbol también por interpretabilidad. El árbol no tiene errores; en Bayes y k-NN se concentran en DrogaY.
 
 **Decisiones de los autores en la Parte A:**
 
