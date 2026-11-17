@@ -106,6 +106,18 @@ Convenciones del notebook:
 - Se usa pandas 3: las columnas de texto tienen dtype `str` y no `object` como en los notebooks de clase.
 - **Nombres de las componentes:** `scikit-learn` numera las columnas de salida desde cero (`pca0`, `pca1`, ...). Apenas se ajusta un método de reducción, sus columnas se renombran con el prefijo del método y numeradas desde 1: `PC1`, `PC2`, ... en PCA; `ISO1`, `ISO2` en Isomap; `TSNE1`, `TSNE2` en t-SNE.
 
+## Apunte para el examen (`apunte/`)
+
+PDF con toda la teoría U1–U6, preguntas típicas y tres simulacros con respuestas (examen integrador del 27/11/2026). Las fuentes son `apunte/partes/*.html` (se concatenan en orden); el HTML completo y el PDF se generan con:
+
+```powershell
+.entorno\Scripts\python.exe apunte\construir.py
+```
+
+- Usa Edge (o Chrome) sin interfaz. **Si el PDF está abierto en un visor, Windows lo bloquea**: el script lo detecta y pide cerrarlo.
+- Las figuras son SVG escritos dentro de las partes. Se numeran por unidad (`Figura 3.2`) en el `figcaption`; al insertar una, renumerar las siguientes de esa unidad.
+- Recuadros disponibles: `box def`, `clave`, `trampa`, `preg`, `prof` y `analog` (analogías con la vida cotidiana).
+
 ## Devolución del profesor sobre el TP1 (nota 7)
 
 Recibida el 16/10/2026, con el TP1 ya entregado. **Decisión de los autores: el TP1 no se corrige.** Las observaciones se aplican de acá en adelante (TP2 y parcial); los conceptos involucrados están en la sección 25 de `RepasoParcial.md`.

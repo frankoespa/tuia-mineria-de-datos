@@ -35,6 +35,10 @@ navegadores = [
     Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
 ]
 nav = next(n for n in navegadores if n.exists())
+antes = PDF.stat().st_mtime if PDF.exists() else 0
 subprocess.run([str(nav), "--headless=new", "--disable-gpu", "--no-pdf-header-footer",
                 f"--print-to-pdf={PDF}", HTML.as_uri()], check=True, timeout=180)
+# Si el PDF está abierto en un visor, Windows lo bloquea y el navegador no lo reemplaza sin dar error.
+if not PDF.exists() or PDF.stat().st_mtime == antes:
+    raise SystemExit(f"No se pudo escribir {PDF.name}: cerrá el PDF si está abierto y volvé a ejecutar.")
 print("PDF:", PDF, PDF.stat().st_size // 1024, "KB")

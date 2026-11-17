@@ -42,6 +42,8 @@ li { margin-bottom: 2pt; }
 .box.preg::before { content: "Pregunta típica. "; font-weight: bold; color: #6a3d9a; }
 .box.prof { border-color: var(--acc2); background: #fbeeee; }
 .box.prof::before { content: "Criterio de la cátedra. "; font-weight: bold; color: var(--acc2); }
+.box.analog { border-color: #00796b; background: #e8f5f3; }
+.box.analog::before { content: "Analogía. "; font-weight: bold; color: #00796b; }
 .box p:last-child, .box ul:last-child { margin-bottom: 0; }
 .formula { text-align: center; font-style: italic; margin: 5pt 0 7pt; font-size: 11pt; }
 table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt; font-size: 9.5pt; break-inside: avoid; text-align: left; }
@@ -85,7 +87,7 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 9pt; backgrou
 <section class="unidad">
 <h1>Cómo usar este apunte</h1>
 
-<div class="abstract"><b>Resumen.</b> Este documento reúne la totalidad de los contenidos teóricos de la materia: introducción y preparación de datos (U1), reducción de la dimensionalidad (U2), aprendizaje no supervisado y clustering (U3), árboles de decisión, métricas y validación (U4), clasificadores supervisados Bayes Ingenuo, k-NN y SVM (U5) y modelos de ensamble (U6). Cada unidad prioriza la comprensión conceptual de cómo y por qué funciona cada método, porque el examen integrador es de opción múltiple y pregunta por conceptos, no por demostraciones. Las fórmulas aparecen solo cuando ayudan a entender. Al final hay un parcial real resuelto y dos simulacros nuevos, con las respuestas y su justificación en hojas separadas.</div>
+<div class="abstract"><b>Resumen.</b> Este documento reúne la totalidad de los contenidos teóricos de la materia: introducción y preparación de datos (U1), reducción de la dimensionalidad (U2), aprendizaje no supervisado y clustering (U3), árboles de decisión, métricas y validación (U4), clasificadores supervisados Bayes Ingenuo, k-NN y SVM (U5) y modelos de ensamble (U6). Cada unidad prioriza la comprensión conceptual de cómo y por qué funciona cada método, porque el examen integrador es de opción múltiple y pregunta por conceptos, no por demostraciones. Las fórmulas aparecen solo cuando ayudan a entender, y los métodos más difíciles van acompañados de figuras y de analogías con la vida cotidiana. Al final hay un parcial real resuelto y dos simulacros nuevos, con las respuestas y su justificación en hojas separadas.</div>
 
 <h2>Qué tipo de examen es</h2>
 <p>El parcial de ejemplo (01/12/2023) tiene 20 preguntas de opción múltiple, más o menos tres por unidad. Revisándolo aparecen cinco patrones que se repiten:</p>
@@ -104,6 +106,7 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 9pt; backgrou
 <div class="box trampa"><p>los distractores y confusiones frecuentes.</p></div>
 <div class="box preg"><p>cómo podría aparecer en el examen, con su respuesta.</p></div>
 <div class="box prof"><p>observaciones que hizo el profesor al corregir nuestros TPs.</p></div>
+<div class="box analog"><p>una comparación con la vida cotidiana para entender la idea antes de la teoría.</p></div>
 
 <h2>Plan de estudio sugerido (17 al 27 de noviembre)</h2>
 <table>
