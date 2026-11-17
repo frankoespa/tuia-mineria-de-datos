@@ -217,6 +217,30 @@ Ejemplo con la masa de los Chinstrap: Q1 = 3487, Q3 = 3950, IQR = 463. Límites:
 
 En nuestro TP **no eliminamos ninguno**: sobre el conjunto completo no hay atípicos, y los 6 que aparecen dentro de cada especie apenas pasan el límite y son coherentes con el sexo (los grandes son machos, los chicos hembras).
 
+### Valor imposible contra atípico estadístico
+
+En el TP3 quedó clara una distinción que conviene tener siempre a mano, porque son **dos problemas distintos con dos tratamientos distintos**:
+
+| | Valor **imposible** | Atípico **estadístico** |
+|---|---|---|
+| Cómo se detecta | Conociendo la variable: el rango que puede tomar | Con una regla sobre los datos (IQR, 1.5 × IQR) |
+| Qué es | Un error: la medición está rota | Un dato real y extremo |
+| Qué se hace | Se elimina o se corrige | Casi siempre se conserva |
+| Cuántos suele haber | Muy pocos | Pueden ser miles |
+
+El criterio del IQR **no distingue entre los dos**: marca por igual a un pH de 25 y a un suelo genuinamente muy rico en carbono. Por eso primero se buscan los imposibles usando lo que uno sabe de la variable, y recién después se aplica el IQR.
+
+*Cómo se buscan los imposibles.* Hay que mirar variable por variable y preguntarse qué rango admite:
+
+- **Porcentajes y fracciones** (`humedad`, `arcilla`, `arena`): entre 0 y 100.
+- **Escalas definidas** (`ph`): entre 0 y 14.
+- **Conteos y cantidades** (`lluvia`, `P`): no pueden ser negativos.
+- **Ojo:** que un valor sea negativo no lo hace imposible. En el TP3, `elevacion` −161 son zonas bajo el nivel del mar y `temp_min_mensual` −27.9 es un mes de invierno. Los dos son correctos.
+
+*Lo que encontramos en el TP3.* 2 filas entre 50.004, con `ph` 25.3 y 18.0, `arcilla` 142 % y `humedad` 148 %. Una de las dos tenía además los máximos del conjunto en dos temperaturas y el mínimo en radiación solar: estaba rota entera, no era un valor suelto. Se eliminaron las dos filas.
+
+Después, con el IQR, aparecieron **3.645 atípicos en `soc` (7.32 %)**, 3.485 en `P` y 2.821 en `elevacion`. Esos **se conservaron**, por la regla de oro de arriba: el boxplot por cultivo mostró que los `soc` altos son casi todos de `coco` y los `cec` altos de `garbanzo`. Recortarlos habría borrado justo lo que distingue a esos cultivos.
+
 ---
 
 ## 9. Correlación
@@ -276,6 +300,28 @@ A los **árboles** esto casi no les afecta, porque parten por umbrales. A **k-NN
 set(df["columna"]) - set(mi_diccionario.keys())   # tiene que dar set()
 ```
 
+### Codificar la variable objetivo: `LabelEncoder`
+
+Todo lo de arriba vale para las **predictoras**. Con la variable **objetivo** de una clasificación la pregunta cambia, y la respuesta es más simple: se usa `LabelEncoder`, que asigna un número por categoría siguiendo el orden alfabético.
+
+```python
+codificador = LabelEncoder()
+y = codificador.fit_transform(cultivos["clase"])   # algodon -> 0 ... manzana -> 9
+codificador.classes_                               # para volver a los nombres
+```
+
+**¿Y el problema de las distancias falsas?** No existe acá, y esta es la diferencia que conviene tener clara:
+
+| | Variable **predictora** nominal | Variable **objetivo** |
+|---|---|---|
+| Qué hace el modelo con ella | La usa para calcular: distancias (k-NN), productos con pesos (SVM), umbrales (árboles) | Solo la compara: ¿la etiqueta estimada es igual a la real? |
+| Codificarla 0, 1, 2… | Inventa que la 1 está entre la 0 y la 2 | No inventa nada: ningún modelo calcula con el número de la clase |
+| Qué se usa | One-hot si es nominal, `OrdinalEncoder` si es ordinal | `LabelEncoder` |
+
+De hecho, `scikit-learn` acepta la objetivo como texto y funciona igual. `LabelEncoder` se usa porque deja los nombres guardados en `classes_` y porque algunas salidas (matrices de confusión, importancias) quedan más prolijas con números.
+
+**En el TP2 no lo usamos:** `Droga` quedó como texto. En el TP3 lo pide el enunciado.
+
 ---
 
 ## 11. Escalas y estandarización
@@ -309,6 +355,21 @@ Ojo: estandarizar **no cambia la forma** de la distribución ni el orden de los 
 Suelen usarse como sinónimos, pero no son lo mismo:
 - **Estandarizar (z-score):** media 0 y desvío 1. Es lo que hicimos.
 - **Normalizar (min-max):** llevar todo al rango 0 a 1.
+
+### A quién le hace falta y a quién no
+
+| Necesita estandarizar | Por qué |
+|---|---|
+| PCA, Isomap, t-SNE, k-means, clustering jerárquico | Trabajan con distancias o con varianzas |
+| k-NN | Mide distancias |
+| **SVM** | El margen se mide como una distancia al hiperplano |
+| **No** lo necesitan: árboles y Random Forest | Cada nodo compara **una** variable contra un umbral, nunca mezcla dos |
+
+El caso de los árboles vale la pena entenderlo, porque es la razón de fondo: estandarizar es restar una constante y dividir por otra, y eso **no cambia el orden** de los valores de una columna. El corte `lluvia <= 950` pasa a ser `lluvia_std <= -0.25`, pero deja exactamente las mismas filas de cada lado. Por eso el árbol es el mismo.
+
+*Lo comprobamos en el TP3.* Entrenamos dos Random Forest con la misma semilla, uno con `X` y otro con `X_std`: las **importancias de las variables dieron idénticas** y la exactitud pasó de 0.91567 a 0.91587, con 4 predicciones distintas entre 9.961. Esa diferencia mínima no es el algoritmo: son redondeos de punto flotante al calcular los umbrales, que pueden desempatar distinto cuando dos cortes empatan en impureza.
+
+En el TP2 los árboles se entrenaron **sin estandarizar** justamente para que los umbrales del gráfico se leyeran en las unidades de los datos (`Na_a_K <= 14.829` y no `<= 0.37`). En el TP3 se estandariza en la preparación porque lo pide el enunciado y lo necesitan los dos SVM, y el Random Forest usa esos mismos datos porque le da igual.
 
 ### El detalle del desvío 1.001
 `StandardScaler` divide por **n** (desvío poblacional), mientras que `describe()` de pandas divide por **n − 1** (desvío muestral). Por eso el `describe()` de los datos estandarizados muestra 1.001 y no 1 exacto. Con 342 muestras la diferencia es despreciable y **no es un error**.
@@ -1766,7 +1827,22 @@ Con más de dos clases, precisión y exhaustividad se calculan **por clase** y d
 
 Es exactamente lo que pasó con nuestro árbol podado: la exactitud cayó de 1.00 a 0.93, pero la **precisión macro se desplomó a 0.76**, porque DrogaC quedó en 0.
 
-**Por eso el enunciado pide macro:** con clases desbalanceadas, es la única forma de que un fallo en una clase chica se note.
+**Por eso el enunciado del TP2 pide macro:** con clases desbalanceadas, es la única forma de que un fallo en una clase chica se note.
+
+### Cuando las clases están balanceadas da lo mismo
+
+El enunciado del TP3 pide **weighted** y lo justifica diciendo que el conjunto tiene un leve desbalance. El archivo original trae 5.000 muestras por clase salvo tres (`cafe` 5.002, `arroz` y `manzana` 5.001). Después de la limpieza, como los duplicados estaban concentrados en dos cultivos, va de `lenteja` con 4.891 (9.82 %) a `banana`, `cafe` y `coco` con 5.000 (10.04 %): un desbalance de menos de medio punto porcentual.
+
+Cuando todas las clases tienen el mismo tamaño, **el peso de weighted es el mismo para todas y weighted se vuelve igual a macro**. Las dos fórmulas son el mismo promedio:
+
+```
+macro    = (m1 + m2 + ... + m10) / 10
+weighted = (n1·m1 + n2·m2 + ... + n10·m10) / N     con n1 = n2 = ... = n10
+```
+
+O sea que la elección entre macro y weighted **solo cambia algo cuando las clases son de tamaños distintos**. En el TP2, con DrogaY (91) contra DrogaB (16), cambiaba mucho; en el TP3 no cambia nada.
+
+Y, como además hay 10 clases del mismo tamaño, hay otra referencia útil: **un modelo que tire la clase al azar acierta el 10 %**. Cualquier exactitud se lee contra ese 0.10, no contra 0.
 
 ---
 
