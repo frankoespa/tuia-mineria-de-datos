@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Minería de Datos: apunte integral</title>
+<style>
+@page { size: A4; margin: 22mm 20mm 22mm 20mm;
+  @bottom-center { content: counter(page); font-family: Cambria, Georgia, serif; font-size: 9pt; color: #555; }
+  @top-right { content: "Minería de Datos · Apunte integral U1–U6"; font-family: Cambria, Georgia, serif; font-size: 8pt; color: #888; }
+}
+@page :first { @bottom-center { content: none; } @top-right { content: none; } }
+:root { --ink:#1a1a1a; --muted:#555; --rule:#999; --acc:#1f3a5f; --acc2:#7a1f1f; --box:#f4f6f9; --warn:#fdf3e7; --key:#eef6ee; --q:#f3eef8; }
+html { font-size: 10.5pt; }
+body { font-family: Cambria, "Cambria Math", Georgia, "Times New Roman", serif; color: var(--ink); line-height: 1.42; margin: 0; background: #fff; text-align: justify; hyphens: auto; }
+h1, h2, h3, h4 { font-family: Cambria, Georgia, serif; color: var(--acc); text-align: left; hyphens: none; break-after: avoid; }
+h1 { font-size: 20pt; margin: 0 0 4pt; border-bottom: 1.5pt solid var(--acc); padding-bottom: 4pt; }
+h2 { font-size: 14pt; margin: 18pt 0 6pt; }
+h3 { font-size: 12pt; margin: 13pt 0 4pt; }
+h4 { font-size: 10.5pt; margin: 10pt 0 3pt; color: var(--ink); font-style: italic; }
+p { margin: 0 0 6pt; orphans: 3; widows: 3; }
+ul, ol { margin: 2pt 0 7pt 0; padding-left: 18pt; }
+li { margin-bottom: 2pt; }
+.unidad { break-before: page; }
+.portada { height: 245mm; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+.portada .inst { font-size: 11pt; letter-spacing: .5pt; color: var(--muted); text-transform: uppercase; }
+.portada .tit { font-size: 30pt; color: var(--acc); margin: 18pt 0 6pt; font-weight: bold; }
+.portada .sub { font-size: 14pt; font-style: italic; color: var(--ink); }
+.portada .linea { width: 60%; margin: 22pt auto; border-top: 1pt solid var(--rule); }
+.portada .meta { font-size: 11pt; color: var(--muted); line-height: 1.7; }
+.abstract { margin: 10pt 8% 12pt; font-size: 10pt; border-top: .6pt solid var(--rule); border-bottom: .6pt solid var(--rule); padding: 7pt 0; }
+.abstract b { font-variant: small-caps; color: var(--acc); }
+.indice { columns: 2; column-gap: 18pt; font-size: 10pt; }
+.indice div { break-inside: avoid; margin-bottom: 6pt; }
+.indice b { color: var(--acc); }
+.box { border-left: 3pt solid var(--acc); background: var(--box); padding: 5pt 8pt; margin: 7pt 0 9pt; break-inside: avoid; }
+.box.def::before { content: "Definición. "; font-weight: bold; color: var(--acc); }
+.box.clave { border-color: #2e7d32; background: var(--key); }
+.box.clave::before { content: "Idea clave. "; font-weight: bold; color: #2e7d32; }
+.box.trampa { border-color: #c06000; background: var(--warn); }
+.box.trampa::before { content: "Ojo en el examen. "; font-weight: bold; color: #c06000; }
+.box.preg { border-color: #6a3d9a; background: var(--q); }
+.box.preg::before { content: "Pregunta típica. "; font-weight: bold; color: #6a3d9a; }
+.box.prof { border-color: var(--acc2); background: #fbeeee; }
+.box.prof::before { content: "Criterio de la cátedra. "; font-weight: bold; color: var(--acc2); }
+.box p:last-child, .box ul:last-child { margin-bottom: 0; }
+.formula { text-align: center; font-style: italic; margin: 5pt 0 7pt; font-size: 11pt; }
+table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt; font-size: 9.5pt; break-inside: avoid; text-align: left; }
+th { border-top: 1pt solid var(--ink); border-bottom: .6pt solid var(--ink); padding: 3pt 5pt; background: #f2f2f2; }
+td { border-bottom: .4pt solid #ccc; padding: 3pt 5pt; vertical-align: top; }
+tr:last-child td { border-bottom: 1pt solid var(--ink); }
+.cap { font-size: 9pt; color: var(--muted); text-align: center; margin: -4pt 0 10pt; font-style: italic; }
+figure { margin: 6pt 0 10pt; text-align: center; break-inside: avoid; }
+figure svg { max-width: 100%; }
+figcaption { font-size: 9pt; color: var(--muted); font-style: italic; margin-top: 2pt; }
+.dos { display: flex; gap: 12pt; } .dos > div { flex: 1; }
+code { font-family: Consolas, "Courier New", monospace; font-size: 9pt; background: #f2f2f2; padding: 0 2pt; }
+.small { font-size: 9pt; color: var(--muted); }
+/* Simulacros */
+.q { break-inside: avoid; margin: 0 0 8pt; }
+.q .enun { font-weight: bold; margin-bottom: 2pt; }
+.q ol { list-style: lower-alpha; margin: 0; padding-left: 22pt; }
+.q li { margin: 0 0 1pt; }
+.multi { font-weight: normal; font-style: italic; color: var(--acc2); font-size: 9pt; }
+.resp { font-size: 9.5pt; }
+.resp td:first-child { width: 22pt; font-weight: bold; }
+.resp td:nth-child(2) { width: 34pt; font-weight: bold; color: var(--acc); }
+.grilla { font-size: 9.5pt; }
+.grilla td { text-align: center; width: 9%; height: 14pt; }
+</style>
+</head>
+<body>
+
+<section class="portada">
+  <div class="inst">Tecnicatura Universitaria en Inteligencia Artificial · FCEIA · UNR</div>
+  <div class="tit">Minería de Datos</div>
+  <div class="sub">Apunte integral de teoría, unidades 1 a 6,<br>con guía de preguntas típicas y simulacros de examen</div>
+  <div class="linea"></div>
+  <div class="meta">
+    Preparado para el examen integrador del 27 de noviembre de 2026<br>
+    Basado en las filminas del Prof. Flavio E. Spetale, los notebooks de clase y el parcial de ejemplo del 01/12/2023<br>
+    Franco Renna · Franco Esparza
+  </div>
+</section>
+
+<section class="unidad">
+<h1>Cómo usar este apunte</h1>
+
+<div class="abstract"><b>Resumen.</b> Este documento reúne la totalidad de los contenidos teóricos de la materia: introducción y preparación de datos (U1), reducción de la dimensionalidad (U2), aprendizaje no supervisado y clustering (U3), árboles de decisión, métricas y validación (U4), clasificadores supervisados Bayes Ingenuo, k-NN y SVM (U5) y modelos de ensamble (U6). Cada unidad prioriza la comprensión conceptual de cómo y por qué funciona cada método, porque el examen integrador es de opción múltiple y pregunta por conceptos, no por demostraciones. Las fórmulas aparecen solo cuando ayudan a entender. Al final hay un parcial real resuelto y dos simulacros nuevos, con las respuestas y su justificación en hojas separadas.</div>
+
+<h2>Qué tipo de examen es</h2>
+<p>El parcial de ejemplo (01/12/2023) tiene 20 preguntas de opción múltiple, más o menos tres por unidad. Revisándolo aparecen cinco patrones que se repiten:</p>
+<ol>
+  <li><b>Definición directa:</b> "¿Qué es un dendrograma?", "¿Qué mide el índice de Gini?". La respuesta correcta suele ser casi textual de las filminas.</li>
+  <li><b>Pares opuestos:</b> dos opciones idénticas salvo una palabra (máxima/mínima, alta/baja dimensión, geodésica/euclídea). Hay que leer con lupa.</li>
+  <li><b>"¿Cuál NO es...?":</b> ventajas o miembros de una familia. Ejemplo: "¿cuál no es un método de ensamble?" → árboles de decisión.</li>
+  <li><b>Consecuencias:</b> "¿qué pasa si k es demasiado pequeño en K-means?", "¿cuál es el objetivo de la poda?".</li>
+  <li><b>Clasificación de métodos:</b> lineal o no lineal, perezoso o no, supervisado o no, ensamble o no.</li>
+</ol>
+<p>Algunas preguntas admiten más de una respuesta correcta (por ejemplo, "¿cuáles técnicas son no lineales?"). En los simulacros están marcadas.</p>
+
+<h2>Recuadros</h2>
+<div class="box def"><p>el concepto formal, como lo define la teoría.</p></div>
+<div class="box clave"><p>lo que hay que entender sí o sí.</p></div>
+<div class="box trampa"><p>los distractores y confusiones frecuentes.</p></div>
+<div class="box preg"><p>cómo podría aparecer en el examen, con su respuesta.</p></div>
+<div class="box prof"><p>observaciones que hizo el profesor al corregir nuestros TPs.</p></div>
+
+<h2>Plan de estudio sugerido (17 al 27 de noviembre)</h2>
+<table>
+<tr><th>Día</th><th>Fecha</th><th>Contenido</th></tr>
+<tr><td>1</td><td>lun 17/11</td><td>U1 completa y repaso del examen de ejemplo (sin mirar respuestas)</td></tr>
+<tr><td>2</td><td>mar 18/11</td><td>U2: maldición de la dimensionalidad, PCA y criterios</td></tr>
+<tr><td>3</td><td>mié 19/11</td><td>U2: MDS, ISOMAP, t-SNE, UMAP y su comparación</td></tr>
+<tr><td>4</td><td>jue 20/11</td><td>U3: no supervisado, K-means, jerárquico, validación</td></tr>
+<tr><td>5</td><td>vie 21/11</td><td>U3: DBSCAN, HDBSCAN, asociación · U4: árboles e impureza</td></tr>
+<tr><td>6</td><td>sáb 22/11</td><td>U4: sesgo y varianza, poda, métricas, validación cruzada</td></tr>
+<tr><td>7</td><td>dom 23/11</td><td>U5: Bayes Ingenuo y k-NN</td></tr>
+<tr><td>8</td><td>lun 24/11</td><td>U5: SVM · U6: ensambles</td></tr>
+<tr><td>9</td><td>mar 25/11</td><td>Simulacros 2 y 3 cronometrados; repasar solo lo que se falló</td></tr>
+<tr><td>10</td><td>mié 26/11</td><td>Repaso final (capítulo 7) y examen de ejemplo otra vez</td></tr>
+</table>
+
+<h2>Contenido</h2>
+<div class="indice">
+<div><b>1. Introducción y preparación de datos</b><br>Minería de datos y aprendizaje inductivo · Clasificación, regresión, agrupamiento · Tipos de aprendizaje · Preparación: limpieza, normalización, discretización · Entrenamiento, test y validación cruzada · Análisis exploratorio · Fuga de datos</div>
+<div><b>2. Reducción de la dimensionalidad</b><br>Reducción vs selección · Maldición de la dimensionalidad · Proyección y manifold learning · PCA · MDS · ISOMAP · t-SNE · UMAP · Comparación</div>
+<div><b>3. Aprendizaje no supervisado</b><br>Agrupación, asociación y reducción · K-means · Clustering jerárquico y dendrogramas · Validación: cohesión, separación, Gap, Silhouette · DBSCAN y HDBSCAN · Apriori, Eclat, FP-Growth</div>
+<div><b>4. Árboles de decisión</b><br>ID3, C4.5, CART · Gini y entropía · Construcción · Sesgo, varianza y poda · CART en clasificación y regresión · Métricas de clasificación y regresión · Validación cruzada y Monte Carlo · Estandarizar después de separar</div>
+<div><b>5. Clasificación supervisada</b><br>Bayes Ingenuo y sus variantes · Redes bayesianas · k-NN y distancias · SVM: margen, vectores de soporte, margen blando, kernels, multiclase</div>
+<div><b>6. Modelos de ensamble</b><br>Por qué combinar · Bagging y bootstrap · Out-of-bag · Random Forest · Boosting: AdaBoost, Gradient Boosting, XGBoost · Stacking</div>
+<div><b>7. Repaso transversal</b><br>Tabla comparativa de todos los métodos · Qué método necesita escalado · Glosario</div>
+<div><b>8. Simulacros</b><br>Parcial 2023 · Simulacro 2 · Simulacro 3 · Hojas de respuestas justificadas</div>
+</div>
+</section>

@@ -1,0 +1,299 @@
+
+<section class="unidad">
+<h1>1. Introducción a la minería de datos y preparación de los datos</h1>
+
+<h2>1.1 Qué es la minería de datos</h2>
+<p>La teoría la define de tres maneras complementarias:</p>
+<ul>
+  <li>El <b>arte y la ciencia del análisis inteligente</b> de los datos.</li>
+  <li>El <b>conjunto de herramientas</b> para entender y modelizar conjuntos (complejos) de datos.</li>
+  <li>El <b>proceso de descubrir patrones y obtener conocimiento</b> a partir de grandes conjuntos de datos.</li>
+</ul>
+<p>Es un conjunto de conocimientos y herramientas que se usan en todas las etapas del análisis: desde la adquisición y limpieza hasta el modelado y la interpretación.</p>
+
+<div class="box clave"><p>Clasificación, regresión y agrupamiento se basan en el <b>paradigma del aprendizaje inductivo</b>: a partir de los datos (la información de entrenamiento) se deriva un <b>modelo</b> (el conocimiento) que tiene <b>utilidad predictiva</b>, es decir, que puede aplicarse a datos nuevos. Inducción = ir de los casos particulares a una regla general.</p></div>
+
+<h2>1.2 Las tres tareas principales</h2>
+<table>
+<tr><th>Tarea</th><th>Función</th><th>Qué devuelve</th><th>¿Hay etiqueta?</th></tr>
+<tr><td><b>Clasificación</b></td><td>c : X → C</td><td>Una clase de un conjunto discreto (ej. C = {0, 1} en clasificación binaria)</td><td>Sí</td></tr>
+<tr><td><b>Regresión</b></td><td>f : X → ℝ</td><td>Un valor numérico real</td><td>Sí</td></tr>
+<tr><td><b>Agrupamiento</b> (clustering)</td><td>h : X → C<sub>h</sub></td><td>Un grupo (cluster) de un conjunto de grupos descubiertos</td><td>No</td></tr>
+</table>
+<p>X es el conjunto de atributos que describe una instancia. En el <b>agrupamiento</b> no existen clases predefinidas: los grupos se "descubren" de forma autónoma a partir de patrones de <b>similitud</b> entre instancias, y el modelo resultante puede asignar instancias nuevas a uno de esos grupos. Por eso se lo describe como "una clasificación sin clases conocidas".</p>
+
+<h2>1.3 Tipología de algoritmos</h2>
+<p>El aprendizaje computacional se divide en cuatro familias:</p>
+<ul>
+  <li><b>Supervisado:</b> se aprende de datos etiquetados. Tareas: clasificación y regresión.</li>
+  <li><b>No supervisado:</b> sin etiquetas. Tareas: clustering y asociación (y reducción de dimensionalidad, U3).</li>
+  <li><b>Semi-supervisado:</b> combina pocos datos etiquetados con muchos sin etiquetar.</li>
+  <li><b>Por refuerzo:</b> un <b>agente</b> actúa sobre un <b>ambiente</b>; recibe <b>estados</b> y <b>recompensas</b> según sus <b>acciones</b>.</li>
+</ul>
+<table>
+<tr><th>Método</th><th>Clasificación</th><th>Regresión</th><th>Agrupamiento</th></tr>
+<tr><td>Agrupamiento jerárquico</td><td></td><td></td><td>✓</td></tr>
+<tr><td>K-means y derivados</td><td></td><td></td><td>✓</td></tr>
+<tr><td>k-NN</td><td>✓</td><td></td><td></td></tr>
+<tr><td>SVM</td><td>✓</td><td>✓</td><td></td></tr>
+<tr><td>Redes neuronales</td><td>✓</td><td>✓</td><td></td></tr>
+<tr><td>Árboles de decisión</td><td>✓</td><td>✓</td><td></td></tr>
+<tr><td>Métodos probabilísticos</td><td>✓</td><td>✓</td><td></td></tr>
+</table>
+<p class="cap">Tabla de la filmina 12 de la U1. k-NN también puede hacer regresión, pero la cátedra lo presenta como clasificador.</p>
+<p><b>Aplicaciones:</b> procesamiento de lenguaje natural y bots, visión por computadora, seguridad, detección de fraude, fidelización de clientes, marketing y recomendaciones, búsqueda en línea, conducción automática, antivirus y detección de intrusos, y apoyo a disciplinas científicas (genómica, biología, física, geografía).</p>
+
+<h2>1.4 Preparación de los datos</h2>
+<p>Es la etapa que más esfuerzo lleva (se estima un 75% del tiempo de un proyecto). Incluye cuatro tareas:</p>
+<ol>
+  <li><b>Limpieza:</b> corregir o eliminar ruido y datos no válidos.</li>
+  <li><b>Normalización:</b> llevar los datos al mismo rango.</li>
+  <li><b>Discretización:</b> convertir variables continuas en categóricas (intervalos).</li>
+  <li><b>Reducción de la dimensionalidad:</b> trabajar con conjuntos de datos reducidos (U2).</li>
+</ol>
+
+<h3>Limpieza</h3>
+<p>Detecta, elimina o corrige instancias corruptas o inapropiadas. A nivel de atributos se gestionan los valores <b>ausentes</b>, <b>erróneos</b> e <b>inconsistentes</b>, como los valores fuera de rango (<i>outliers</i>). La <b>integración</b> de datos de distintas fuentes es una de las principales fuentes de incoherencias.</p>
+<ul>
+  <li><b>Valores nulos.</b> Muchos algoritmos no los aceptan. Opciones: eliminar las filas, eliminar el atributo o reemplazar (imputar) con un valor como la media o la mediana (en pandas, <code>dropna()</code> y <code>fillna()</code>).
+    <ul>
+      <li><b>Imputar por grupo</b> (por ejemplo, la mediana de la clase) es mejor que imputar con el valor general de la columna, que sesga los datos hacia valores que algunos grupos nunca toman.</li>
+      <li><b>Nunca rellenar una categórica con "Desconocido":</b> se inventa una categoría que no existe en el fenómeno y el modelo aprendería a predecirla.</li>
+    </ul>
+  </li>
+  <li><b>Valores atípicos.</b> Antes de eliminarlos hay que preguntarse si son errores o si son típicos de una clase. Si caracterizan a una clase, eliminarlos borra justamente la información que la distingue. Se pueden detectar con el criterio del rango intercuartílico (Q1 − 1.5·IQR, Q3 + 1.5·IQR) o recortar con <i>winsorización</i>.</li>
+  <li><b>Errores de carga:</b> categorías escritas de varias formas, separadores, filas duplicadas.</li>
+</ul>
+
+<h3>Normalización y estandarización</h3>
+<p>Consiste en modificar los datos para que estén en una escala equivalente. Muchos métodos <b>quedan sesgados por los atributos con valores más altos</b>, que dominan el resultado. La teoría muestra tres formas:</p>
+<ul>
+  <li><b>Por el máximo:</b> x' = x / máx.</li>
+  <li><b>Por la diferencia</b> (min-max): x' = (x − mín) / (máx − mín), lleva a [0, 1].</li>
+  <li><b>Basada en la desviación estándar</b> (estandarización o z-score): x' = (x − media) / desvío. Deja media 0 y desvío 1.</li>
+</ul>
+<div class="box clave"><p>Escalar es imprescindible en los métodos basados en <b>distancias o varianzas</b>: PCA, ISOMAP, t-SNE, UMAP, K-means, clustering jerárquico, DBSCAN, k-NN y SVM. Los <b>árboles de decisión</b> (y por lo tanto Random Forest) <b>no lo necesitan</b>, porque solo comparan cada variable contra un umbral.</p></div>
+
+<h3>Discretización</h3>
+<p>Convierte una variable continua en intervalos. Dos estrategias habituales: <b>igual ancho</b> (intervalos del mismo tamaño) e <b>igual frecuencia</b> o cuantiles (cada intervalo con la misma cantidad de casos). Se usa, por ejemplo, para aplicar Bayes Ingenuo categórico a variables continuas (U5).</p>
+
+<h2>1.5 Conjuntos de entrenamiento y test</h2>
+<p>Los datos se dividen en un conjunto de <b>entrenamiento</b>, con el que el algoritmo construye el modelo, y uno de <b>test</b>, con el que se evalúa su desempeño sobre datos que no vio. Habitualmente son <b>extracciones aleatorias</b> del conjunto inicial.</p>
+<div class="box clave"><p>Hay un <b>compromiso</b>: cuantos más datos se usan para entrenar, más <b>robusto</b> es el modelo; cuantos más se usan para validar, más <b>fiable</b> es la estimación del error (la capacidad de generalización).</p></div>
+<p>Con clases desbalanceadas la partición se hace <b>estratificada</b>, para que cada clase mantenga su proporción en ambos conjuntos.</p>
+
+<h3>Validación cruzada k-fold</h3>
+<p>Se divide el conjunto en k partes; se entrena con k−1 y se evalúa con la restante, rotando k veces. El rendimiento es el promedio. Se desarrolla en la U4 (sección 4.8).</p>
+
+<h3>Fuga de datos (<i>data leakage</i>) y sesgo de espionaje</h3>
+<ul>
+  <li><b>Fuga de datos:</b> el modelo usa durante el entrenamiento información que no estaría disponible al predecir en el mundo real. Ejemplos: incluir la variable objetivo o una variable que solo se conoce después del hecho (en el ejemplo de taxis, la propina o el tiempo real de viaje); estandarizar con todos los datos antes de separar el test (U4).</li>
+  <li><b>Sesgo de espionaje de los datos</b> (<i>data snooping bias</i>): mirar el test durante el análisis exploratorio y tomar decisiones influidas por él. Por eso el test se separa temprano.</li>
+</ul>
+
+<h2>1.6 El flujo de un proyecto y el análisis exploratorio</h2>
+<p>Lista de chequeo de los notebooks de clase:</p>
+<ol>
+  <li>Definición del objetivo.</li>
+  <li>Adquisición de datos.</li>
+  <li>Examinar la estructura (filas, tipos, nulos, categorías).</li>
+  <li>Separación del conjunto de prueba.</li>
+  <li>Análisis exploratorio.</li>
+  <li>Preparación: limpieza, escalado, discretización.</li>
+  <li>Aplicación del modelo.</li>
+</ol>
+<p>El <b>análisis exploratorio de datos</b> (EDA) fue introducido por <b>Tukey (1977)</b>. Es un proceso <b>cíclico y creativo</b> guiado por preguntas, sobre todo dos: ¿qué <b>variación</b> ocurre dentro de cada variable? y ¿qué <b>covariación</b> hay entre variables?</p>
+<ul>
+  <li><b>Medidas resumen:</b> media, mediana, desvío, cuartiles. Si la media es mucho mayor que la mediana, la distribución es asimétrica a la derecha.</li>
+  <li><b>Histogramas y boxplots</b> para ver distribuciones y atípicos.</li>
+  <li><b>Correlación de Pearson:</b> mide solo relaciones <b>lineales</b> entre variables numéricas y no informa la pendiente. Para variables ordinales se usa <b>Spearman</b>.</li>
+  <li>Correlación alta con la <b>objetivo</b>: indica relevancia (sobre todo en regresión). Correlación alta <b>entre predictoras</b>: no son independientes, así que se puede reducir la dimensionalidad.</li>
+</ul>
+<p><b>Repositorios de datos:</b> OpenML, Kaggle, PapersWithCode, UCI Machine Learning Repository y AWS datasets. Herramientas: Jupyter / Google Colab y <b>scikit-learn</b> (creada por David Cournapeau en 2007, mantenida por Inria). Un <b>Pipeline</b> encadena transformaciones y un estimador final en un solo objeto, para asegurar reproducibilidad.</p>
+
+<div class="box preg"><p>"La clasificación, la regresión y el agrupamiento se basan en..." → el <b>aprendizaje inductivo</b>. "¿Qué tarea no dispone de una etiqueta de clase?" → el agrupamiento.</p></div>
+</section>
+
+<section class="unidad">
+<h1>2. Reducción de la dimensionalidad</h1>
+
+<h2>2.1 Reducción de dimensionalidad vs. selección de variables</h2>
+<ul>
+  <li><b>Selección de variables:</b> se eligen algunas columnas originales y se descartan otras. Las variables conservan su significado.</li>
+  <li><b>Reducción de dimensionalidad:</b> se crean <b>variables nuevas</b> (componentes) que combinan las originales; por ejemplo, PCA convierte un conjunto de autos en "x_reducida1" y "x_reducida2". Se pierde la interpretación directa, pero se conserva la mayor parte de la información.</li>
+</ul>
+
+<h2>2.2 La maldición de la dimensionalidad</h2>
+<p>Muchos problemas tienen miles o millones de características. Eso hace el entrenamiento lento y, sobre todo, dificulta encontrar una buena solución. En aprendizaje automático, la cantidad de <b>dimensiones</b> equivale a la cantidad de <b>variables</b>.</p>
+<p>La maldición se manifiesta de dos maneras:</p>
+<ol>
+  <li>La <b>distancia media</b> entre los datos <b>aumenta</b> con el número de dimensiones. Esto en sí no es tan grave.</li>
+  <li>La <b>variabilidad de las distancias disminuye exponencialmente</b>. <b>Este es el verdadero problema:</b> todos los puntos quedan casi a la misma distancia entre sí, así que "cercano" y "lejano" dejan de distinguirse.</li>
+</ol>
+<p><b>Consecuencias.</b> Los datos de alta dimensión son muy <b>escasos</b> (dispersos):</p>
+<ul>
+  <li>Una instancia nueva probablemente queda lejos de todas las de entrenamiento, así que las predicciones se basan en extrapolaciones y son menos confiables.</li>
+  <li>Cuantas más dimensiones, <b>mayor riesgo de sobreajuste</b>.</li>
+  <li>Las instancias necesarias para mantener la densidad crecen <b>exponencialmente</b>: con solo 100 características en [0, 1] harían falta más instancias que átomos en el universo observable para que estén a 0.1 entre sí.</li>
+</ul>
+<div class="box clave"><p>La maldición <b>afecta a las técnicas basadas en distancias</b>: clustering, k-NN y detección de anomalías por distancia (como Local Outlier Factor). Hay <b>dos remedios</b>: reducir el número de dimensiones o aumentar la cantidad de datos.</p></div>
+
+<h2>2.3 Dos enfoques: proyección y manifold learning</h2>
+<h3>Proyección</h3>
+<p>En los datos reales las instancias no se distribuyen uniformemente: muchas variables son casi constantes y otras están muy correlacionadas, así que los datos viven <b>cerca de un subespacio de menor dimensión</b>. Proyectar consiste en llevar cada punto a ese subespacio <b>preservando aproximadamente las distancias</b> (por ejemplo, de 3D a un plano 2D con ejes z<sub>1</sub>, z<sub>2</sub>).</p>
+<h3>Manifold learning (aprendizaje de variedades)</h3>
+<p>La proyección no siempre sirve. En el <b>rollo suizo</b> los datos forman una hoja 2D enrollada en 3D: proyectar sobre un plano (descartar x<sub>3</sub>) <b>aplastaría capas distintas</b> unas sobre otras. Lo que se quiere es <b>desenrollarlo</b>.</p>
+<div class="box def"><p>Un <b>manifold d-dimensional</b> es una parte de un espacio n-dimensional (d &lt; n) que <b>localmente se parece a un hiperplano d-dimensional</b>. El rollo suizo es un manifold 2D (d = 2) en un espacio 3D (n = 3).</p></div>
+<p>Los algoritmos que modelan la variedad se basan en la <b>hipótesis de la variedad</b> (<i>manifold assumption</i>): la mayoría de los datos reales de alta dimensión están cerca de una variedad de dimensión mucho menor. Suele acompañarse de un segundo supuesto: la tarea (clasificación o regresión) será <b>más simple</b> expresada en esa variedad.</p>
+
+<h2>2.4 Análisis de componentes principales (PCA)</h2>
+<div class="box def"><p>Los <b>componentes principales</b> de un conjunto de datos son <b>las direcciones en las cuales la varianza de los elementos es máxima</b>, es decir, aquellas en las que los elementos están <b>más separados</b> unos de otros. PCA busca las <b>combinaciones lineales</b> de las variables originales que maximizan la varianza (información).</p></div>
+<p>PCA es un método <b>estadístico, lineal y no supervisado</b> que usa <b>factorización matricial</b> (descomposición de la matriz de varianzas-covarianzas en autovectores y autovalores). Para calcular las componentes siguen haciendo falta las variables originales.</p>
+<p><b>Finalidades:</b> hallar variables latentes (factores), reducir la dimensión, eliminar redundancias y representar gráficamente información multidimensional. También sirve como paso previo a regresión o clustering.</p>
+
+<h3>Interpretación geométrica</h3>
+<ol>
+  <li>Se centran los ejes en la media de los datos.</li>
+  <li>La <b>primera componente</b> (z<sub>1</sub>) pasa en la dirección de <b>máxima varianza</b> de las proyecciones.</li>
+  <li>La <b>segunda</b> (z<sub>2</sub>) es <b>perpendicular</b> (ortogonal) a la primera y maximiza la varianza restante.</li>
+  <li>z<sub>1</sub> y z<sub>2</sub> definen el plano que mejor representa los datos en menor dimensión.</li>
+</ol>
+<figure>
+<svg width="360" height="170" viewBox="0 0 360 170" xmlns="http://www.w3.org/2000/svg" font-family="Cambria, serif" font-size="11">
+  <g fill="#7f9cc0">
+    <circle cx="90" cy="120" r="3"/><circle cx="105" cy="112" r="3"/><circle cx="118" cy="110" r="3"/><circle cx="130" cy="98" r="3"/><circle cx="140" cy="104" r="3"/><circle cx="152" cy="90" r="3"/><circle cx="165" cy="88" r="3"/><circle cx="175" cy="78" r="3"/><circle cx="188" cy="80" r="3"/><circle cx="200" cy="66" r="3"/><circle cx="212" cy="64" r="3"/><circle cx="226" cy="55" r="3"/><circle cx="125" cy="118" r="3"/><circle cx="160" cy="100" r="3"/><circle cx="190" cy="68" r="3"/><circle cx="148" cy="80" r="3"/><circle cx="110" cy="100" r="3"/><circle cx="205" cy="78" r="3"/>
+  </g>
+  <line x1="70" y1="138" x2="250" y2="40" stroke="#1f3a5f" stroke-width="2"/>
+  <line x1="135" y1="43" x2="185" y2="135" stroke="#7a1f1f" stroke-width="2"/>
+  <text x="252" y="38" fill="#1f3a5f">PC1: máxima varianza</text>
+  <text x="190" y="148" fill="#7a1f1f">PC2: perpendicular a PC1</text>
+</svg>
+<figcaption>Figura 2.1. Las componentes principales son direcciones ortogonales ordenadas por la varianza que capturan.</figcaption>
+</figure>
+
+<h3>Propiedades</h3>
+<ul>
+  <li>Las componentes son <b>ortogonales</b> (no correlacionadas entre sí): cada una aporta información nueva.</li>
+  <li>Están <b>ordenadas</b> por la varianza que explican: la primera explica más que la segunda, y así sucesivamente.</li>
+  <li>Cada componente es una combinación lineal de las variables originales; los coeficientes (<b>cargas</b>) indican el peso de cada variable, lo que hace a PCA <b>interpretable</b>. Los valores de cada observación en las nuevas componentes son los <b>scores</b>.</li>
+  <li>Cada <b>autovalor</b> (eigenvalue) es la varianza explicada por su componente.</li>
+  <li>Con n observaciones y p variables hay como máximo <b>min(n − 1, p)</b> componentes distintas.</li>
+</ul>
+
+<h3>Consideraciones importantes</h3>
+<ul>
+  <li><b>Escalado:</b> la varianza se mide en la escala de la variable al cuadrado. Si no se estandariza (media 0, desvío 1), las variables de mayor escala <b>dominan</b> las componentes.</li>
+  <li><b>Reproducibilidad:</b> PCA da siempre las mismas componentes con cualquier software; los autovalores son los mismos. La única diferencia posible es que el <b>signo</b> de las componentes esté invertido.</li>
+  <li><b>Outliers:</b> al trabajar con varianzas, PCA es <b>muy sensible a los atípicos</b>. En varias dimensiones pueden pasar desapercibidos (una persona de 2 m y 50 kg no es atípica en cada variable por separado, pero sí en conjunto). Para detectarlos se usa la <b>distancia de Mahalanobis</b>, que tiene en cuenta la correlación entre dimensiones.</li>
+</ul>
+
+<h3>¿Cuántas componentes conservar?</h3>
+<p>No hay un método objetivo; depende del analista y del problema. Para visualizar se suelen tomar dos o tres componentes, si explican suficiente variabilidad. Para uso supervisado, se elige por validación cruzada. Los tres criterios vistos en clase:</p>
+<table>
+<tr><th>Criterio</th><th>Regla</th></tr>
+<tr><td>Varianza acumulada</td><td>La menor cantidad de componentes que acumule ≈ 75–80% de la varianza.</td></tr>
+<tr><td>Kaiser</td><td>Conservar las componentes con <b>autovalor &gt; 1</b> (con datos estandarizados, una componente con autovalor &lt; 1 aporta menos que una sola variable original).</td></tr>
+<tr><td>Codo (<i>scree plot</i>)</td><td>Graficar la varianza de cada componente y buscar el quiebre donde la curva deja de caer bruscamente.</td></tr>
+</table>
+<p>Basta con <b>un</b> criterio; no hace falta que se cumplan los tres.</p>
+<div class="box prof"><p>En el método del codo, <b>la componente donde se produce el quiebre se incluye</b>. Si el quiebre está en la tercera componente, se toman 3, no 2. (Lo marcó en nuestro TP1.)</p></div>
+<div class="box trampa"><p>Las componentes son las direcciones de varianza <b>máxima</b>, no mínima, y son aquellas donde los datos están <b>más</b> separados, no menos. PCA es <b>lineal</b> y no puede "desenrollar" un manifold como el rollo suizo.</p></div>
+
+<h2>2.5 Escalado multidimensional (MDS)</h2>
+<p>Representa una <b>matriz de disimilaridades</b> en un número dado de dimensiones. Como técnica de reducción, calcula las disimilaridades en el espacio original y busca una representación en baja dimensión donde las <b>distancias euclídeas se parezcan lo más posible</b> a esas disimilaridades. La función de costo (<i>stress</i>) se minimiza con <b>descenso del gradiente</b>: un algoritmo que encuentra un mínimo local moviendo un punto en el sentido contrario al gradiente, proporcionalmente a su magnitud, hasta converger o hasta un número fijo de iteraciones. ISOMAP usa MDS como último paso.</p>
+
+<h2>2.6 ISOMAP (Isometric Mapping)</h2>
+<div class="box def"><p>ISOMAP busca una representación reducida que <b>mantenga las distancias geodésicas</b> entre todos los puntos. La <b>distancia geodésica</b> es la de menor longitud entre dos puntos <b>medida sobre la superficie</b> (la variedad), a diferencia de la euclídea, que va en línea recta por "fuera" de ella.</p></div>
+<p>Tenenbaum, de Silva y Langford (2000). Se basa en que muchos datos de alta dimensión tienen una estructura intrínseca de menor dimensión (por ejemplo, una imagen facial tiene miles de píxeles, pero sus variaciones reales se describen con pocas: pose, expresión, identidad).</p>
+
+<h3>Algoritmo</h3>
+<p>Entradas: los datos, la cantidad de vecinos <b>k</b> y la dimensión de salida <b>m</b>.</p>
+<ol>
+  <li><b>Grafo de vecindad:</b> para cada punto se buscan sus k vecinos más cercanos con distancia <b>euclídea</b>, y se los conecta en un grafo ponderado por esas distancias.</li>
+  <li><b>Distancias geodésicas:</b> se aproximan como los <b>caminos más cortos en el grafo</b>, con <b>Dijkstra</b> o <b>Floyd-Warshall</b> (a los no vecinos se les asigna inicialmente distancia infinita).</li>
+  <li><b>MDS clásico</b> sobre la matriz de distancias geodésicas, para obtener la configuración en m dimensiones que mejor las preserva.</li>
+</ol>
+<div class="box preg"><p>"¿Cómo funciona ISOMAP?" → <b>"ISOMAP comienza estimando las distancias geodésicas entre los puntos en las entradas utilizando las distancias más cercanas en el grafo de los vecinos más cercanos del conjunto de datos."</b> Hay que distinguirla de las variantes con "euclídeas" o sin mencionar el grafo. Las euclídeas se usan solo para armar el grafo.</p></div>
+
+<h3>Características</h3>
+<ul>
+  <li><b>No lineal</b> y <b>no paramétrico</b>: no aprende una función de mapeo, así que <b>no puede aplicarse a datos nuevos</b> sin repetir todo el proceso.</li>
+  <li>Preserva la estructura <b>global</b> (y también la local).</li>
+  <li><b>Complejidad:</b> grafo O(n² log n); Floyd-Warshall O(n³); MDS O(n³). Es costoso con muchos datos.</li>
+  <li>Si el grafo queda <b>desconectado</b>, puede trabajar cada componente por separado.</li>
+  <li>Variantes: con puntos de referencia (<i>landmarks</i>), conformal y L-ISOMAP.</li>
+</ul>
+<h3>Ventajas, limitaciones y uso práctico</h3>
+<div class="dos">
+<div><b>Ventajas</b><ul><li>Captura relaciones no lineales que PCA pierde.</li><li>Preserva la estructura global.</li><li>Revela estructuras ocultas en datos complejos.</li></ul></div>
+<div><b>Limitaciones</b><ul><li>Sensible al ruido.</li><li>Costoso para grandes conjuntos.</li><li>Asume un único manifold conectado.</li><li>Inestabilidad topológica: conexiones erróneas en el grafo, "huecos" en la variedad, variedades no convexas.</li><li>No permite medir cuánta información se retuvo.</li><li>Sus ejes no tienen significado directo.</li></ul></div>
+</div>
+<div class="box clave"><p><b>Elección de k:</b> un k muy <b>pequeño</b> puede dejar el grafo <b>desconectado</b>; uno muy <b>grande</b> crea <b>"atajos"</b> que no respetan la variedad, y el resultado se parece al de PCA. Conviene <b>normalizar</b> antes. La calidad se evalúa comparando las distancias originales con las del espacio reducido.</p></div>
+<p><b>Aplicaciones:</b> visualización de alta dimensión, reconocimiento de imágenes y voz, datos biomédicos, procesamiento de lenguaje natural.</p>
+
+<h2>2.7 t-SNE (t-distributed Stochastic Neighbor Embedding)</h2>
+<p>Técnica <b>no lineal y no supervisada</b>, usada sobre todo para <b>explorar y visualizar</b> datos de alta dimensión en 2 o 3 dimensiones. SNE fue publicado por Hinton y Roweis (2002); van der Maaten y Hinton (2008) lo modificaron con la distribución t. La idea: <b>los puntos similares en alta dimensión deben quedar cerca en baja dimensión</b>, y las similitudes se representan con <b>probabilidades</b>.</p>
+<p><b>Objetivos:</b> preservar la estructura local, adaptarse a relaciones no lineales, visualizar clusters y balancear estructura local y global.</p>
+
+<h3>Algoritmo</h3>
+<ol>
+  <li><b>Probabilidades en alta dimensión:</b> sobre cada punto x<sub>i</sub> se centra una <b>gaussiana</b> y se mide la densidad de los demás puntos bajo ella. El ancho σ<sub>i</sub> de cada gaussiana se ajusta para lograr la <b>perplejidad</b> deseada. Las probabilidades se simetrizan (p<sub>ij</sub>).</li>
+  <li><b>Inicialización</b> aleatoria de los puntos en baja dimensión.</li>
+  <li><b>Probabilidades en baja dimensión</b> (q<sub>ij</sub>) con una <b>t de Student con un grado de libertad</b> (Cauchy). Tiene <b>colas más pesadas</b> que la normal, lo que permite modelar mejor las distancias grandes y evita que todo se amontone.</li>
+  <li><b>Optimización:</b> se minimiza la <b>divergencia de Kullback-Leibler</b> entre P y Q con <b>descenso del gradiente</b>.</li>
+  <li><b>Iteración</b> hasta un número fijo de pasos o convergencia.</li>
+</ol>
+<p>Trucos: <b>early exaggeration</b> (multiplicar p<sub>ij</sub> por 4–12 al principio para favorecer la formación de clusters) y <b>momentum</b>. Variantes: <b>Barnes-Hut</b> (reduce O(n²) a O(n log n) por iteración), FIt-SNE (interpolación y FFT) y multiscale t-SNE.</p>
+
+<h3>Hiperparámetros</h3>
+<ul>
+  <li><b>Perplejidad:</b> una medida suave del <b>número efectivo de vecinos</b>. Valores típicos entre <b>5 y 50</b>, y debe ser <b>menor que la cantidad de puntos</b>. El algoritmo es bastante robusto a sus cambios. Con valores muy bajos (2) dominan las variaciones locales; con valores muy altos (100) los clusters se fusionan. Cuanto más denso el conjunto, mayor perplejidad conviene.</li>
+  <li><b>Iteraciones:</b> del orden de 1000. Si el proceso se detiene antes de estabilizarse aparecen formas <b>"pellizcadas"</b>. No hay un número fijo que sirva para todos los datos.</li>
+  <li><b>Tasa de aprendizaje</b> del descenso del gradiente.</li>
+</ul>
+
+<h3>Interpretación y limitaciones</h3>
+<div class="box trampa"><ul>
+<li>Los <b>ejes no tienen significado</b>.</li>
+<li><b>No se pueden leer los tamaños relativos de los clusters:</b> t-SNE expande los clusters densos y contrae los dispersos, así que todos terminan pareciendo del mismo tamaño.</li>
+<li>Las <b>distancias entre clusters lejanos no son confiables</b>.</li>
+<li>Los resultados <b>varían entre ejecuciones</b> por la inicialización aleatoria: conviene correrlo varias veces.</li>
+<li>Es <b>costoso</b> (O(n²) por iteración en su versión estándar).</li>
+<li>No hay una métrica única de calidad: se evalúa visualmente y con conocimiento del dominio.</li>
+</ul></div>
+<p>Se recomienda estandarizar antes. <b>Aplicaciones:</b> datos genómicos, imágenes, redes sociales, <i>embeddings</i> de palabras.</p>
+
+<h2>2.8 UMAP (Uniform Manifold Approximation and Projection)</h2>
+<div class="box def"><p>UMAP construye una representación de baja dimensión que <b>preserva la estructura global y local del espacio de alta dimensión</b>. Combina teoría de manifolds, topología y aprendizaje automático: usa un <b>enfoque basado en grafos</b> para construir una <b>representación topológica</b> de los datos, que luego se incrusta en baja dimensión mediante <b>descenso de gradiente estocástico</b>.</p></div>
+<h3>Algoritmo</h3>
+<ol>
+  <li><b>Grafo de vecinos más cercanos:</b> para cada punto, sus k vecinos y la distancia ρ al más cercano; se arma un grafo dirigido.</li>
+  <li><b>Representación topológica difusa:</b> probabilidad de conexión entre puntos conectados (decae con la distancia, con un factor de escala local σ). Se simetriza tomando el máximo.</li>
+  <li><b>Complejo simplicial de baja dimensión:</b> se inicializan los puntos y se calculan sus probabilidades de conexión en baja dimensión (con hiperparámetros a y b).</li>
+  <li><b>Optimización:</b> se minimiza la divergencia entre ambas representaciones, normalmente la <b>entropía cruzada</b>, con descenso de gradiente estocástico.</li>
+  <li><b>Iteración</b> por un número de épocas.</li>
+</ol>
+<p>Parámetros: <code>n_neighbors</code>, <code>min_dist</code>, métrica, épocas y semilla. Complejidad <b>O(n log n)</b>: es <b>más escalable que t-SNE</b>. Puede devolver un modelo entrenado.</p>
+<h3>Interpretación</h3>
+<ul>
+  <li>Grupos cercanos en UMAP suelen corresponder a datos similares en el espacio original, pero las <b>distancias absolutas no siempre se correlacionan</b>, y las distancias entre clusters lejanos pueden engañar.</li>
+  <li>La forma global (curvas, espirales) puede revelar relaciones no lineales; las zonas continuas, transiciones graduales; los puntos aislados, outliers.</li>
+  <li>Como t-SNE, los resultados <b>varían entre ejecuciones</b>: las estructuras que aparecen siempre son las más confiables.</li>
+  <li>Es una herramienta de <b>exploración</b>: los patrones deben validarse con análisis estadístico y conocimiento del dominio.</li>
+</ul>
+<p>Aplicaciones: visualización, preprocesamiento, análisis de RNA de célula única (single-cell RNA-seq).</p>
+<div class="box preg"><p>"¿Cuáles afirmaciones son correctas respecto a UMAP?" → usa un enfoque basado en grafos para construir una representación topológica que luego se incrusta en baja dimensión con descenso de gradiente estocástico; y preserva la estructura global y local <b>del espacio de alta dimensión</b>. Cuidado con la variante que dice "del espacio de baja dimensión".</p></div>
+
+<h2>2.9 Comparación entre PCA, ISOMAP, t-SNE y UMAP</h2>
+<table>
+<tr><th>Aspecto</th><th>PCA</th><th>ISOMAP</th><th>t-SNE</th><th>UMAP</th></tr>
+<tr><td>Tipo</td><td><b>Lineal</b></td><td>No lineal</td><td>No lineal</td><td>No lineal</td></tr>
+<tr><td>Preserva</td><td>Varianza; estructura <b>global</b></td><td>Distancias geodésicas (global)</td><td>Vecindades (<b>local</b>)</td><td>Local <b>y</b> global</td></tr>
+<tr><td>Interpretable</td><td><b>Sí</b> (cargas)</td><td>No</td><td>No</td><td>No</td></tr>
+<tr><td>Costo</td><td>Bajo (álgebra lineal)</td><td>Alto (O(n³))</td><td>Alto (O(n²))</td><td>Medio (O(n log n))</td></tr>
+<tr><td>Determinista</td><td>Sí</td><td>Sí</td><td>No</td><td>No</td></tr>
+<tr><td>Parámetros clave</td><td>Nº de componentes</td><td>k, dimensión</td><td>Perplejidad, iteraciones, tasa de aprendizaje</td><td>n_neighbors, min_dist, métrica</td></tr>
+<tr><td>Uso típico</td><td>Reducción, selección de características, reducción de ruido, preprocesamiento</td><td>Desenrollar variedades</td><td>Visualización y exploración</td><td>Visualización, preprocesamiento</td></tr>
+</table>
+<div class="box clave"><p><b>No lineales:</b> ISOMAP, t-SNE y UMAP (también MDS no métrico). <b>Lineal:</b> PCA (y LDA, U3). PCA sirve para entender <b>qué</b> variables explican la variabilidad; t-SNE y UMAP para <b>ver</b> si hay grupos; ISOMAP cuando la estructura es curva.</p></div>
+</section>

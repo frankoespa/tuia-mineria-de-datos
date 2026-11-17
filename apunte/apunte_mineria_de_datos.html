@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Minería de Datos: apunte integral</title>
+<style>
+@page { size: A4; margin: 22mm 20mm 22mm 20mm;
+  @bottom-center { content: counter(page); font-family: Cambria, Georgia, serif; font-size: 9pt; color: #555; }
+  @top-right { content: "Minería de Datos · Apunte integral U1–U6"; font-family: Cambria, Georgia, serif; font-size: 8pt; color: #888; }
+}
+@page :first { @bottom-center { content: none; } @top-right { content: none; } }
+:root { --ink:#1a1a1a; --muted:#555; --rule:#999; --acc:#1f3a5f; --acc2:#7a1f1f; --box:#f4f6f9; --warn:#fdf3e7; --key:#eef6ee; --q:#f3eef8; }
+html { font-size: 10.5pt; }
+body { font-family: Cambria, "Cambria Math", Georgia, "Times New Roman", serif; color: var(--ink); line-height: 1.42; margin: 0; background: #fff; text-align: justify; hyphens: auto; }
+h1, h2, h3, h4 { font-family: Cambria, Georgia, serif; color: var(--acc); text-align: left; hyphens: none; break-after: avoid; }
+h1 { font-size: 20pt; margin: 0 0 4pt; border-bottom: 1.5pt solid var(--acc); padding-bottom: 4pt; }
+h2 { font-size: 14pt; margin: 18pt 0 6pt; }
+h3 { font-size: 12pt; margin: 13pt 0 4pt; }
+h4 { font-size: 10.5pt; margin: 10pt 0 3pt; color: var(--ink); font-style: italic; }
+p { margin: 0 0 6pt; orphans: 3; widows: 3; }
+ul, ol { margin: 2pt 0 7pt 0; padding-left: 18pt; }
+li { margin-bottom: 2pt; }
+.unidad { break-before: page; }
+.portada { height: 245mm; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+.portada .inst { font-size: 11pt; letter-spacing: .5pt; color: var(--muted); text-transform: uppercase; }
+.portada .tit { font-size: 30pt; color: var(--acc); margin: 18pt 0 6pt; font-weight: bold; }
+.portada .sub { font-size: 14pt; font-style: italic; color: var(--ink); }
+.portada .linea { width: 60%; margin: 22pt auto; border-top: 1pt solid var(--rule); }
+.portada .meta { font-size: 11pt; color: var(--muted); line-height: 1.7; }
+.abstract { margin: 10pt 8% 12pt; font-size: 10pt; border-top: .6pt solid var(--rule); border-bottom: .6pt solid var(--rule); padding: 7pt 0; }
+.abstract b { font-variant: small-caps; color: var(--acc); }
+.indice { columns: 2; column-gap: 18pt; font-size: 10pt; }
+.indice div { break-inside: avoid; margin-bottom: 6pt; }
+.indice b { color: var(--acc); }
+.box { border-left: 3pt solid var(--acc); background: var(--box); padding: 5pt 8pt; margin: 7pt 0 9pt; break-inside: avoid; }
+.box.def::before { content: "Definición. "; font-weight: bold; color: var(--acc); }
+.box.clave { border-color: #2e7d32; background: var(--key); }
+.box.clave::before { content: "Idea clave. "; font-weight: bold; color: #2e7d32; }
+.box.trampa { border-color: #c06000; background: var(--warn); }
+.box.trampa::before { content: "Ojo en el examen. "; font-weight: bold; color: #c06000; }
+.box.preg { border-color: #6a3d9a; background: var(--q); }
+.box.preg::before { content: "Pregunta típica. "; font-weight: bold; color: #6a3d9a; }
+.box.prof { border-color: var(--acc2); background: #fbeeee; }
+.box.prof::before { content: "Criterio de la cátedra. "; font-weight: bold; color: var(--acc2); }
+.box p:last-child, .box ul:last-child { margin-bottom: 0; }
+.formula { text-align: center; font-style: italic; margin: 5pt 0 7pt; font-size: 11pt; }
+table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt; font-size: 9.5pt; break-inside: avoid; text-align: left; }
+th { border-top: 1pt solid var(--ink); border-bottom: .6pt solid var(--ink); padding: 3pt 5pt; background: #f2f2f2; }
+td { border-bottom: .4pt solid #ccc; padding: 3pt 5pt; vertical-align: top; }
+tr:last-child td { border-bottom: 1pt solid var(--ink); }
+.cap { font-size: 9pt; color: var(--muted); text-align: center; margin: -4pt 0 10pt; font-style: italic; }
+figure { margin: 6pt 0 10pt; text-align: center; break-inside: avoid; }
+figure svg { max-width: 100%; }
+figcaption { font-size: 9pt; color: var(--muted); font-style: italic; margin-top: 2pt; }
+.dos { display: flex; gap: 12pt; } .dos > div { flex: 1; }
+code { font-family: Consolas, "Courier New", monospace; font-size: 9pt; background: #f2f2f2; padding: 0 2pt; }
+.small { font-size: 9pt; color: var(--muted); }
+/* Simulacros */
+.q { break-inside: avoid; margin: 0 0 8pt; }
+.q .enun { font-weight: bold; margin-bottom: 2pt; }
+.q ol { list-style: lower-alpha; margin: 0; padding-left: 22pt; }
+.q li { margin: 0 0 1pt; }
+.multi { font-weight: normal; font-style: italic; color: var(--acc2); font-size: 9pt; }
+.resp { font-size: 9.5pt; }
+.resp td:first-child { width: 22pt; font-weight: bold; }
+.resp td:nth-child(2) { width: 34pt; font-weight: bold; color: var(--acc); }
+.grilla { font-size: 9.5pt; }
+.grilla td { text-align: center; width: 9%; height: 14pt; }
+</style>
+</head>
+<body>
+
+<section class="portada">
+  <div class="inst">Tecnicatura Universitaria en Inteligencia Artificial · FCEIA · UNR</div>
+  <div class="tit">Minería de Datos</div>
+  <div class="sub">Apunte integral de teoría, unidades 1 a 6,<br>con guía de preguntas típicas y simulacros de examen</div>
+  <div class="linea"></div>
+  <div class="meta">
+    Preparado para el examen integrador del 27 de noviembre de 2026<br>
+    Basado en las filminas del Prof. Flavio E. Spetale, los notebooks de clase y el parcial de ejemplo del 01/12/2023<br>
+    Franco Renna · Franco Esparza
+  </div>
+</section>
+
+<section class="unidad">
+<h1>Cómo usar este apunte</h1>
+
+<div class="abstract"><b>Resumen.</b> Este documento reúne la totalidad de los contenidos teóricos de la materia: introducción y preparación de datos (U1), reducción de la dimensionalidad (U2), aprendizaje no supervisado y clustering (U3), árboles de decisión, métricas y validación (U4), clasificadores supervisados Bayes Ingenuo, k-NN y SVM (U5) y modelos de ensamble (U6). Cada unidad prioriza la comprensión conceptual de cómo y por qué funciona cada método, porque el examen integrador es de opción múltiple y pregunta por conceptos, no por demostraciones. Las fórmulas aparecen solo cuando ayudan a entender. Al final hay un parcial real resuelto y dos simulacros nuevos, con las respuestas y su justificación en hojas separadas.</div>
+
+<h2>Qué tipo de examen es</h2>
+<p>El parcial de ejemplo (01/12/2023) tiene 20 preguntas de opción múltiple, más o menos tres por unidad. Revisándolo aparecen cinco patrones que se repiten:</p>
+<ol>
+  <li><b>Definición directa:</b> "¿Qué es un dendrograma?", "¿Qué mide el índice de Gini?". La respuesta correcta suele ser casi textual de las filminas.</li>
+  <li><b>Pares opuestos:</b> dos opciones idénticas salvo una palabra (máxima/mínima, alta/baja dimensión, geodésica/euclídea). Hay que leer con lupa.</li>
+  <li><b>"¿Cuál NO es...?":</b> ventajas o miembros de una familia. Ejemplo: "¿cuál no es un método de ensamble?" → árboles de decisión.</li>
+  <li><b>Consecuencias:</b> "¿qué pasa si k es demasiado pequeño en K-means?", "¿cuál es el objetivo de la poda?".</li>
+  <li><b>Clasificación de métodos:</b> lineal o no lineal, perezoso o no, supervisado o no, ensamble o no.</li>
+</ol>
+<p>Algunas preguntas admiten más de una respuesta correcta (por ejemplo, "¿cuáles técnicas son no lineales?"). En los simulacros están marcadas.</p>
+
+<h2>Recuadros</h2>
+<div class="box def"><p>el concepto formal, como lo define la teoría.</p></div>
+<div class="box clave"><p>lo que hay que entender sí o sí.</p></div>
+<div class="box trampa"><p>los distractores y confusiones frecuentes.</p></div>
+<div class="box preg"><p>cómo podría aparecer en el examen, con su respuesta.</p></div>
+<div class="box prof"><p>observaciones que hizo el profesor al corregir nuestros TPs.</p></div>
+
+<h2>Plan de estudio sugerido (17 al 27 de noviembre)</h2>
+<table>
+<tr><th>Día</th><th>Fecha</th><th>Contenido</th></tr>
+<tr><td>1</td><td>lun 17/11</td><td>U1 completa y repaso del examen de ejemplo (sin mirar respuestas)</td></tr>
+<tr><td>2</td><td>mar 18/11</td><td>U2: maldición de la dimensionalidad, PCA y criterios</td></tr>
+<tr><td>3</td><td>mié 19/11</td><td>U2: MDS, ISOMAP, t-SNE, UMAP y su comparación</td></tr>
+<tr><td>4</td><td>jue 20/11</td><td>U3: no supervisado, K-means, jerárquico, validación</td></tr>
+<tr><td>5</td><td>vie 21/11</td><td>U3: DBSCAN, HDBSCAN, asociación · U4: árboles e impureza</td></tr>
+<tr><td>6</td><td>sáb 22/11</td><td>U4: sesgo y varianza, poda, métricas, validación cruzada</td></tr>
+<tr><td>7</td><td>dom 23/11</td><td>U5: Bayes Ingenuo y k-NN</td></tr>
+<tr><td>8</td><td>lun 24/11</td><td>U5: SVM · U6: ensambles</td></tr>
+<tr><td>9</td><td>mar 25/11</td><td>Simulacros 2 y 3 cronometrados; repasar solo lo que se falló</td></tr>
+<tr><td>10</td><td>mié 26/11</td><td>Repaso final (capítulo 7) y examen de ejemplo otra vez</td></tr>
+</table>
+
+<h2>Contenido</h2>
+<div class="indice">
+<div><b>1. Introducción y preparación de datos</b><br>Minería de datos y aprendizaje inductivo · Clasificación, regresión, agrupamiento · Tipos de aprendizaje · Preparación: limpieza, normalización, discretización · Entrenamiento, test y validación cruzada · Análisis exploratorio · Fuga de datos</div>
+<div><b>2. Reducción de la dimensionalidad</b><br>Reducción vs selección · Maldición de la dimensionalidad · Proyección y manifold learning · PCA · MDS · ISOMAP · t-SNE · UMAP · Comparación</div>
+<div><b>3. Aprendizaje no supervisado</b><br>Agrupación, asociación y reducción · K-means · Clustering jerárquico y dendrogramas · Validación: cohesión, separación, Gap, Silhouette · DBSCAN y HDBSCAN · Apriori, Eclat, FP-Growth</div>
+<div><b>4. Árboles de decisión</b><br>ID3, C4.5, CART · Gini y entropía · Construcción · Sesgo, varianza y poda · CART en clasificación y regresión · Métricas de clasificación y regresión · Validación cruzada y Monte Carlo · Estandarizar después de separar</div>
+<div><b>5. Clasificación supervisada</b><br>Bayes Ingenuo y sus variantes · Redes bayesianas · k-NN y distancias · SVM: margen, vectores de soporte, margen blando, kernels, multiclase</div>
+<div><b>6. Modelos de ensamble</b><br>Por qué combinar · Bagging y bootstrap · Out-of-bag · Random Forest · Boosting: AdaBoost, Gradient Boosting, XGBoost · Stacking</div>
+<div><b>7. Repaso transversal</b><br>Tabla comparativa de todos los métodos · Qué método necesita escalado · Glosario</div>
+<div><b>8. Simulacros</b><br>Parcial 2023 · Simulacro 2 · Simulacro 3 · Hojas de respuestas justificadas</div>
+</div>
+</section>
+
+<section class="unidad">
+<h1>1. Introducción a la minería de datos y preparación de los datos</h1>
+
+<h2>1.1 Qué es la minería de datos</h2>
+<p>La teoría la define de tres maneras complementarias:</p>
+<ul>
+  <li>El <b>arte y la ciencia del análisis inteligente</b> de los datos.</li>
+  <li>El <b>conjunto de herramientas</b> para entender y modelizar conjuntos (complejos) de datos.</li>
+  <li>El <b>proceso de descubrir patrones y obtener conocimiento</b> a partir de grandes conjuntos de datos.</li>
+</ul>
+<p>Es un conjunto de conocimientos y herramientas que se usan en todas las etapas del análisis: desde la adquisición y limpieza hasta el modelado y la interpretación.</p>
+
+<div class="box clave"><p>Clasificación, regresión y agrupamiento se basan en el <b>paradigma del aprendizaje inductivo</b>: a partir de los datos (la información de entrenamiento) se deriva un <b>modelo</b> (el conocimiento) que tiene <b>utilidad predictiva</b>, es decir, que puede aplicarse a datos nuevos. Inducción = ir de los casos particulares a una regla general.</p></div>
+
+<h2>1.2 Las tres tareas principales</h2>
+<table>
+<tr><th>Tarea</th><th>Función</th><th>Qué devuelve</th><th>¿Hay etiqueta?</th></tr>
+<tr><td><b>Clasificación</b></td><td>c : X → C</td><td>Una clase de un conjunto discreto (ej. C = {0, 1} en clasificación binaria)</td><td>Sí</td></tr>
+<tr><td><b>Regresión</b></td><td>f : X → ℝ</td><td>Un valor numérico real</td><td>Sí</td></tr>
+<tr><td><b>Agrupamiento</b> (clustering)</td><td>h : X → C<sub>h</sub></td><td>Un grupo (cluster) de un conjunto de grupos descubiertos</td><td>No</td></tr>
+</table>
+<p>X es el conjunto de atributos que describe una instancia. En el <b>agrupamiento</b> no existen clases predefinidas: los grupos se "descubren" de forma autónoma a partir de patrones de <b>similitud</b> entre instancias, y el modelo resultante puede asignar instancias nuevas a uno de esos grupos. Por eso se lo describe como "una clasificación sin clases conocidas".</p>
+
+<h2>1.3 Tipología de algoritmos</h2>
+<p>El aprendizaje computacional se divide en cuatro familias:</p>
+<ul>
+  <li><b>Supervisado:</b> se aprende de datos etiquetados. Tareas: clasificación y regresión.</li>
+  <li><b>No supervisado:</b> sin etiquetas. Tareas: clustering y asociación (y reducción de dimensionalidad, U3).</li>
+  <li><b>Semi-supervisado:</b> combina pocos datos etiquetados con muchos sin etiquetar.</li>
+  <li><b>Por refuerzo:</b> un <b>agente</b> actúa sobre un <b>ambiente</b>; recibe <b>estados</b> y <b>recompensas</b> según sus <b>acciones</b>.</li>
+</ul>
+<table>
+<tr><th>Método</th><th>Clasificación</th><th>Regresión</th><th>Agrupamiento</th></tr>
+<tr><td>Agrupamiento jerárquico</td><td></td><td></td><td>✓</td></tr>
+<tr><td>K-means y derivados</td><td></td><td></td><td>✓</td></tr>
+<tr><td>k-NN</td><td>✓</td><td></td><td></td></tr>
+<tr><td>SVM</td><td>✓</td><td>✓</td><td></td></tr>
+<tr><td>Redes neuronales</td><td>✓</td><td>✓</td><td></td></tr>
+<tr><td>Árboles de decisión</td><td>✓</td><td>✓</td><td></td></tr>
+<tr><td>Métodos probabilísticos</td><td>✓</td><td>✓</td><td></td></tr>
+</table>
+<p class="cap">Tabla de la filmina 12 de la U1. k-NN también puede hacer regresión, pero la cátedra lo presenta como clasificador.</p>
+<p><b>Aplicaciones:</b> procesamiento de lenguaje natural y bots, visión por computadora, seguridad, detección de fraude, fidelización de clientes, marketing y recomendaciones, búsqueda en línea, conducción automática, antivirus y detección de intrusos, y apoyo a disciplinas científicas (genómica, biología, física, geografía).</p>
+
+<h2>1.4 Preparación de los datos</h2>
+<p>Es la etapa que más esfuerzo lleva (se estima un 75% del tiempo de un proyecto). Incluye cuatro tareas:</p>
+<ol>
+  <li><b>Limpieza:</b> corregir o eliminar ruido y datos no válidos.</li>
+  <li><b>Normalización:</b> llevar los datos al mismo rango.</li>
+  <li><b>Discretización:</b> convertir variables continuas en categóricas (intervalos).</li>
+  <li><b>Reducción de la dimensionalidad:</b> trabajar con conjuntos de datos reducidos (U2).</li>
+</ol>
+
+<h3>Limpieza</h3>
+<p>Detecta, elimina o corrige instancias corruptas o inapropiadas. A nivel de atributos se gestionan los valores <b>ausentes</b>, <b>erróneos</b> e <b>inconsistentes</b>, como los valores fuera de rango (<i>outliers</i>). La <b>integración</b> de datos de distintas fuentes es una de las principales fuentes de incoherencias.</p>
+<ul>
+  <li><b>Valores nulos.</b> Muchos algoritmos no los aceptan. Opciones: eliminar las filas, eliminar el atributo o reemplazar (imputar) con un valor como la media o la mediana (en pandas, <code>dropna()</code> y <code>fillna()</code>).
+    <ul>
+      <li><b>Imputar por grupo</b> (por ejemplo, la mediana de la clase) es mejor que imputar con el valor general de la columna, que sesga los datos hacia valores que algunos grupos nunca toman.</li>
+      <li><b>Nunca rellenar una categórica con "Desconocido":</b> se inventa una categoría que no existe en el fenómeno y el modelo aprendería a predecirla.</li>
+    </ul>
+  </li>
+  <li><b>Valores atípicos.</b> Antes de eliminarlos hay que preguntarse si son errores o si son típicos de una clase. Si caracterizan a una clase, eliminarlos borra justamente la información que la distingue. Se pueden detectar con el criterio del rango intercuartílico (Q1 − 1.5·IQR, Q3 + 1.5·IQR) o recortar con <i>winsorización</i>.</li>
+  <li><b>Errores de carga:</b> categorías escritas de varias formas, separadores, filas duplicadas.</li>
+</ul>
+
+<h3>Normalización y estandarización</h3>
+<p>Consiste en modificar los datos para que estén en una escala equivalente. Muchos métodos <b>quedan sesgados por los atributos con valores más altos</b>, que dominan el resultado. La teoría muestra tres formas:</p>
+<ul>
+  <li><b>Por el máximo:</b> x' = x / máx.</li>
+  <li><b>Por la diferencia</b> (min-max): x' = (x − mín) / (máx − mín), lleva a [0, 1].</li>
+  <li><b>Basada en la desviación estándar</b> (estandarización o z-score): x' = (x − media) / desvío. Deja media 0 y desvío 1.</li>
+</ul>
+<div class="box clave"><p>Escalar es imprescindible en los métodos basados en <b>distancias o varianzas</b>: PCA, ISOMAP, t-SNE, UMAP, K-means, clustering jerárquico, DBSCAN, k-NN y SVM. Los <b>árboles de decisión</b> (y por lo tanto Random Forest) <b>no lo necesitan</b>, porque solo comparan cada variable contra un umbral.</p></div>
+
+<h3>Discretización</h3>
+<p>Convierte una variable continua en intervalos. Dos estrategias habituales: <b>igual ancho</b> (intervalos del mismo tamaño) e <b>igual frecuencia</b> o cuantiles (cada intervalo con la misma cantidad de casos). Se usa, por ejemplo, para aplicar Bayes Ingenuo categórico a variables continuas (U5).</p>
+
+<h2>1.5 Conjuntos de entrenamiento y test</h2>
+<p>Los datos se dividen en un conjunto de <b>entrenamiento</b>, con el que el algoritmo construye el modelo, y uno de <b>test</b>, con el que se evalúa su desempeño sobre datos que no vio. Habitualmente son <b>extracciones aleatorias</b> del conjunto inicial.</p>
+<div class="box clave"><p>Hay un <b>compromiso</b>: cuantos más datos se usan para entrenar, más <b>robusto</b> es el modelo; cuantos más se usan para validar, más <b>fiable</b> es la estimación del error (la capacidad de generalización).</p></div>
+<p>Con clases desbalanceadas la partición se hace <b>estratificada</b>, para que cada clase mantenga su proporción en ambos conjuntos.</p>
+
+<h3>Validación cruzada k-fold</h3>
+<p>Se divide el conjunto en k partes; se entrena con k−1 y se evalúa con la restante, rotando k veces. El rendimiento es el promedio. Se desarrolla en la U4 (sección 4.8).</p>
+
+<h3>Fuga de datos (<i>data leakage</i>) y sesgo de espionaje</h3>
+<ul>
+  <li><b>Fuga de datos:</b> el modelo usa durante el entrenamiento información que no estaría disponible al predecir en el mundo real. Ejemplos: incluir la variable objetivo o una variable que solo se conoce después del hecho (en el ejemplo de taxis, la propina o el tiempo real de viaje); estandarizar con todos los datos antes de separar el test (U4).</li>
+  <li><b>Sesgo de espionaje de los datos</b> (<i>data snooping bias</i>): mirar el test durante el análisis exploratorio y tomar decisiones influidas por él. Por eso el test se separa temprano.</li>
+</ul>
+
+<h2>1.6 El flujo de un proyecto y el análisis exploratorio</h2>
+<p>Lista de chequeo de los notebooks de clase:</p>
+<ol>
+  <li>Definición del objetivo.</li>
+  <li>Adquisición de datos.</li>
+  <li>Examinar la estructura (filas, tipos, nulos, categorías).</li>
+  <li>Separación del conjunto de prueba.</li>
+  <li>Análisis exploratorio.</li>
+  <li>Preparación: limpieza, escalado, discretización.</li>
+  <li>Aplicación del modelo.</li>
+</ol>
+<p>El <b>análisis exploratorio de datos</b> (EDA) fue introducido por <b>Tukey (1977)</b>. Es un proceso <b>cíclico y creativo</b> guiado por preguntas, sobre todo dos: ¿qué <b>variación</b> ocurre dentro de cada variable? y ¿qué <b>covariación</b> hay entre variables?</p>
+<ul>
+  <li><b>Medidas resumen:</b> media, mediana, desvío, cuartiles. Si la media es mucho mayor que la mediana, la distribución es asimétrica a la derecha.</li>
+  <li><b>Histogramas y boxplots</b> para ver distribuciones y atípicos.</li>
+  <li><b>Correlación de Pearson:</b> mide solo relaciones <b>lineales</b> entre variables numéricas y no informa la pendiente. Para variables ordinales se usa <b>Spearman</b>.</li>
+  <li>Correlación alta con la <b>objetivo</b>: indica relevancia (sobre todo en regresión). Correlación alta <b>entre predictoras</b>: no son independientes, así que se puede reducir la dimensionalidad.</li>
+</ul>
+<p><b>Repositorios de datos:</b> OpenML, Kaggle, PapersWithCode, UCI Machine Learning Repository y AWS datasets. Herramientas: Jupyter / Google Colab y <b>scikit-learn</b> (creada por David Cournapeau en 2007, mantenida por Inria). Un <b>Pipeline</b> encadena transformaciones y un estimador final en un solo objeto, para asegurar reproducibilidad.</p>
+
+<div class="box preg"><p>"La clasificación, la regresión y el agrupamiento se basan en..." → el <b>aprendizaje inductivo</b>. "¿Qué tarea no dispone de una etiqueta de clase?" → el agrupamiento.</p></div>
+</section>
+
+<section class="unidad">
+<h1>2. Reducción de la dimensionalidad</h1>
+
+<h2>2.1 Reducción de dimensionalidad vs. selección de variables</h2>
+<ul>
+  <li><b>Selección de variables:</b> se eligen algunas columnas originales y se descartan otras. Las variables conservan su significado.</li>
+  <li><b>Reducción de dimensionalidad:</b> se crean <b>variables nuevas</b> (componentes) que combinan las originales; por ejemplo, PCA convierte un conjunto de autos en "x_reducida1" y "x_reducida2". Se pierde la interpretación directa, pero se conserva la mayor parte de la información.</li>
+</ul>
+
+<h2>2.2 La maldición de la dimensionalidad</h2>
+<p>Muchos problemas tienen miles o millones de características. Eso hace el entrenamiento lento y, sobre todo, dificulta encontrar una buena solución. En aprendizaje automático, la cantidad de <b>dimensiones</b> equivale a la cantidad de <b>variables</b>.</p>
+<p>La maldición se manifiesta de dos maneras:</p>
+<ol>
+  <li>La <b>distancia media</b> entre los datos <b>aumenta</b> con el número de dimensiones. Esto en sí no es tan grave.</li>
+  <li>La <b>variabilidad de las distancias disminuye exponencialmente</b>. <b>Este es el verdadero problema:</b> todos los puntos quedan casi a la misma distancia entre sí, así que "cercano" y "lejano" dejan de distinguirse.</li>
+</ol>
+<p><b>Consecuencias.</b> Los datos de alta dimensión son muy <b>escasos</b> (dispersos):</p>
+<ul>
+  <li>Una instancia nueva probablemente queda lejos de todas las de entrenamiento, así que las predicciones se basan en extrapolaciones y son menos confiables.</li>
+  <li>Cuantas más dimensiones, <b>mayor riesgo de sobreajuste</b>.</li>
+  <li>Las instancias necesarias para mantener la densidad crecen <b>exponencialmente</b>: con solo 100 características en [0, 1] harían falta más instancias que átomos en el universo observable para que estén a 0.1 entre sí.</li>
+</ul>
+<div class="box clave"><p>La maldición <b>afecta a las técnicas basadas en distancias</b>: clustering, k-NN y detección de anomalías por distancia (como Local Outlier Factor). Hay <b>dos remedios</b>: reducir el número de dimensiones o aumentar la cantidad de datos.</p></div>
+
+<h2>2.3 Dos enfoques: proyección y manifold learning</h2>
+<h3>Proyección</h3>
+<p>En los datos reales las instancias no se distribuyen uniformemente: muchas variables son casi constantes y otras están muy correlacionadas, así que los datos viven <b>cerca de un subespacio de menor dimensión</b>. Proyectar consiste en llevar cada punto a ese subespacio <b>preservando aproximadamente las distancias</b> (por ejemplo, de 3D a un plano 2D con ejes z<sub>1</sub>, z<sub>2</sub>).</p>
+<h3>Manifold learning (aprendizaje de variedades)</h3>
+<p>La proyección no siempre sirve. En el <b>rollo suizo</b> los datos forman una hoja 2D enrollada en 3D: proyectar sobre un plano (descartar x<sub>3</sub>) <b>aplastaría capas distintas</b> unas sobre otras. Lo que se quiere es <b>desenrollarlo</b>.</p>
+<div class="box def"><p>Un <b>manifold d-dimensional</b> es una parte de un espacio n-dimensional (d &lt; n) que <b>localmente se parece a un hiperplano d-dimensional</b>. El rollo suizo es un manifold 2D (d = 2) en un espacio 3D (n = 3).</p></div>
+<p>Los algoritmos que modelan la variedad se basan en la <b>hipótesis de la variedad</b> (<i>manifold assumption</i>): la mayoría de los datos reales de alta dimensión están cerca de una variedad de dimensión mucho menor. Suele acompañarse de un segundo supuesto: la tarea (clasificación o regresión) será <b>más simple</b> expresada en esa variedad.</p>
+
+<h2>2.4 Análisis de componentes principales (PCA)</h2>
+<div class="box def"><p>Los <b>componentes principales</b> de un conjunto de datos son <b>las direcciones en las cuales la varianza de los elementos es máxima</b>, es decir, aquellas en las que los elementos están <b>más separados</b> unos de otros. PCA busca las <b>combinaciones lineales</b> de las variables originales que maximizan la varianza (información).</p></div>
+<p>PCA es un método <b>estadístico, lineal y no supervisado</b> que usa <b>factorización matricial</b> (descomposición de la matriz de varianzas-covarianzas en autovectores y autovalores). Para calcular las componentes siguen haciendo falta las variables originales.</p>
+<p><b>Finalidades:</b> hallar variables latentes (factores), reducir la dimensión, eliminar redundancias y representar gráficamente información multidimensional. También sirve como paso previo a regresión o clustering.</p>
+
+<h3>Interpretación geométrica</h3>
+<ol>
+  <li>Se centran los ejes en la media de los datos.</li>
+  <li>La <b>primera componente</b> (z<sub>1</sub>) pasa en la dirección de <b>máxima varianza</b> de las proyecciones.</li>
+  <li>La <b>segunda</b> (z<sub>2</sub>) es <b>perpendicular</b> (ortogonal) a la primera y maximiza la varianza restante.</li>
+  <li>z<sub>1</sub> y z<sub>2</sub> definen el plano que mejor representa los datos en menor dimensión.</li>
+</ol>
+<figure>
+<svg width="360" height="170" viewBox="0 0 360 170" xmlns="http://www.w3.org/2000/svg" font-family="Cambria, serif" font-size="11">
+  <g fill="#7f9cc0">
+    <circle cx="90" cy="120" r="3"/><circle cx="105" cy="112" r="3"/><circle cx="118" cy="110" r="3"/><circle cx="130" cy="98" r="3"/><circle cx="140" cy="104" r="3"/><circle cx="152" cy="90" r="3"/><circle cx="165" cy="88" r="3"/><circle cx="175" cy="78" r="3"/><circle cx="188" cy="80" r="3"/><circle cx="200" cy="66" r="3"/><circle cx="212" cy="64" r="3"/><circle cx="226" cy="55" r="3"/><circle cx="125" cy="118" r="3"/><circle cx="160" cy="100" r="3"/><circle cx="190" cy="68" r="3"/><circle cx="148" cy="80" r="3"/><circle cx="110" cy="100" r="3"/><circle cx="205" cy="78" r="3"/>
+  </g>
+  <line x1="70" y1="138" x2="250" y2="40" stroke="#1f3a5f" stroke-width="2"/>
+  <line x1="135" y1="43" x2="185" y2="135" stroke="#7a1f1f" stroke-width="2"/>
+  <text x="252" y="38" fill="#1f3a5f">PC1: máxima varianza</text>
+  <text x="190" y="148" fill="#7a1f1f">PC2: perpendicular a PC1</text>
+</svg>
+<figcaption>Figura 2.1. Las componentes principales son direcciones ortogonales ordenadas por la varianza que capturan.</figcaption>
+</figure>
+
+<h3>Propiedades</h3>
+<ul>
+  <li>Las componentes son <b>ortogonales</b> (no correlacionadas entre sí): cada una aporta información nueva.</li>
+  <li>Están <b>ordenadas</b> por la varianza que explican: la primera explica más que la segunda, y así sucesivamente.</li>
+  <li>Cada componente es una combinación lineal de las variables originales; los coeficientes (<b>cargas</b>) indican el peso de cada variable, lo que hace a PCA <b>interpretable</b>. Los valores de cada observación en las nuevas componentes son los <b>scores</b>.</li>
+  <li>Cada <b>autovalor</b> (eigenvalue) es la varianza explicada por su componente.</li>
+  <li>Con n observaciones y p variables hay como máximo <b>min(n − 1, p)</b> componentes distintas.</li>
+</ul>
+
+<h3>Consideraciones importantes</h3>
+<ul>
+  <li><b>Escalado:</b> la varianza se mide en la escala de la variable al cuadrado. Si no se estandariza (media 0, desvío 1), las variables de mayor escala <b>dominan</b> las componentes.</li>
+  <li><b>Reproducibilidad:</b> PCA da siempre las mismas componentes con cualquier software; los autovalores son los mismos. La única diferencia posible es que el <b>signo</b> de las componentes esté invertido.</li>
+  <li><b>Outliers:</b> al trabajar con varianzas, PCA es <b>muy sensible a los atípicos</b>. En varias dimensiones pueden pasar desapercibidos (una persona de 2 m y 50 kg no es atípica en cada variable por separado, pero sí en conjunto). Para detectarlos se usa la <b>distancia de Mahalanobis</b>, que tiene en cuenta la correlación entre dimensiones.</li>
+</ul>
+
+<h3>¿Cuántas componentes conservar?</h3>
+<p>No hay un método objetivo; depende del analista y del problema. Para visualizar se suelen tomar dos o tres componentes, si explican suficiente variabilidad. Para uso supervisado, se elige por validación cruzada. Los tres criterios vistos en clase:</p>
+<table>
+<tr><th>Criterio</th><th>Regla</th></tr>
+<tr><td>Varianza acumulada</td><td>La menor cantidad de componentes que acumule ≈ 75–80% de la varianza.</td></tr>
+<tr><td>Kaiser</td><td>Conservar las componentes con <b>autovalor &gt; 1</b> (con datos estandarizados, una componente con autovalor &lt; 1 aporta menos que una sola variable original).</td></tr>
+<tr><td>Codo (<i>scree plot</i>)</td><td>Graficar la varianza de cada componente y buscar el quiebre donde la curva deja de caer bruscamente.</td></tr>
+</table>
+<p>Basta con <b>un</b> criterio; no hace falta que se cumplan los tres.</p>
+<div class="box prof"><p>En el método del codo, <b>la componente donde se produce el quiebre se incluye</b>. Si el quiebre está en la tercera componente, se toman 3, no 2. (Lo marcó en nuestro TP1.)</p></div>
+<div class="box trampa"><p>Las componentes son las direcciones de varianza <b>máxima</b>, no mínima, y son aquellas donde los datos están <b>más</b> separados, no menos. PCA es <b>lineal</b> y no puede "desenrollar" un manifold como el rollo suizo.</p></div>
+
+<h2>2.5 Escalado multidimensional (MDS)</h2>
+<p>Representa una <b>matriz de disimilaridades</b> en un número dado de dimensiones. Como técnica de reducción, calcula las disimilaridades en el espacio original y busca una representación en baja dimensión donde las <b>distancias euclídeas se parezcan lo más posible</b> a esas disimilaridades. La función de costo (<i>stress</i>) se minimiza con <b>descenso del gradiente</b>: un algoritmo que encuentra un mínimo local moviendo un punto en el sentido contrario al gradiente, proporcionalmente a su magnitud, hasta converger o hasta un número fijo de iteraciones. ISOMAP usa MDS como último paso.</p>
+
+<h2>2.6 ISOMAP (Isometric Mapping)</h2>
+<div class="box def"><p>ISOMAP busca una representación reducida que <b>mantenga las distancias geodésicas</b> entre todos los puntos. La <b>distancia geodésica</b> es la de menor longitud entre dos puntos <b>medida sobre la superficie</b> (la variedad), a diferencia de la euclídea, que va en línea recta por "fuera" de ella.</p></div>
+<p>Tenenbaum, de Silva y Langford (2000). Se basa en que muchos datos de alta dimensión tienen una estructura intrínseca de menor dimensión (por ejemplo, una imagen facial tiene miles de píxeles, pero sus variaciones reales se describen con pocas: pose, expresión, identidad).</p>
+
+<h3>Algoritmo</h3>
+<p>Entradas: los datos, la cantidad de vecinos <b>k</b> y la dimensión de salida <b>m</b>.</p>
+<ol>
+  <li><b>Grafo de vecindad:</b> para cada punto se buscan sus k vecinos más cercanos con distancia <b>euclídea</b>, y se los conecta en un grafo ponderado por esas distancias.</li>
+  <li><b>Distancias geodésicas:</b> se aproximan como los <b>caminos más cortos en el grafo</b>, con <b>Dijkstra</b> o <b>Floyd-Warshall</b> (a los no vecinos se les asigna inicialmente distancia infinita).</li>
+  <li><b>MDS clásico</b> sobre la matriz de distancias geodésicas, para obtener la configuración en m dimensiones que mejor las preserva.</li>
+</ol>
+<div class="box preg"><p>"¿Cómo funciona ISOMAP?" → <b>"ISOMAP comienza estimando las distancias geodésicas entre los puntos en las entradas utilizando las distancias más cercanas en el grafo de los vecinos más cercanos del conjunto de datos."</b> Hay que distinguirla de las variantes con "euclídeas" o sin mencionar el grafo. Las euclídeas se usan solo para armar el grafo.</p></div>
+
+<h3>Características</h3>
+<ul>
+  <li><b>No lineal</b> y <b>no paramétrico</b>: no aprende una función de mapeo, así que <b>no puede aplicarse a datos nuevos</b> sin repetir todo el proceso.</li>
+  <li>Preserva la estructura <b>global</b> (y también la local).</li>
+  <li><b>Complejidad:</b> grafo O(n² log n); Floyd-Warshall O(n³); MDS O(n³). Es costoso con muchos datos.</li>
+  <li>Si el grafo queda <b>desconectado</b>, puede trabajar cada componente por separado.</li>
+  <li>Variantes: con puntos de referencia (<i>landmarks</i>), conformal y L-ISOMAP.</li>
+</ul>
+<h3>Ventajas, limitaciones y uso práctico</h3>
+<div class="dos">
+<div><b>Ventajas</b><ul><li>Captura relaciones no lineales que PCA pierde.</li><li>Preserva la estructura global.</li><li>Revela estructuras ocultas en datos complejos.</li></ul></div>
+<div><b>Limitaciones</b><ul><li>Sensible al ruido.</li><li>Costoso para grandes conjuntos.</li><li>Asume un único manifold conectado.</li><li>Inestabilidad topológica: conexiones erróneas en el grafo, "huecos" en la variedad, variedades no convexas.</li><li>No permite medir cuánta información se retuvo.</li><li>Sus ejes no tienen significado directo.</li></ul></div>
+</div>
+<div class="box clave"><p><b>Elección de k:</b> un k muy <b>pequeño</b> puede dejar el grafo <b>desconectado</b>; uno muy <b>grande</b> crea <b>"atajos"</b> que no respetan la variedad, y el resultado se parece al de PCA. Conviene <b>normalizar</b> antes. La calidad se evalúa comparando las distancias originales con las del espacio reducido.</p></div>
+<p><b>Aplicaciones:</b> visualización de alta dimensión, reconocimiento de imágenes y voz, datos biomédicos, procesamiento de lenguaje natural.</p>
+
+<h2>2.7 t-SNE (t-distributed Stochastic Neighbor Embedding)</h2>
+<p>Técnica <b>no lineal y no supervisada</b>, usada sobre todo para <b>explorar y visualizar</b> datos de alta dimensión en 2 o 3 dimensiones. SNE fue publicado por Hinton y Roweis (2002); van der Maaten y Hinton (2008) lo modificaron con la distribución t. La idea: <b>los puntos similares en alta dimensión deben quedar cerca en baja dimensión</b>, y las similitudes se representan con <b>probabilidades</b>.</p>
+<p><b>Objetivos:</b> preservar la estructura local, adaptarse a relaciones no lineales, visualizar clusters y balancear estructura local y global.</p>
+
+<h3>Algoritmo</h3>
+<ol>
+  <li><b>Probabilidades en alta dimensión:</b> sobre cada punto x<sub>i</sub> se centra una <b>gaussiana</b> y se mide la densidad de los demás puntos bajo ella. El ancho σ<sub>i</sub> de cada gaussiana se ajusta para lograr la <b>perplejidad</b> deseada. Las probabilidades se simetrizan (p<sub>ij</sub>).</li>
+  <li><b>Inicialización</b> aleatoria de los puntos en baja dimensión.</li>
+  <li><b>Probabilidades en baja dimensión</b> (q<sub>ij</sub>) con una <b>t de Student con un grado de libertad</b> (Cauchy). Tiene <b>colas más pesadas</b> que la normal, lo que permite modelar mejor las distancias grandes y evita que todo se amontone.</li>
+  <li><b>Optimización:</b> se minimiza la <b>divergencia de Kullback-Leibler</b> entre P y Q con <b>descenso del gradiente</b>.</li>
+  <li><b>Iteración</b> hasta un número fijo de pasos o convergencia.</li>
+</ol>
+<p>Trucos: <b>early exaggeration</b> (multiplicar p<sub>ij</sub> por 4–12 al principio para favorecer la formación de clusters) y <b>momentum</b>. Variantes: <b>Barnes-Hut</b> (reduce O(n²) a O(n log n) por iteración), FIt-SNE (interpolación y FFT) y multiscale t-SNE.</p>
+
+<h3>Hiperparámetros</h3>
+<ul>
+  <li><b>Perplejidad:</b> una medida suave del <b>número efectivo de vecinos</b>. Valores típicos entre <b>5 y 50</b>, y debe ser <b>menor que la cantidad de puntos</b>. El algoritmo es bastante robusto a sus cambios. Con valores muy bajos (2) dominan las variaciones locales; con valores muy altos (100) los clusters se fusionan. Cuanto más denso el conjunto, mayor perplejidad conviene.</li>
+  <li><b>Iteraciones:</b> del orden de 1000. Si el proceso se detiene antes de estabilizarse aparecen formas <b>"pellizcadas"</b>. No hay un número fijo que sirva para todos los datos.</li>
+  <li><b>Tasa de aprendizaje</b> del descenso del gradiente.</li>
+</ul>
+
+<h3>Interpretación y limitaciones</h3>
+<div class="box trampa"><ul>
+<li>Los <b>ejes no tienen significado</b>.</li>
+<li><b>No se pueden leer los tamaños relativos de los clusters:</b> t-SNE expande los clusters densos y contrae los dispersos, así que todos terminan pareciendo del mismo tamaño.</li>
+<li>Las <b>distancias entre clusters lejanos no son confiables</b>.</li>
+<li>Los resultados <b>varían entre ejecuciones</b> por la inicialización aleatoria: conviene correrlo varias veces.</li>
+<li>Es <b>costoso</b> (O(n²) por iteración en su versión estándar).</li>
+<li>No hay una métrica única de calidad: se evalúa visualmente y con conocimiento del dominio.</li>
+</ul></div>
+<p>Se recomienda estandarizar antes. <b>Aplicaciones:</b> datos genómicos, imágenes, redes sociales, <i>embeddings</i> de palabras.</p>
+
+<h2>2.8 UMAP (Uniform Manifold Approximation and Projection)</h2>
+<div class="box def"><p>UMAP construye una representación de baja dimensión que <b>preserva la estructura global y local del espacio de alta dimensión</b>. Combina teoría de manifolds, topología y aprendizaje automático: usa un <b>enfoque basado en grafos</b> para construir una <b>representación topológica</b> de los datos, que luego se incrusta en baja dimensión mediante <b>descenso de gradiente estocástico</b>.</p></div>
+<h3>Algoritmo</h3>
+<ol>
+  <li><b>Grafo de vecinos más cercanos:</b> para cada punto, sus k vecinos y la distancia ρ al más cercano; se arma un grafo dirigido.</li>
+  <li><b>Representación topológica difusa:</b> probabilidad de conexión entre puntos conectados (decae con la distancia, con un factor de escala local σ). Se simetriza tomando el máximo.</li>
+  <li><b>Complejo simplicial de baja dimensión:</b> se inicializan los puntos y se calculan sus probabilidades de conexión en baja dimensión (con hiperparámetros a y b).</li>
+  <li><b>Optimización:</b> se minimiza la divergencia entre ambas representaciones, normalmente la <b>entropía cruzada</b>, con descenso de gradiente estocástico.</li>
+  <li><b>Iteración</b> por un número de épocas.</li>
+</ol>
+<p>Parámetros: <code>n_neighbors</code>, <code>min_dist</code>, métrica, épocas y semilla. Complejidad <b>O(n log n)</b>: es <b>más escalable que t-SNE</b>. Puede devolver un modelo entrenado.</p>
+<h3>Interpretación</h3>
+<ul>
+  <li>Grupos cercanos en UMAP suelen corresponder a datos similares en el espacio original, pero las <b>distancias absolutas no siempre se correlacionan</b>, y las distancias entre clusters lejanos pueden engañar.</li>
+  <li>La forma global (curvas, espirales) puede revelar relaciones no lineales; las zonas continuas, transiciones graduales; los puntos aislados, outliers.</li>
+  <li>Como t-SNE, los resultados <b>varían entre ejecuciones</b>: las estructuras que aparecen siempre son las más confiables.</li>
+  <li>Es una herramienta de <b>exploración</b>: los patrones deben validarse con análisis estadístico y conocimiento del dominio.</li>
+</ul>
+<p>Aplicaciones: visualización, preprocesamiento, análisis de RNA de célula única (single-cell RNA-seq).</p>
+<div class="box preg"><p>"¿Cuáles afirmaciones son correctas respecto a UMAP?" → usa un enfoque basado en grafos para construir una representación topológica que luego se incrusta en baja dimensión con descenso de gradiente estocástico; y preserva la estructura global y local <b>del espacio de alta dimensión</b>. Cuidado con la variante que dice "del espacio de baja dimensión".</p></div>
+
+<h2>2.9 Comparación entre PCA, ISOMAP, t-SNE y UMAP</h2>
+<table>
+<tr><th>Aspecto</th><th>PCA</th><th>ISOMAP</th><th>t-SNE</th><th>UMAP</th></tr>
+<tr><td>Tipo</td><td><b>Lineal</b></td><td>No lineal</td><td>No lineal</td><td>No lineal</td></tr>
+<tr><td>Preserva</td><td>Varianza; estructura <b>global</b></td><td>Distancias geodésicas (global)</td><td>Vecindades (<b>local</b>)</td><td>Local <b>y</b> global</td></tr>
+<tr><td>Interpretable</td><td><b>Sí</b> (cargas)</td><td>No</td><td>No</td><td>No</td></tr>
+<tr><td>Costo</td><td>Bajo (álgebra lineal)</td><td>Alto (O(n³))</td><td>Alto (O(n²))</td><td>Medio (O(n log n))</td></tr>
+<tr><td>Determinista</td><td>Sí</td><td>Sí</td><td>No</td><td>No</td></tr>
+<tr><td>Parámetros clave</td><td>Nº de componentes</td><td>k, dimensión</td><td>Perplejidad, iteraciones, tasa de aprendizaje</td><td>n_neighbors, min_dist, métrica</td></tr>
+<tr><td>Uso típico</td><td>Reducción, selección de características, reducción de ruido, preprocesamiento</td><td>Desenrollar variedades</td><td>Visualización y exploración</td><td>Visualización, preprocesamiento</td></tr>
+</table>
+<div class="box clave"><p><b>No lineales:</b> ISOMAP, t-SNE y UMAP (también MDS no métrico). <b>Lineal:</b> PCA (y LDA, U3). PCA sirve para entender <b>qué</b> variables explican la variabilidad; t-SNE y UMAP para <b>ver</b> si hay grupos; ISOMAP cuando la estructura es curva.</p></div>
+</section>
+
+<section class="unidad">
+<h1>3. Aprendizaje no supervisado</h1>
+
+<h2>3.1 Definición y funcionamiento</h2>
+<div class="box def"><p>Tipo de aprendizaje automático donde el algoritmo busca <b>patrones y estructuras</b> en los datos <b>sin disponer de una variable objetivo</b> ni de supervisión humana. A diferencia del supervisado, no usa datos etiquetados: agrupa por <b>similitudes</b>.</p></div>
+<p>Pasos del proceso: el sistema interpreta los datos sin etiquetar, encuentra patrones ocultos (basados en semejanzas y diferencias) y aplica algoritmos para segmentar los datos en grupos. <b>Aplicaciones:</b> segmentación de clientes, detección de anomalías en ciberseguridad, reconocimiento de patrones en imágenes y textos.</p>
+<p>Hay <b>tres tipos de métodos</b>:</p>
+<table>
+<tr><th>Tipo</th><th>Objetivo</th><th>Algoritmos</th></tr>
+<tr><td><b>Agrupación</b></td><td>Formar grupos de datos similares y descubrir la estructura intrínseca</td><td>K-means, jerárquico, DBSCAN, Mean Shift</td></tr>
+<tr><td><b>Asociación</b></td><td>Descubrir qué atributos aparecen juntos con frecuencia</td><td>Apriori, Eclat, FP-Growth</td></tr>
+<tr><td><b>Reducción de la dimensionalidad</b></td><td>Transformar a menor dimensión conservando la información</td><td>PCA, LDA, t-SNE</td></tr>
+</table>
+
+<h3>Algoritmos de agrupación (panorama)</h3>
+<ul>
+  <li><b>K-means:</b> divide los datos en k grupos; parte de k centros al azar, asigna cada punto al centro más cercano, recalcula los centros y repite hasta que las asignaciones se estabilizan.</li>
+  <li><b>Jerárquico:</b> agrupa gradualmente creando una jerarquía. Aglomerativo (cada punto empieza solo y se van uniendo) o divisivo (un cluster grande que se va dividiendo).</li>
+  <li><b>DBSCAN:</b> basado en <b>densidad</b>: las zonas densas forman clusters y los puntos en zonas poco pobladas son ruido o atípicos.</li>
+  <li><b>Mean Shift</b> (desplazamiento medio): estima la densidad y desplaza iterativamente ventanas (anchos de banda) hacia la mayor densidad hasta converger. Útil con clusters de formas y tamaños distintos y densidad no homogénea.</li>
+</ul>
+
+<h3>Asociación</h3>
+<p>Descubre combinaciones de atributos que aparecen juntas con frecuencia. El ejemplo típico es el <b>análisis de la canasta de compra</b>: qué productos se compran juntos, para recomendar, ubicar productos o dirigir publicidad.</p>
+<ul>
+  <li><b>Apriori:</b> dos pasos. Primero la frecuencia de cada elemento individual; después la de las combinaciones (<i>itemsets</i>). Usa un <b>umbral de soporte</b> para quedarse con los itemsets frecuentes. <b>Genera candidatos</b>.</li>
+  <li><b>Eclat:</b> también usa umbral de soporte, pero <b>no genera candidatos</b>: usa clases de equivalencia.</li>
+  <li><b>FP-Growth:</b> no usa los principios de Apriori ni genera candidatos; construye un <b>árbol FP</b> y <b>recorre los datos una sola vez</b>, por eso es rápido.</li>
+</ul>
+
+<h3>Reducción de dimensionalidad en el contexto no supervisado</h3>
+<ul>
+  <li><b>PCA</b> es <b>extracción de características</b>: crea variables nuevas con transformaciones lineales.</li>
+  <li><b>LDA</b> (análisis discriminante lineal) es <b>selección de características</b> orientada a clasificar: busca la combinación lineal que <b>separe las clases</b> minimizando la variación dentro de cada clase. A diferencia de PCA, <b>usa la etiqueta de clase</b>.</li>
+  <li><b>t-SNE</b> puede usarse para extracción y para selección; es no lineal y apto para visualizar.</li>
+</ul>
+
+<h3>Ventajas y desventajas del no supervisado</h3>
+<div class="dos">
+<div><b>Ventajas</b><ul><li>No requiere datos etiquetados (caros o difíciles de obtener).</li><li>Detecta patrones ocultos.</li><li>Detecta anomalías (fraude, seguridad, salud).</li><li>Flexible y escalable.</li></ul></div>
+<div><b>Desventajas</b><ul><li><b>Difícil de evaluar</b>: no hay variable objetivo.</li><li>Puede encontrar patrones sin significado.</li><li>Puede sobreajustar, sobre todo con muchas características.</li><li>Requiere conocimiento experto para configurarlo e interpretarlo.</li></ul></div>
+</div>
+
+<h2>3.2 K-means</h2>
+<p>Particiona n observaciones en <b>k grupos</b>, de modo que cada observación pertenece al grupo cuyo <b>centroide</b> está más cerca. Minimiza la <b>suma de distancias cuadráticas</b> de cada objeto al centroide de su cluster (suma de residuos cuadrados, RSS, o <b>inercia</b>).</p>
+<h3>Algoritmo</h3>
+<ol>
+  <li>Elegir el número de clusters <b>k</b>.</li>
+  <li><b>Inicializar</b> k centroides (por ejemplo, al azar).</li>
+  <li><b>Asignar</b> cada punto al centroide más cercano.</li>
+  <li><b>Actualizar</b> cada centroide como el <b>promedio</b> de los puntos de su grupo.</li>
+  <li>Repetir 3 y 4 hasta el criterio de parada.</li>
+</ol>
+<p><b>Criterios de parada:</b> (1) los centroides dejan de cambiar; (2) los puntos dejan de cambiar de cluster; (3) se alcanza un límite de iteraciones. En la práctica alcanza con estar cerca de la convergencia.</p>
+
+<h3>Elección de k</h3>
+<ul>
+  <li><b>Minimizar la RSS intragrupo:</b> segmentos lo más compactos posible.</li>
+  <li><b>Maximizar la distancia entre segmentos</b> (por ejemplo, entre centros): segmentos lo más diferenciados posible.</li>
+  <li><b>Método del codo:</b> graficar la RSS (inercia) contra k y elegir el valor a partir del cual ya no hay mejoras significativas.</li>
+  <li><b>k dinámico:</b> unir dos particiones con centros muy cercanos (reduce k) o dividir una muy heterogénea (aumenta k).</li>
+  <li>Índices de validación: <b>Gap</b> y <b>Silhouette</b> (sección 3.4).</li>
+</ul>
+<div class="box prof"><p>Igual que en PCA, el k donde se produce el quiebre del codo <b>se incluye</b>. Si el codo no es claro, está bien decidir con Silhouette y Gap.</p></div>
+
+<h3>Propiedades</h3>
+<div class="box clave"><ul>
+<li>K-means <b>no garantiza el óptimo global</b>: puede quedar en un <b>óptimo local</b> que depende de la inicialización (por eso se fija la semilla o se corre varias veces).</li>
+<li>Puede no encontrar estructura si los datos no la tienen o si k está mal elegido.</li>
+<li>Hay que <b>especificar k</b> de antemano.</li>
+<li>Genera clusters <b>esféricos o convexos</b> y de tamaño parecido.</li>
+<li><b>Sensible a outliers</b>, que arrastran a los centroides.</li>
+<li>Ventajas: <b>fácil de implementar y entender</b>, <b>escalable</b> a grandes conjuntos y <b>converge relativamente rápido</b>.</li>
+</ul></div>
+<div class="box preg"><p>"¿Cuál no es una ventaja de K-means?" → <b>"Garantizado para encontrar el óptimo global"</b>. "¿Qué sucede si k es demasiado pequeño?" → los grupos contienen <b>demasiados datos</b> y pueden no capturar la estructura subyacente. (Si k es demasiado grande, los grupos son demasiado específicos y se sobreajustan.)</p></div>
+
+<h2>3.3 Clustering jerárquico</h2>
+<p>Construye una <b>jerarquía de particiones</b>. Hay <b>dos tipos</b>, con enfoques inversos:</p>
+<table>
+<tr><th></th><th>Aglomerativo (AHC)</th><th>Divisivo (DHC)</th></tr>
+<tr><td>Estrategia</td><td><b>Bottom-up</b> (de abajo hacia arriba)</td><td><b>Top-down</b> (de arriba hacia abajo)</td></tr>
+<tr><td>Inicio</td><td>Cada dato es su propio grupo</td><td>Un único grupo con todos los datos</td></tr>
+<tr><td>Paso</td><td>Fusiona los dos clusters más cercanos</td><td>Divide recursivamente</td></tr>
+<tr><td>Se lo llama</td><td>Clustering o agrupamiento</td><td>Segmentación</td></tr>
+<tr><td>Costo</td><td>Alto; es la forma más natural de construir el dendrograma</td><td>Suele ser más eficiente (no baja hasta un dato por grupo) y aprovecha la distribución global</td></tr>
+</table>
+<p><b>Algoritmo aglomerativo:</b> (1) cada observación es un cluster; (2) calcular la matriz de distancias; (3) elegir los 2 clusters más cercanos según un criterio; (4) fusionarlos; (5) actualizar la matriz; (6) repetir hasta tener un único cluster.</p>
+<p>Inconveniente principal: <b>no determinan por sí mismos el número de grupos</b>; hay que fijarlo o definir un criterio de parada. Además son <b>voraces</b> (<i>greedy</i>): toman la mejor decisión local en cada paso, sin garantizar el óptimo global.</p>
+
+<h3>Dendrograma</h3>
+<div class="box def"><p>Diagrama que representa la <b>estructura del árbol de la agrupación jerárquica</b>: las agrupaciones (o divisiones) sucesivas que genera el algoritmo.</p></div>
+<figure>
+<svg width="380" height="175" viewBox="0 0 380 175" xmlns="http://www.w3.org/2000/svg" font-family="Cambria, serif" font-size="10">
+  <line x1="30" y1="10" x2="30" y2="150" stroke="#999"/><text x="2" y="80" transform="rotate(-90 12 80)">distancia</text>
+  <g stroke="#1f3a5f" stroke-width="1.6" fill="none">
+    <path d="M60 150 V128 H90 V150"/><path d="M75 128 V110 H120 V150"/>
+    <path d="M170 150 V136 H200 V150"/><path d="M230 150 V132 H260 V150"/><path d="M185 136 V100 H245 V132"/>
+    <path d="M97 110 V40 H215 V100"/><path d="M300 150 V120 H330 V150"/><path d="M156 40 V20 H315 V120"/>
+  </g>
+  <line x1="40" y1="75" x2="350" y2="75" stroke="#7a1f1f" stroke-dasharray="4 3"/>
+  <text x="352" y="72" fill="#7a1f1f">corte</text>
+  <g text-anchor="middle"><text x="60" y="164">A</text><text x="90" y="164">B</text><text x="120" y="164">C</text><text x="170" y="164">D</text><text x="200" y="164">E</text><text x="230" y="164">F</text><text x="260" y="164">G</text><text x="300" y="164">H</text><text x="330" y="164">I</text></g>
+</svg>
+<figcaption>Figura 3.1. Las uniones bajas juntan grupos muy parecidos; las altas, grupos lejanos. La línea de corte deja 3 clusters.</figcaption>
+</figure>
+<p><b>Cómo se lee:</b> el eje horizontal representa las muestras (o clusters iniciales); el vertical, la distancia a la que se fusionan. <b>Unión baja = clusters muy próximos (similares); unión alta = grupos lejanos (poco similares).</b> El número de clusters se elige trazando una línea horizontal donde haya un tramo largo sin uniones y contando las ramas que corta. Su punto débil es que no muestra directamente la distancia entre los objetos individuales. Su interés es que ofrece <b>todos los niveles</b> de agrupamiento a la vez.</p>
+
+<h3>Criterios para el número de clusters</h3>
+<p>Profundidad máxima del árbol, número máximo de instancias por partición, o un umbral de similaridad (no dividir lo que ya es suficientemente cohesivo).</p>
+<div class="box clave"><p><b>No existe un óptimo absoluto único:</b> no hay un criterio objetivo y ampliamente válido; la optimalidad depende del contexto y del objetivo, y distintos criterios pueden sugerir distintos k.</p></div>
+
+<h3>Criterios de enlace (cómo se mide la distancia entre dos clusters)</h3>
+<table>
+<tr><th>Enlace</th><th>Distancia entre clusters A y B</th><th>Comportamiento</th></tr>
+<tr><td><b>Single</b> (simple)</td><td>La <b>mínima</b> entre un elemento de A y uno de B</td><td>Poco estable; sensible al ruido y a fronteras difusas; forma cadenas alargadas</td></tr>
+<tr><td><b>Complete</b> (completo)</td><td>La <b>máxima</b> entre elementos de A y B</td><td>Más estable y robusto, pero "pesimista"; clusters compactos</td></tr>
+<tr><td><b>Average</b> (UPGMA)</td><td>El <b>promedio</b> de todas las distancias entre A y B</td><td>Balance: ni tan alargado como single ni tan compacto como complete</td></tr>
+<tr><td><b>Centroid</b> (UPGMC)</td><td>Distancia entre los <b>centroides</b></td><td>Puede producir inversiones (clusters unidos que vuelven a separarse)</td></tr>
+<tr><td><b>Ward</b></td><td>Une los clusters cuya fusión <b>menos aumenta la dispersión interna</b></td><td>Clusters compactos, parecido a K-means; el más usado en los ejemplos de clase</td></tr>
+</table>
+
+<h2>3.4 Validación del clustering</h2>
+<ul>
+  <li><b>Validación externa:</b> usa información externa al algoritmo (por ejemplo, las etiquetas reales). Sirve para elegir el algoritmo óptimo en un conjunto específico, pero esa información rara vez está disponible.</li>
+  <li><b>Validación interna:</b> usa solo los datos y el resultado. Sirve para elegir el algoritmo y el <b>número óptimo de clusters</b> sin información adicional.</li>
+</ul>
+<p>Las métricas internas se basan en dos criterios:</p>
+<ul>
+  <li><b>Cohesión:</b> los miembros de un cluster deben estar lo más cerca posible entre sí. Se mide con la suma de cuadrados intracluster (<b>SSW</b>).</li>
+  <li><b>Separación:</b> los clusters deben estar bien separados entre sí. Se mide con la suma de cuadrados intercluster (<b>SSB</b>), por ejemplo, entre centroides.</li>
+</ul>
+
+<h3>Gap statistic</h3>
+<p>Estima el número de clusters comparando la curva del <b>logaritmo de la dispersión intracluster</b> de los datos con la que se <b>esperaría bajo una distribución uniforme</b> generada sobre el rectángulo que contiene a los datos (promediada sobre B conjuntos de referencia). Es una formalización del <b>codo</b> y se aplica a cualquier técnica de clustering y distancia. Se elige el k donde la diferencia (el "gap") es mayor.</p>
+
+<h3>Coeficiente de Silhouette</h3>
+<p class="formula">s = (b − a) / máx(a, b)</p>
+<p>a = distancia promedio dentro del propio grupo; b = distancia promedio al grupo vecino más cercano. Varía entre −1 y 1:</p>
+<ul>
+  <li><b>≈ 1:</b> grupos bien separados y claramente distinguidos.</li>
+  <li><b>≈ 0:</b> clusters indiferentes o superpuestos (el punto está en la frontera).</li>
+  <li><b>≈ −1:</b> puntos asignados al grupo incorrecto.</li>
+</ul>
+<p>Se calcula el promedio para varios k y se elige el máximo. No está definido para k = 1.</p>
+
+<h2>3.5 DBSCAN</h2>
+<p><i>Density-Based Spatial Clustering of Applications with Noise</i> (Ester, Kriegel, Sander y Xu, 1996): el método no supervisado más usado entre los basados en <b>densidad</b>. Tiene dos parámetros:</p>
+<ul>
+  <li><b>eps:</b> radio de la vecindad de cada punto.</li>
+  <li><b>min_samples:</b> mínimo de puntos en esa vecindad para que un punto sea <b>central</b>.</li>
+</ul>
+<figure>
+<svg width="360" height="130" viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" font-family="Cambria, serif" font-size="10">
+  <circle cx="90" cy="65" r="36" fill="none" stroke="#1f3a5f" stroke-dasharray="3 2"/>
+  <g fill="#1f3a5f"><circle cx="90" cy="65" r="4"/><circle cx="72" cy="55" r="3"/><circle cx="105" cy="52" r="3"/><circle cx="80" cy="82" r="3"/><circle cx="108" cy="78" r="3"/></g>
+  <circle cx="160" cy="70" r="4" fill="#c06000"/>
+  <circle cx="300" cy="40" r="4" fill="#999"/>
+  <text x="60" y="122">central (≥ min_samples en eps)</text>
+  <text x="140" y="95" fill="#c06000">borde</text>
+  <text x="285" y="62" fill="#666">ruido (−1)</text>
+  <line x1="90" y1="65" x2="126" y2="65" stroke="#1f3a5f"/><text x="104" y="62">eps</text>
+</svg>
+<figcaption>Figura 3.2. Tipos de punto en DBSCAN.</figcaption>
+</figure>
+<ul>
+  <li><b>Punto central:</b> tiene al menos min_samples puntos dentro de su radio eps.</li>
+  <li><b>Punto de borde:</b> tiene menos de min_samples, pero al menos un punto central en su vecindad.</li>
+  <li><b>Ruido:</b> ni central ni de borde. Se etiqueta <b>−1</b>.</li>
+</ul>
+<p><b>Algoritmo:</b> se toma un punto arbitrario; si es central, se crea un cluster y se le agregan todos los puntos alcanzables por densidad; se repite con los puntos no visitados; los que no pertenecen a ningún cluster quedan como ruido.</p>
+<h3>Interpretación y efecto de los parámetros</h3>
+<ul>
+  <li><b>Determina automáticamente el número de clusters.</b></li>
+  <li>Detecta clusters de <b>forma arbitraria</b>, no solo circulares.</li>
+  <li>Los clusters encontrados tienen densidad similar, la que fijan eps y min_samples.</li>
+  <li>eps <b>pequeño</b> y min_samples <b>grande</b> → clusters más densos y <b>más ruido</b>. eps <b>grande</b> y min_samples <b>pequeño</b> → <b>menos clusters</b> y menos ruido.</li>
+</ul>
+<p><b>Limitaciones:</b> sensible a eps y min_samples; problemas con clusters de <b>densidades muy distintas</b>; el orden de procesamiento puede afectar el resultado (puntos de borde). Complejidad entre O(n log n) y O(n²).</p>
+<table>
+<tr><th>DBSCAN</th><th>K-means</th></tr>
+<tr><td>No necesita especificar el número de clusters</td><td>Hay que especificar k (muy sensible a él)</td></tr>
+<tr><td>Clusters de forma arbitraria</td><td>Clusters esféricos o convexos</td></tr>
+<tr><td>Funciona bien con ruido y outliers (los marca como ruido)</td><td>Los outliers sesgan mucho los clusters</td></tr>
+<tr><td>Dos parámetros (eps, min_samples)</td><td>Un parámetro (k)</td></tr>
+</table>
+
+<h3>Variantes: OPTICS, HDBSCAN, ST-DBSCAN</h3>
+<p><b>OPTICS</b> reduce la sensibilidad a los parámetros. <b>ST-DBSCAN</b> trabaja con datos espacio-temporales. <b>HDBSCAN</b> es una generalización <b>jerárquica</b> que maneja <b>densidades variables</b>: calcula la distancia núcleo de cada punto (según min_samples), transforma el espacio según la densidad, arma un árbol de expansión mínima, construye la jerarquía de clusters, la condensa según el tamaño mínimo (<code>min_cluster_size</code>) y extrae los clusters más estables. Aumentar min_cluster_size produce menos clusters.</p>
+</section>
+
+<section class="unidad">
+<h1>4. Árboles de decisión, métricas y validación</h1>
+
+<h2>4.1 Qué es un árbol de decisión</h2>
+<div class="box def"><p>Modelo <b>jerárquico</b> en forma de árbol, usado para hacer <b>predicciones basadas en las características de entrada</b>. Está formado por un nodo raíz, ramas, nodos internos (de decisión) y nodos hoja. Es una técnica de <b>aprendizaje supervisado no paramétrico</b>, sirve para <b>clasificación y regresión</b>, aunque se prefiere sobre todo para clasificación.</p></div>
+<div class="box clave"><p>Los árboles se caracterizan <b>no por su capacidad predictiva</b> (generalmente superada por modelos más complejos) <b>sino por su alta capacidad explicativa</b> y la facilidad para interpretar el modelo. Cada camino de la raíz a una hoja es una regla legible.</p></div>
+<p>Esta interpretabilidad se relaciona con la <b>IA explicable</b> (XAI), que busca hacer comprensibles modelos complejos como los bosques aleatorios o las redes profundas.</p>
+<p><b>Ventajas prácticas:</b> son <b>robustos a valores atípicos</b> y <b>no requieren escalar</b> los datos. La implementación de scikit-learn usa una versión optimizada de CART que <b>no admite variables categóricas</b> sin codificar.</p>
+
+<h2>4.2 Algoritmos</h2>
+<table>
+<tr><th>Algoritmo</th><th>Autor</th><th>Criterio de división</th></tr>
+<tr><td>Algoritmo de Hunt (1960)</td><td>Hunt</td><td>Origen: modelar el aprendizaje humano en psicología</td></tr>
+<tr><td><b>ID3</b> (Iterative Dichotomiser 3, 1986)</td><td>Ross Quinlan</td><td><b>Entropía y ganancia de información</b></td></tr>
+<tr><td><b>C4.5</b></td><td>Ross Quinlan (evolución de ID3)</td><td>Ganancia de información o <b>relación de ganancia</b> (gain ratio)</td></tr>
+<tr><td><b>CART</b> (Classification And Regression Trees)</td><td>Leo Breiman</td><td><b>Impureza de Gini</b>; divisiones <b>binarias</b>; también regresión</td></tr>
+</table>
+
+<h3>Terminología</h3>
+<ul>
+  <li><b>Nodo raíz:</b> donde comienza el árbol; representa todo el conjunto de datos.</li>
+  <li><b>Nodo hoja:</b> nodo final de salida; no se divide más.</li>
+  <li><b>División:</b> partir un nodo en subnodos según una condición.</li>
+  <li><b>Rama o subárbol:</b> parte del árbol que surge de una división.</li>
+  <li><b>Poda:</b> eliminar ramas no deseadas.</li>
+  <li><b>Nodo padre / hijo:</b> relación entre un nodo y los que surgen de él.</li>
+  <li><b>Profundidad:</b> la trayectoria más larga entre la raíz y una hoja.</li>
+</ul>
+
+<h2>4.3 Medidas de impureza</h2>
+<p>El árbol se construye <b>minimizando la impureza</b> de los nodos resultantes en cada división. Siendo p<sub>i</sub> la proporción de observaciones de la clase i en el nodo:</p>
+<div class="dos">
+<div><p class="formula">Gini = 1 − Σ p<sub>i</sub>²</p>
+<p>El <b>índice de Gini mide el grado de impureza de un nodo</b>: la probabilidad de clasificar mal un punto al azar si se lo etiquetara según la distribución de clases del nodo. <b>Gini = 0: nodo puro</b> (una sola clase). Valores mayores, hasta 1, indican mezcla. Menor es mejor.</p></div>
+<div><p class="formula">H(S) = − Σ p<sub>i</sub> · log<sub>2</sub> p<sub>i</sub></p>
+<p>La <b>entropía</b> viene de la teoría de la información y mide la impureza (incertidumbre) de la muestra. Vale 0 en un nodo puro. Con dos clases varía entre 0 y 1.</p></div>
+</div>
+<ul>
+  <li><b>Ganancia de información:</b> IG(S, A) = H(S) − entropía ponderada de los subconjuntos que genera el atributo A. Se elige el atributo con <b>mayor ganancia</b> (mayor reducción de incertidumbre).</li>
+  <li><b>Relación de ganancia</b> (gain ratio, C4.5): normaliza la ganancia para no favorecer atributos con <b>muchos valores distintos</b>.</li>
+</ul>
+<div class="box preg"><p>"¿Qué mide el índice de Gini?" → <b>el grado de impureza de un nodo</b>. No "de las variables categóricas", ni "luego de la poda", ni "asociado al sobreajuste".</p></div>
+
+<h2>4.4 Construcción conceptual de un árbol</h2>
+<ol>
+  <li><b>Punto de partida:</b> ejemplos de entrenamiento, atributos predictores y un atributo objetivo.</li>
+  <li><b>Homogeneidad:</b> si todos los ejemplos de un nodo son de la misma clase, el nodo es una <b>hoja</b> con esa clase.</li>
+  <li><b>Sin atributos:</b> si no quedan atributos para dividir pero hay clases mezcladas, el nodo es hoja con la <b>clase mayoritaria</b>.</li>
+  <li><b>Mejor atributo:</b> se elige el que da la mayor ganancia de información (o el menor Gini, o χ²).</li>
+  <li><b>Ramas:</b> una por cada valor del atributo; los ejemplos se reparten según su valor.</li>
+  <li><b>Casos vacíos:</b> si una rama no recibe ejemplos, se pone una hoja con la clase mayoritaria del padre; si recibe, se construye un subárbol de forma <b>recursiva</b>.</li>
+  <li><b>Resultado:</b> el proceso termina cuando todas las ramas terminan en hojas. Cada hoja es una regla.</li>
+</ol>
+
+<h2>4.5 Sesgo, varianza, subajuste y sobreajuste</h2>
+<ul>
+  <li><b>Sesgo</b> (bias): error por <b>simplificar demasiado</b> el problema ("todos los pacientes tienen la misma enfermedad").</li>
+  <li><b>Varianza:</b> error por <b>depender demasiado de los datos de entrenamiento</b> ("cada paciente es un caso único sin reglas generales").</li>
+</ul>
+<table>
+<tr><th></th><th>Subajuste (underfitting)</th><th>Sobreajuste (overfitting)</th></tr>
+<tr><td>Cuándo</td><td>Árbol demasiado simple para captar los patrones</td><td>Árbol demasiado complejo: aprende hasta el ruido</td></tr>
+<tr><td>Señal</td><td>Error <b>alto en entrenamiento y en test</b></td><td>Error <b>muy bajo en entrenamiento y alto en test</b>: no generaliza</td></tr>
+<tr><td>Causa</td><td><b>Alto sesgo</b></td><td><b>Alta varianza</b></td></tr>
+</table>
+<div class="box clave"><p>El <b>trade-off sesgo-varianza</b> es la tensión inevitable: si se reduce uno, aumenta el otro. Se busca un modelo lo bastante complejo para aprender los patrones relevantes, pero no tanto como para aprender ruido. En árboles se maneja con la <b>profundidad máxima</b>, el <b>número mínimo de ejemplos por hoja</b> y la <b>poda</b>. Las regiones muy pequeñas (hojas con pocos datos) son síntoma de sobreajuste.</p></div>
+
+<h3>Poda</h3>
+<div class="box def"><p>Consiste en <b>eliminar las hojas que causan el sobreajuste</b>. Se calcula qué partición (o subárbol) aporta el menor cociente entre el aumento de profundidad media del árbol y la disminución del error global de clasificación, y se eliminan las hojas que menos ayudan a mejorar el árbol.</p></div>
+<ul>
+  <li><b>Prepoda:</b> limitar el crecimiento mientras se construye (<code>max_depth</code>, <code>min_samples_leaf</code>, <code>min_samples_split</code>).</li>
+  <li><b>Poda posterior</b> (<i>post-pruning</i>): dejar crecer el árbol y luego recortar (en scikit-learn, <code>ccp_alpha</code>: 0 no poda, cuanto mayor, más ramas elimina).</li>
+</ul>
+<div class="box preg"><p>"¿Cuál es el objetivo de la poda?" → <b>reducir el sobreajuste</b>. No mejora las métricas de entrenamiento (de hecho las empeora un poco), no busca velocidad ni evita normalizar.</p></div>
+
+<h2>4.6 CART en clasificación</h2>
+<p>CART genera <b>particiones binarias</b> sucesivas (una condición: se cumple o no) buscando que cada subgrupo sea lo más <b>homogéneo</b> posible. Ejemplo de clase: 20 personajes de Dragon Ball (10 malignos, 10 buenos) según fuerza y letalidad.</p>
+<ol>
+  <li>Para cada umbral candidato se calcula el Gini de cada nodo hijo.</li>
+  <li>La <b>función de costo</b> es el <b>promedio ponderado</b> de los Gini de los hijos (cada Gini multiplicado por la fracción de datos que recibe).</li>
+  <li>Se elige el umbral con el <b>menor costo</b>. En el ejemplo, x<sub>0</sub> ≤ 6.5 (costo 0.375: un hijo puro con 4 rojos y otro con 6 rojos y 10 verdes, Gini 0.469) es mejor que x<sub>1</sub> ≤ 11 (costo 0.446).</li>
+  <li>Se repite en cada nodo impuro hasta lograr grupos homogéneos.</li>
+</ol>
+<p>Si la hoja tiene varias clases, el árbol puede devolver <b>probabilidades</b> (<code>predict_proba</code>): la proporción de cada clase en la hoja.</p>
+
+<h2>4.7 CART en regresión</h2>
+<p>Cuando la relación entre variables no es lineal (en el ejemplo, la efectividad de un medicamento según la dosis es baja en un rango, alta en otro y media en otro), el árbol hace particiones binarias buscando regiones con valores <b>lo más parecidos posible</b>.</p>
+<ol>
+  <li>Se ordenan los valores de la característica y se toman los <b>puntos medios</b> entre valores consecutivos como <b>umbrales candidatos</b>.</li>
+  <li>Para cada umbral se mide la dispersión de cada región con el <b>error cuadrático medio</b> respecto de su promedio.</li>
+  <li>El costo del umbral es la suma de los MSE ponderados por la fracción de datos de cada región.</li>
+  <li>Se elige el umbral de <b>menor costo</b> (en el ejemplo, dosis ≤ 37.5 mg) y se repite en cada región.</li>
+</ol>
+<p>La predicción de una hoja es el <b>promedio</b> de los valores que contiene.</p>
+
+<h2>4.8 Métricas de clasificación</h2>
+<table>
+<tr><th rowspan="2"></th><th colspan="2">Predicho</th></tr>
+<tr><th>Positivo</th><th>Negativo</th></tr>
+<tr><td><b>Real positivo</b></td><td>VP (verdadero positivo)</td><td>FN (falso negativo)</td></tr>
+<tr><td><b>Real negativo</b></td><td>FP (falso positivo)</td><td>VN (verdadero negativo)</td></tr>
+</table>
+<p class="cap">Matriz de confusión binaria. La diagonal son los aciertos.</p>
+<ul>
+  <li><b>Exactitud</b> (accuracy) = (VP + VN) / total: proporción de aciertos. <b>Engaña con clases desbalanceadas</b>.</li>
+  <li><b>Precisión</b> (precision) = VP / (VP + FP): de lo que el modelo dijo positivo, cuánto lo era. Se lee en la <b>columna</b>.</li>
+  <li><b>Exhaustividad</b> (recall, sensibilidad, TPR) = VP / (VP + FN): de los positivos reales, cuántos detectó. Se lee en la <b>fila</b>. En salud: la capacidad de detectar la enfermedad entre los enfermos.</li>
+  <li><b>F1-score:</b> media armónica entre precisión y exhaustividad.</li>
+</ul>
+<div class="box trampa"><p>En las filminas, "precisión" se describe también con su sentido de medición física (poca dispersión entre mediciones repetidas) y "exactitud" como cercanía al valor verdadero (relacionada con el sesgo). En el examen, usar las definiciones de arriba: precisión mira la columna, exhaustividad la fila, exactitud el total.</p></div>
+<h3>Multiclase</h3>
+<p>Se calcula precisión y exhaustividad <b>por clase</b>; el valor <b>macro</b> es el <b>promedio simple</b> de las clases, sin pesar por tamaño (las clases chicas cuentan igual). <i>Weighted</i> pondera por la cantidad de casos de cada clase. Ejemplo de clase: frutas con matriz [[28, 2, 5], [3, 30, 2], [4, 1, 25]] → precisión de manzana 28/35 ≈ 0.80, exhaustividad de banana 30/35 ≈ 0.86.</p>
+<h3>Curva ROC y AUC</h3>
+<p>La <b>curva ROC</b> grafica la tasa de verdaderos positivos (recall) contra la tasa de falsos positivos, <b>variando el umbral</b> de decisión. El <b>AUC</b> (área bajo la curva) va de 0 a 1; <b>1 es el clasificador ideal</b>. (La filmina asocia 0 a un modelo aleatorio; en la literatura un modelo aleatorio da AUC ≈ 0.5.)</p>
+
+<h2>4.9 Métricas de regresión</h2>
+<table>
+<tr><th>Métrica</th><th>Qué es</th><th>Puntos clave</th></tr>
+<tr><td><b>MAE</b></td><td>Promedio del valor absoluto de los errores</td><td>En unidades originales; <b>más robusta a outliers</b>; no diferenciable</td></tr>
+<tr><td><b>MSE</b></td><td>Promedio de los errores al cuadrado</td><td>Penaliza los errores grandes; unidades al cuadrado; diferenciable</td></tr>
+<tr><td><b>RMSE</b></td><td>Raíz del MSE</td><td>En unidades originales; penaliza errores grandes; la más usada para comparar modelos</td></tr>
+<tr><td><b>MAPE</b></td><td>Error porcentual absoluto medio</td><td>Independiente de la escala; se indefine si hay valores reales cercanos a 0</td></tr>
+<tr><td><b>R²</b></td><td>Coeficiente de determinación: qué parte de la variación se explica</td><td>Mejor 1, peor 0; <b>nunca disminuye al agregar variables</b></td></tr>
+<tr><td><b>R² ajustado</b></td><td>R² penalizado por la cantidad de variables</td><td>Baja si la variable agregada no aporta lo suficiente</td></tr>
+<tr><td><b>RMSLE</b></td><td>RMSE sobre logaritmos</td><td>Atenúa el efecto de los outliers</td></tr>
+</table>
+<div class="box clave"><p>En MAE, MSE y RMSE <b>menor es mejor</b>; en R² <b>mayor es mejor</b>. Si el RMSE es mucho mayor que el MAE, la mayoría de los errores son chicos y unos pocos son grandes.</p></div>
+
+<h2>4.10 Validación cruzada, Monte Carlo y búsqueda de hiperparámetros</h2>
+<h3>Validación cruzada k-fold</h3>
+<ol>
+  <li>Se divide el conjunto en k particiones (<i>folds</i>).</li>
+  <li>Se entrena con k−1 y se evalúa con la restante.</li>
+  <li>Se repite k veces, cambiando la de evaluación.</li>
+  <li>El rendimiento final es el <b>promedio</b> de las k evaluaciones.</li>
+</ol>
+<p><b>Cada observación se usa exactamente una vez para test</b>; aprovecha mejor los datos limitados y da una estimación más estable. <b>k típicamente 5 o 10.</b></p>
+<h3>Validación Monte Carlo</h3>
+<p>Se generan m particiones aleatorias de entrenamiento y validación (por ejemplo 100 o 1000), se entrena y evalúa en cada una y se promedian las métricas y su <b>varianza</b>. Permite tamaños de conjuntos flexibles, <b>una observación puede usarse varias veces</b> como test, y sirve para medir la variabilidad del rendimiento o cuando k-fold es muy costoso con muchos datos.</p>
+<div class="box clave"><p>Las dos cumplen dos roles: <b>optimizar el modelo</b> (elegir hiperparámetros como la profundidad del árbol, k en k-NN, C y γ en SVM) y <b>estimar la capacidad de generalización</b> antes del test final. El esquema completo (<i>pipeline</i>) es: dentro de cada partición externa se separa una validación interna para ajustar hiperparámetros, se entrena con los mejores y se evalúa en el test de esa partición; el rendimiento final es el promedio. En scikit-learn, <code>GridSearchCV</code> prueba todas las combinaciones de una grilla con validación cruzada sobre el entrenamiento, y <code>RandomizedSearchCV</code> prueba combinaciones al azar.</p></div>
+
+<h2>4.11 Estandarizar después de separar</h2>
+<div class="box prof"><p>La estandarización se hace <b>antes de entrenar pero después de separar</b> en entrenamiento y test. Si se estandariza todo el conjunto antes de dividir, se filtra información del test hacia el entrenamiento (<b>fuga de datos</b>). El procedimiento correcto: (1) separar; (2) calcular media y desvío <b>solo con el entrenamiento</b>; (3) aplicar esos mismos parámetros al entrenamiento y al test; (4) entrenar; (5) evaluar. Así el modelo se evalúa en condiciones parecidas a producción, donde no se conocen los datos futuros. Lo mismo vale para imputar, codificar y discretizar.</p></div>
+</section>
+
+<section class="unidad">
+<h1>5. Clasificación supervisada: Bayes Ingenuo, k-NN y SVM</h1>
+
+<h2>5.1 Bayes Ingenuo (Naive Bayes)</h2>
+<h3>Fundamento: probabilidad condicional y teorema de Bayes</h3>
+<p>La <b>probabilidad condicional</b> P(A|B) es la probabilidad de que ocurra A sabiendo que ocurrió B: P(A|B) = P(A ∩ B) / P(B). El <b>teorema de Bayes</b> es la base del aprendizaje bayesiano y permite "dar vuelta" la condición:</p>
+<p class="formula">P(clase | atributos) = P(atributos | clase) · P(clase) / P(atributos)</p>
+<ul>
+  <li><b>P(clase)</b>: probabilidad <b>a priori</b>, la frecuencia de la clase en el entrenamiento.</li>
+  <li><b>P(atributos | clase)</b>: <b>verosimilitud</b>, qué tan probable es ver esos atributos en esa clase.</li>
+  <li><b>P(clase | atributos)</b>: probabilidad <b>a posteriori</b>, la que se usa para decidir.</li>
+</ul>
+
+<h3>El supuesto "ingenuo"</h3>
+<div class="box def"><p>Bayes Ingenuo supone que los predictores son <b>condicionalmente independientes</b> entre sí dada la clase, y que todas las características <b>contribuyen por igual</b> al resultado. Así, la verosimilitud conjunta se calcula como el <b>producto</b> de las probabilidades de cada atributo: P(d<sub>1</sub>|c) · P(d<sub>2</sub>|c) · … · P(d<sub>m</sub>|c).</p></div>
+<p>Estos supuestos casi nunca se cumplen en la realidad, pero simplifican enormemente el cálculo (solo hace falta una probabilidad por variable) y el clasificador <b>funciona bien igual</b>, en particular con <b>muestras pequeñas</b>.</p>
+
+<h3>Cómo clasifica</h3>
+<p>Asigna a un ejemplo nuevo d = (d<sub>1</sub>, …, d<sub>m</sub>) la clase c que <b>maximiza</b> P(c) · Π P(d<sub>i</sub>|c). P(c) y P(d<sub>i</sub>|c) se estiman con <b>frecuencias relativas</b> del entrenamiento (estimación de máxima verosimilitud).</p>
+<p><b>Ejemplo de clase (Pokémon).</b> Con 13 Pokémon de tipo fuego (5), siniestro (6) y planta (2), y atributos ataque, defensa, velocidad y HP, se clasifica uno nuevo con ataque alto, defensa media, velocidad alta y HP medio:</p>
+<ul>
+  <li>Fuego: 5/13 · 2/5 · 2/5 · 4/5 · 2/5 ≈ 0.0196.</li>
+  <li>Siniestro: 6/13 · 1/6 · 1/6 · 5/6 · 2/6 ≈ 0.0036.</li>
+  <li>Planta: da 0, porque una de sus probabilidades es 0 (ningún planta con defensa media).</li>
+</ul>
+<p>Se clasifica como <b>fuego</b>, la de mayor verosimilitud.</p>
+
+<h3>Atributos continuos</h3>
+<ol>
+  <li><b>Discretizarlos</b> en intervalos y tratarlos como nominales.</li>
+  <li>Suponer que en cada clase siguen una <b>distribución gaussiana</b> y usar su densidad con la media y el desvío de la clase (<b>GaussianNB</b>). Si no son normales, conviene discretizar. Al usar media y desvío, es sensible a outliers.</li>
+</ol>
+
+<h3>El problema de la frecuencia cero y el suavizado</h3>
+<p>Si un par &lt;atributo, valor&gt; del test no apareció en el entrenamiento para una clase, su probabilidad es 0 y, como se multiplican, <b>anula toda la probabilidad</b> de esa clase (lo que le pasó a "planta" en el ejemplo). Se resuelve con <b>suavizado</b>, por ejemplo el <b>de Laplace</b>, que asigna una probabilidad pequeña en lugar de 0.</p>
+
+<h3>Variantes</h3>
+<table>
+<tr><th>Variante</th><th>Tipo de dato</th></tr>
+<tr><td><b>GaussianNB</b></td><td>Variables <b>continuas</b> con distribución normal en cada clase</td></tr>
+<tr><td><b>MultinomialNB</b></td><td>Datos <b>discretos de conteo</b> (frecuencias), típico de procesamiento de lenguaje natural</td></tr>
+<tr><td><b>BernoulliNB</b></td><td>Variables <b>booleanas</b> (0/1)</td></tr>
+<tr><td>CategoricalNB</td><td>Variables categóricas, por ejemplo continuas discretizadas</td></tr>
+</table>
+
+<div class="dos">
+<div><b>Ventajas</b><ul><li><b>Simple</b>: parámetros fáciles de estimar.</li><li><b>Escala bien</b>: rápido, eficiente y con bajo requerimiento de almacenamiento.</li><li>Maneja <b>datos de alta dimensión</b> (clasificación de documentos).</li></ul></div>
+<div><b>Desventajas</b><ul><li>Supuesto de independencia <b>poco realista</b>.</li><li><b>Frecuencia cero</b>: hace falta suavizado.</li><li>Sensible al <b>desbalance de clases</b>: el prior empuja hacia la clase mayoritaria.</li></ul></div>
+</div>
+
+<h3>Redes bayesianas</h3>
+<div class="box def"><p>Una <b>red bayesiana</b> es un <b>modelo gráfico</b> que representa las <b>relaciones probabilísticas</b> (dependencias condicionales) entre un conjunto de variables, mediante un grafo dirigido sin ciclos: los nodos son variables y las flechas, dependencias. Bayes Ingenuo es el caso más simple: la clase apunta a todos los atributos y no hay flechas entre atributos.</p></div>
+<div class="box preg"><p>"¿Qué es una red bayesiana?" → un <b>modelo gráfico que representa las relaciones probabilísticas</b> entre un conjunto de variables. "¿Qué teorema es la base del aprendizaje bayesiano?" → el <b>teorema de Bayes</b>.</p></div>
+
+<h2>5.2 k vecinos más cercanos (k-NN)</h2>
+<div class="box def"><p>Clasificador supervisado <b>no paramétrico</b> (no hace suposiciones sobre los datos) que <b>no genera un modelo</b> durante el entrenamiento: el aprendizaje ocurre <b>en el momento de clasificar</b>. Por eso es un método de <b>aprendizaje perezoso</b> (<i>lazy learning</i>), también llamado <b>basado en instancias</b> o <b>en memoria</b>, porque guarda todos los datos de entrenamiento.</p></div>
+<h3>Algoritmo</h3>
+<ol>
+  <li>Calcular la distancia del punto nuevo a <b>todos</b> los puntos de entrenamiento y ordenarlas.</li>
+  <li>Tomar los <b>k más cercanos</b>.</li>
+  <li>Asignar la clase por <b>voto mayoritario</b> entre esos k vecinos.</li>
+</ol>
+<p>Como todo el cálculo ocurre al predecir, k-NN se vuelve <b>ineficiente a medida que crece el conjunto</b>.</p>
+
+<h3>Métricas de distancia</h3>
+<table>
+<tr><th>Distancia</th><th>Idea</th></tr>
+<tr><td><b>Euclídea</b> (p = 2)</td><td>Línea recta; la más usada; solo para vectores de valores reales</td></tr>
+<tr><td><b>Manhattan</b> (p = 1)</td><td>Suma de diferencias absolutas, como recorrer cuadras</td></tr>
+<tr><td><b>Minkowski</b></td><td>Generalización de las dos anteriores mediante el parámetro p</td></tr>
+<tr><td><b>Hamming</b></td><td>Cuenta las posiciones en que dos vectores booleanos o cadenas no coinciden</td></tr>
+</table>
+<p>La métrica debería reflejar la importancia relativa de cada atributo (puede llevar pesos) y ser eficiente, porque se calcula muchísimas veces.</p>
+
+<h3>Elección de k</h3>
+<ul>
+  <li><b>k muy pequeño:</b> el <b>ruido</b> gana importancia → <b>sobreajuste</b>.</li>
+  <li><b>k muy grande:</b> domina la <b>clase mayoritaria</b> → <b>subajuste</b>.</li>
+  <li>Se elige probando valores (validación cruzada). Un punto de partida es la <b>raíz cuadrada</b> del número de datos de entrenamiento.</li>
+  <li>Se usa un k <b>impar o primo</b> para minimizar empates. Si hay empate: no predecir, o elegir la clase más frecuente entre las empatadas.</li>
+  <li>k debería ser menor que el tamaño de la clase minoritaria, para no invisibilizarla.</li>
+  <li><code>weights='distance'</code> pondera más a los vecinos más cercanos.</li>
+</ul>
+<div class="box clave"><p>k-NN <b>exige normalizar</b> los atributos: como decide por distancias, la variable de mayor rango domina el cálculo. También es <b>sensible a outliers</b> y a la <b>maldición de la dimensionalidad</b>.</p></div>
+<div class="box preg"><p>"¿Cuál es un algoritmo de aprendizaje perezoso?" → <b>k-vecinos más cercanos</b>. Árboles, SVM y redes neuronales construyen un modelo durante el entrenamiento.</p></div>
+
+<h2>5.3 Máquinas de vectores de soporte (SVM)</h2>
+<h3>Idea</h3>
+<p>Aporte de Vapnik: en lugar de construir hipótesis que cometan pocos errores en el entrenamiento (<b>minimización del riesgo empírico</b>), construir modelos en cuyas predicciones se pueda tener mucha confianza, con poco riesgo de error en clasificaciones futuras (<b>minimización del riesgo estructural</b>, Vapnik y Chervonenkis, 1974). Si la frontera entre clases es compleja, en lugar de un clasificador complejo se "dobla" el espacio a uno de mayor dimensión donde <b>un único corte</b> separe las clases.</p>
+<div class="box def"><p>El objetivo principal de una SVM es <b>encontrar el límite de decisión (hiperplano) que maximiza el margen entre las clases</b>. El margen es la distancia entre el hiperplano y los puntos más cercanos de cada clase. Esos puntos son los <b>vectores de soporte</b>: definen el hiperplano y el margen.</p></div>
+<figure>
+<svg width="360" height="170" viewBox="0 0 360 170" xmlns="http://www.w3.org/2000/svg" font-family="Cambria, serif" font-size="10">
+  <line x1="120" y1="160" x2="250" y2="10" stroke="#1f3a5f" stroke-width="2"/>
+  <line x1="90" y1="160" x2="220" y2="10" stroke="#1f3a5f" stroke-dasharray="4 3"/>
+  <line x1="150" y1="160" x2="280" y2="10" stroke="#1f3a5f" stroke-dasharray="4 3"/>
+  <g fill="#c0392b"><circle cx="60" cy="60" r="4"/><circle cx="80" cy="95" r="4"/><circle cx="45" cy="120" r="4"/><circle cx="100" cy="40" r="4"/><circle cx="110" cy="80" r="4"/><circle cx="164" cy="75" r="5" stroke="#000" stroke-width="1.5"/></g>
+  <g fill="#2e6fb0"><circle cx="270" cy="100" r="4"/><circle cx="300" cy="70" r="4"/><circle cx="290" cy="135" r="4"/><circle cx="320" cy="110" r="4"/><circle cx="245" cy="125" r="4"/><circle cx="193" cy="110" r="5" stroke="#000" stroke-width="1.5"/></g>
+  <text x="252" y="22" fill="#1f3a5f">hiperplano óptimo</text>
+  <text x="5" y="14">contorno negro: vectores de soporte</text>
+  <text x="5" y="28">líneas punteadas: límites del margen</text>
+</svg>
+<figcaption>Figura 5.1. La SVM elige, entre todos los hiperplanos que separan las clases, el de margen máximo.</figcaption>
+</figure>
+
+<h3>Tipos</h3>
+<ul>
+  <li><b>SVM lineal:</b> cuando los datos son linealmente separables (una recta en 2D, un hiperplano en general).</li>
+  <li><b>SVM no lineal:</b> cuando no lo son; se usa el <b>truco del kernel</b>. Es lo más habitual en problemas reales.</li>
+</ul>
+
+<h3>Intuición matemática (sin demostración)</h3>
+<ul>
+  <li>El hiperplano es <b>w · x + b = 0</b>, con w un vector <b>perpendicular</b> al hiperplano y b un desplazamiento.</li>
+  <li>Se usa w como referencia porque medir contra infinitos puntos del hiperplano es impracticable: se proyecta cada punto sobre w con el <b>producto escalar</b>. Si w · x + b ≥ 0 la clase es +1; si es &lt; 0, −1.</li>
+  <li>Las líneas del margen son w · x + b = ±1; ningún punto debe quedar dentro: y<sub>i</sub>(w · x<sub>i</sub> + b) ≥ 1.</li>
+  <li>El ancho del margen es <b>2 / ‖w‖</b>: maximizar el margen equivale a <b>minimizar ‖w‖</b>. Se resuelve con <b>multiplicadores de Lagrange</b> (optimización con restricciones).</li>
+</ul>
+
+<h3>Margen duro y margen blando: el parámetro C</h3>
+<p>El <b>margen duro</b> exige separación perfecta, algo que casi nunca ocurre. El <b>margen blando</b> permite algunos errores: agrega variables de holgura ζ (0 para los puntos bien clasificados; la distancia a su lado correcto para los mal clasificados) y un hiperparámetro <b>C</b> que pondera cuánto se penalizan.</p>
+<p class="formula">minimizar ‖w‖² + C · Σ ζ<sub>i</sub>   (error total = error de margen + error de clasificación)</p>
+<table>
+<tr><th>C</th><th>Margen</th><th>Efecto</th></tr>
+<tr><td><b>Pequeño</b> (&lt; 1, ej. 0.01)</td><td><b>Ancho</b></td><td>Más permisivo, tolera errores, generaliza mejor</td></tr>
+<tr><td><b>Grande</b> (ej. 1000)</td><td><b>Estrecho</b></td><td>Penaliza fuerte los errores, intenta clasificar todo bien, <b>riesgo de sobreajuste</b></td></tr>
+</table>
+<p>El valor óptimo de C se busca con <code>GridSearchCV</code> y validación cruzada. Solo los vectores de soporte definen el hiperplano: si se borran los demás puntos, el hiperplano no cambia.</p>
+
+<h3>Kernels</h3>
+<div class="box clave"><p>El <b>truco del kernel</b> transforma los datos a un <b>espacio de mayor dimensión</b> donde se vuelven <b>linealmente separables</b>, sin calcular explícitamente esa transformación: el kernel mide la similitud entre puntos como si estuvieran en ese espacio.</p></div>
+<table>
+<tr><th>Kernel</th><th>Comentario</th></tr>
+<tr><td><b>Lineal</b></td><td>Para datos linealmente separables; el más simple y de menor costo. Probarlo primero.</td></tr>
+<tr><td><b>Polinomial</b></td><td>Se usa poco por su baja eficiencia.</td></tr>
+<tr><td><b>Radial (RBF, gaussiano)</b></td><td>El más usado para datos no lineales; parámetro <b>γ</b> (gamma) regula la influencia de cada punto.</td></tr>
+<tr><td><b>Sigmoide</b></td><td>Tangente hiperbólica.</td></tr>
+</table>
+<p>Si el lineal y el RBF dan resultados parecidos, se elige el <b>lineal</b> por ser más simple.</p>
+
+<h3>Multiclase</h3>
+<p>El hiperplano no se generaliza naturalmente a más de dos clases. Estrategias:</p>
+<ul>
+  <li><b>One-versus-all</b> (one-vs-rest): K clasificadores, cada clase contra todas las demás. Simple, pero puede haber inconsistencias (varios positivos) y cada clasificador se entrena <b>desbalanceado</b> (10 positivos contra 990 negativos con 100 clases de 10).</li>
+  <li><b>One-versus-one</b> (el que usa <code>SVC</code> de scikit-learn): un clasificador por cada <b>par</b> de clases, <b>n(n−1)/2</b> en total; cada uno vota y gana la clase con más votos. Mejor con clases desbalanceadas y clasificadores más simples, pero hay que entrenar y almacenar más y puede haber empates.</li>
+  <li><b>DAGSVM.</b></li>
+</ul>
+
+<h3>Costo computacional</h3>
+<p>Por los kernels, el ajuste involucra una matriz n × n (n = observaciones), así que lo que más influye en el tiempo es el <b>número de observaciones</b>, no el de predictores.</p>
+
+<div class="dos">
+<div><b>Ventajas</b><ul><li>Funciona bien con datos complejos, lineales y no lineales.</li><li><b>Eficaz en alta dimensión</b>, incluso con más características que muestras.</li><li><b>Resistente al sobreajuste</b> (se apoya en los vectores de soporte).</li><li>Versátil gracias a los kernels.</li><li>Robusto ante atípicos lejanos del margen.</li></ul></div>
+<div><b>Desventajas</b><ul><li><b>Lento con grandes conjuntos</b>.</li><li><b>Difícil de ajustar</b> (kernel, C, γ).</li><li>Sufre con datos ruidosos y clases superpuestas.</li><li><b>Difícil de interpretar</b>, sobre todo con kernels no lineales.</li><li>Consume memoria (guarda los vectores de soporte).</li></ul></div>
+</div>
+<div class="box clave"><p>SVM <b>requiere datos escalados</b>: encuentra mejores fronteras con datos normalizados. Su rendimiento se evalúa como cualquier clasificador: <b>precisión, exhaustividad, F1</b>, exactitud y matriz de confusión.</p></div>
+</section>
+
+<section class="unidad">
+<h1>6. Modelos de ensamble</h1>
+
+<h2>6.1 Qué es un ensamble y por qué funciona</h2>
+<div class="box def"><p>Un <b>modelo de ensamble</b> combina las predicciones de <b>múltiples modelos base</b> para obtener una predicción final mejor que la de cualquiera de ellos por separado (Dzeroski y Zenko, 2000).</p></div>
+<p>Razones para combinar:</p>
+<ol>
+  <li>Los datos de entrenamiento pueden no alcanzar para elegir un único mejor clasificador.</li>
+  <li>La combinación redundante y complementaria mejora la <b>robustez, exactitud y generalidad</b>.</li>
+  <li>Distintos clasificadores usan distintas representaciones y generalizan con distintos patrones.</li>
+  <li>Los ensambles suelen ser mucho más exactos que los clasificadores individuales.</li>
+</ol>
+<p>Se aplican tanto a <b>clasificación</b> como a <b>regresión</b>. Por la forma de combinar, la teoría distingue ensamblado por <b>promedio</b>, por <b>votación</b> y por <b>mezcla</b>. El esquema general: varios clasificadores base entrenados con los datos y un <b>meta-clasificador</b> que combina sus predicciones.</p>
+<div class="dos">
+<div><b>Ventajas</b><ul><li>Más robustos: la diversidad hace menos probable que fallen todos.</li><li>Relativamente fáciles de implementar y configurar.</li></ul></div>
+<div><b>Desventajas</b><ul><li>Requieren muchos recursos computacionales.</li><li>Difíciles de entrenar.</li><li><b>Difíciles de interpretar</b>.</li><li>Pueden sobreajustar.</li></ul></div>
+</div>
+
+<h3>Dos formas de construirlos</h3>
+<table>
+<tr><th></th><th>Paralela</th><th>Secuencial</th></tr>
+<tr><td>Modelos base</td><td>Similares (el mismo algoritmo, por ejemplo árboles)</td><td>Cada uno usa los resultados del anterior</td></tr>
+<tr><td>Diversidad</td><td>Se logra alterando el conjunto de entrenamiento</td><td>Cada modelo se enfoca en lo que el anterior hizo mal</td></tr>
+<tr><td>Ejemplos</td><td><b>Bagging, Random Forest</b></td><td><b>Boosting</b> (AdaBoost, Gradient Boosting, XGBoost)</td></tr>
+</table>
+
+<h2>6.2 Bagging (Bootstrap Aggregating)</h2>
+<p>Leo Breiman, 1996. Tres pasos:</p>
+<ol>
+  <li><b>Bootstrap:</b> se generan muchos conjuntos de entrenamiento por <b>muestreo aleatorio con reemplazo</b> del original. De N elementos se eligen N' ≤ N (normalmente N' = N), así que hay elementos repetidos y otros que no aparecen. Opcionalmente también se puede usar solo un subconjunto de variables (d' ≤ d).</li>
+  <li><b>Entrenamiento en paralelo:</b> un modelo base independiente por conjunto (típicamente árboles de decisión).</li>
+  <li><b>Agregación:</b> <b>voto mayoritario</b> en clasificación (todos los modelos pesan igual) o <b>promedio</b> en regresión.</li>
+</ol>
+<p>No hace falta que cada modelo sea muy preciso: los errores individuales se compensan en la decisión de la mayoría.</p>
+
+<h3>Out-of-bag (OOB)</h3>
+<p>En cada muestra bootstrap queda afuera aproximadamente <b>un tercio</b> de los datos (la probabilidad de que una observación no sea elegida tiende a 1/e ≈ <b>36.8%</b>). Esas observaciones son las <b>out-of-bag</b>, y el error medido sobre ellas (<b>error OOB</b>) estima el error del ensamble sin necesidad de un conjunto de test aparte. Aun así, si hay datos suficientes, conviene validar con un test.</p>
+<div class="dos">
+<div><b>Ventajas</b><ul><li>Simple y efectivo.</li><li><b>Reduce la varianza</b>.</li></ul></div>
+<div><b>Desventajas</b><ul><li>Pierde interpretabilidad.</li><li>Alto costo computacional; no apto para tiempo real.</li></ul></div>
+</div>
+
+<h2>6.3 Random Forest</h2>
+<p>Breiman, 2001. Un árbol pequeño tiene baja varianza y alto sesgo; uno grande, lo contrario. Los ensambles de árboles son una forma de manejar ese <b>trade-off</b>.</p>
+<h3>Algoritmo</h3>
+<ol>
+  <li>Tomar una muestra <b>bootstrap</b> (con reemplazo).</li>
+  <li>Hacer crecer un árbol con esa muestra, pero en <b>cada división</b> considerar solo un <b>subconjunto aleatorio de atributos</b>; el árbol crece hasta su máxima extensión.</li>
+  <li>Repetir para k árboles.</li>
+  <li>Predecir por <b>voto mayoritario</b> (o promedio en regresión).</li>
+</ol>
+<div class="box clave"><p><b>Diferencia con bagging:</b> bagging usa subconjuntos aleatorios de <b>datos</b>; Random Forest usa subconjuntos aleatorios de <b>datos y de características</b> (en cada nodo, típicamente √d atributos en clasificación). Si hay una variable dominante, en bagging todos los árboles se parecen; la segunda fuente de aleatoriedad de Random Forest <b>descorrelaciona los árboles</b>, lo que reduce todavía más la varianza. Random Forest es un caso particular de bagging con árboles como modelos base.</p></div>
+<h3>Hiperparámetros</h3>
+<ul>
+  <li><b>ntree</b> (<code>n_estimators</code>): número de árboles; más estabiliza el error, pero sube el costo.</li>
+  <li><b>mtry</b> (<code>max_features</code>): número de variables candidatas en cada división.</li>
+  <li><b>sampsize:</b> tamaño de cada muestra (por defecto 63.25%; habitual 60–80%). Menor introduce sesgo; mayor puede sobreajustar.</li>
+  <li><b>nodesize</b> (<code>min_samples_leaf</code>): mínimo de muestras en las hojas.</li>
+  <li><b>maxnodes</b> (<code>max_leaf_nodes</code>): máximo de hojas. También <code>max_depth</code> y <code>min_samples_split</code>.</li>
+</ul>
+<div class="dos">
+<div><b>Ventajas</b><ul><li>Muy preciso y eficiente en bases grandes.</li><li>Maneja muchos atributos y estima su <b>importancia</b> (sirve para reducir dimensionalidad).</li><li>Mantiene la precisión con muchos datos faltantes.</li></ul></div>
+<div><b>Desventajas</b><ul><li>Difícil de interpretar visualmente.</li><li>Puede sobreajustar con ruido.</li><li>Poco control sobre lo que hace el modelo.</li></ul></div>
+</div>
+
+<h2>6.4 Boosting</h2>
+<p>Parte de clasificadores base <b>débiles</b> (que aciertan apenas más que el azar, como árboles de poca profundidad) y los combina <b>secuencialmente</b>:</p>
+<ol>
+  <li>Se entrena un primer clasificador con los datos originales.</li>
+  <li>Se <b>aumenta el peso de los ejemplos mal clasificados</b>, para que el siguiente se enfoque en ellos.</li>
+  <li>El clasificador combinado suma las predicciones, <b>ponderadas</b> según la precisión de cada uno.</li>
+  <li>Se repite: cada etapa corrige los errores de la anterior sin estropear lo ya acertado. Se detiene cuando un clasificador nuevo ya no aporta.</li>
+</ol>
+<p>La construcción es <b>secuencial</b> (cada paso necesita los anteriores), aunque la predicción final puede evaluarse en paralelo.</p>
+<h3>Tipos</h3>
+<ul>
+  <li><b>AdaBoost</b> (Freund y Schapire): <b>ajusta los pesos</b> de los puntos mal clasificados en cada iteración.</li>
+  <li><b>Gradient Boosting</b> (Friedman, sobre trabajo de Breiman): cada predictor nuevo se entrena sobre los <b>errores residuales</b> del anterior, en lugar de re-ponderar puntos. Combina descenso de gradiente con boosting.</li>
+  <li><b>XGBoost:</b> implementación de gradient boosting optimizada para velocidad y escalabilidad (usa varios núcleos en paralelo).</li>
+</ul>
+<div class="dos">
+<div><b>Ventajas</b><ul><li>Mejora la precisión combinando modelos débiles.</li><li>Reduce el riesgo de sobreajuste al re-ponderar.</li><li>Mejor manejo de datos desbalanceados.</li></ul></div>
+<div><b>Desventajas</b><ul><li><b>Vulnerable a valores atípicos</b> (los sigue re-ponderando).</li><li>Difícil para tiempo real.</li><li>Costoso con grandes volúmenes.</li></ul></div>
+</div>
+
+<h2>6.5 Stacking</h2>
+<p>Aprovecha la complementariedad entre modelos base <b>distintos</b>. Dos fases:</p>
+<ol>
+  <li><b>Modelos base:</b> se entrenan con <b>validación cruzada k-fold</b> sobre el entrenamiento; las predicciones de cada fold se juntan y forman un <b>nuevo conjunto de entrenamiento</b>.</li>
+  <li><b>Meta-modelo:</b> se entrena con esas predicciones como entradas; en test, las predicciones de los modelos base forman su conjunto de test.</li>
+</ol>
+
+<h2>6.6 Resumen comparativo</h2>
+<table>
+<tr><th>Método</th><th>Construcción</th><th>Muestreo</th><th>Agregación</th><th>Reduce principalmente</th></tr>
+<tr><td><b>Bagging</b></td><td>Paralela</td><td>Bootstrap; todas las variables</td><td>Voto o promedio simple</td><td>Varianza</td></tr>
+<tr><td><b>Random Forest</b></td><td>Paralela</td><td>Bootstrap + subconjunto de variables por nodo</td><td>Voto o promedio simple</td><td>Varianza (árboles descorrelacionados)</td></tr>
+<tr><td><b>Boosting</b></td><td>Secuencial</td><td>Re-ponderación de errores o residuos</td><td>Suma ponderada</td><td>Sesgo</td></tr>
+<tr><td><b>Stacking</b></td><td>Dos niveles</td><td>k-fold para generar predicciones</td><td>Meta-modelo</td><td>Combina fortalezas</td></tr>
+</table>
+<div class="box preg"><p>"¿Cuál no es un método de ensamble?" → <b>árboles de decisión</b> (es un modelo único; los ensambles lo usan como base). "Diferencia entre bagging y Random Forest" → <b>bagging usa subconjuntos aleatorios de datos para cada modelo base; Random Forest, subconjuntos aleatorios de datos y de características</b>. "¿Por qué los árboles profundos son buenos candidatos para bagging?" → tienen bajo sesgo y alta varianza, y bagging reduce justamente la varianza.</p></div>
+</section>
+
+<section class="unidad">
+<h1>7. Repaso transversal</h1>
+
+<h2>7.1 Todos los métodos en una tabla</h2>
+<table>
+<tr><th>Método</th><th>Tipo</th><th>Lineal</th><th>¿Escalar?</th><th>Interpretable</th><th>Parámetros clave</th><th>Rasgo distintivo</th></tr>
+<tr><td>PCA</td><td>No sup., reducción</td><td>Sí</td><td>Sí</td><td>Sí</td><td>Nº de componentes</td><td>Direcciones de máxima varianza</td></tr>
+<tr><td>MDS</td><td>No sup., reducción</td><td>—</td><td>Sí</td><td>No</td><td>Dimensión</td><td>Preserva disimilaridades</td></tr>
+<tr><td>ISOMAP</td><td>No sup., reducción</td><td>No</td><td>Sí</td><td>No</td><td>k, dimensión</td><td>Distancias geodésicas en el grafo de vecinos</td></tr>
+<tr><td>t-SNE</td><td>No sup., visualización</td><td>No</td><td>Sí</td><td>No</td><td>Perplejidad, iteraciones</td><td>Probabilidades gaussiana / t-Student, KL</td></tr>
+<tr><td>UMAP</td><td>No sup., reducción</td><td>No</td><td>Sí</td><td>No</td><td>n_neighbors, min_dist</td><td>Grafo topológico, local y global</td></tr>
+<tr><td>LDA</td><td>Supervisado</td><td>Sí</td><td>Sí</td><td>Sí</td><td>—</td><td>Separar clases</td></tr>
+<tr><td>K-means</td><td>No sup., clustering</td><td>—</td><td>Sí</td><td>Media</td><td>k</td><td>Centroides; óptimo local</td></tr>
+<tr><td>Jerárquico</td><td>No sup., clustering</td><td>—</td><td>Sí</td><td>Sí (dendrograma)</td><td>Enlace, corte</td><td>Jerarquía; voraz</td></tr>
+<tr><td>DBSCAN</td><td>No sup., clustering</td><td>—</td><td>Sí</td><td>Media</td><td>eps, min_samples</td><td>Densidad; ruido; formas arbitrarias</td></tr>
+<tr><td>Apriori / FP-Growth</td><td>No sup., asociación</td><td>—</td><td>No</td><td>Sí</td><td>Soporte</td><td>Itemsets frecuentes</td></tr>
+<tr><td>Árbol de decisión</td><td>Supervisado</td><td>No</td><td>No</td><td><b>Muy alta</b></td><td>max_depth, min_samples, poda</td><td>Reglas; Gini o entropía</td></tr>
+<tr><td>Bayes Ingenuo</td><td>Supervisado</td><td>—</td><td>Según variante</td><td>Media</td><td>Variante, suavizado</td><td>Independencia condicional</td></tr>
+<tr><td>k-NN</td><td>Supervisado</td><td>No</td><td><b>Sí</b></td><td>Baja</td><td>k, distancia</td><td>Perezoso, sin modelo</td></tr>
+<tr><td>SVM</td><td>Supervisado</td><td>Según kernel</td><td><b>Sí</b></td><td>Baja</td><td>C, kernel, γ</td><td>Margen máximo</td></tr>
+<tr><td>Bagging / RF</td><td>Ensamble paralelo</td><td>No</td><td>No</td><td>Baja</td><td>Nº árboles, mtry</td><td>Bootstrap, OOB; reduce varianza</td></tr>
+<tr><td>Boosting</td><td>Ensamble secuencial</td><td>No</td><td>No</td><td>Baja</td><td>Nº estimadores</td><td>Re-pondera errores; reduce sesgo</td></tr>
+</table>
+
+<h2>7.2 Confusiones frecuentes</h2>
+<div class="box trampa"><ul>
+<li><b>Máxima / mínima:</b> PCA busca la varianza máxima; el margen de la SVM se maximiza; K-means minimiza la suma de distancias al centroide.</li>
+<li><b>Alta / baja dimensión:</b> UMAP y t-SNE preservan la estructura del espacio de <b>alta</b> dimensión en el de baja.</li>
+<li><b>Geodésica / euclídea:</b> ISOMAP preserva distancias geodésicas; usa las euclídeas solo para armar el grafo de vecinos.</li>
+<li><b>Lineal / no lineal:</b> PCA y LDA son lineales; ISOMAP, t-SNE y UMAP no.</li>
+<li><b>Sesgo / varianza:</b> subajuste = alto sesgo; sobreajuste = alta varianza. Bagging reduce varianza; boosting, sesgo.</li>
+<li><b>Precisión / exhaustividad:</b> precisión = de lo que dije positivo, cuánto lo era; exhaustividad = de lo positivo, cuánto encontré.</li>
+<li><b>Aglomerativo / divisivo:</b> bottom-up y top-down. Los dos tipos de jerárquico son estos, no "K-means y K-medoids".</li>
+<li><b>Árbol de decisión no es un ensamble</b>; es el modelo base típico de los ensambles.</li>
+<li><b>k-NN es perezoso</b>: no entrena un modelo.</li>
+<li><b>K-means no garantiza el óptimo global.</b></li>
+<li>Estandarizar <b>después</b> de separar train/test.</li>
+</ul></div>
+
+<h2>7.3 Glosario</h2>
+<table>
+<tr><td><b>Autovalor (eigenvalue)</b></td><td>Varianza explicada por una componente principal.</td></tr>
+<tr><td><b>Bootstrap</b></td><td>Muestreo aleatorio con reemplazo.</td></tr>
+<tr><td><b>Centroide</b></td><td>Promedio de los puntos de un cluster.</td></tr>
+<tr><td><b>Cohesión / separación</b></td><td>Cercanía dentro de un cluster / distancia entre clusters.</td></tr>
+<tr><td><b>Data leakage</b></td><td>Usar información que no estaría disponible al predecir.</td></tr>
+<tr><td><b>Dendrograma</b></td><td>Diagrama del árbol de una agrupación jerárquica.</td></tr>
+<tr><td><b>Distancia geodésica</b></td><td>Camino más corto sobre la variedad (aproximado por el grafo de vecinos).</td></tr>
+<tr><td><b>Entropía</b></td><td>Medida de impureza o incertidumbre de un nodo.</td></tr>
+<tr><td><b>Gini</b></td><td>Impureza de un nodo; 0 = puro.</td></tr>
+<tr><td><b>Hiperparámetro</b></td><td>Valor que se fija antes de entrenar (k, C, max_depth), a diferencia de los parámetros que aprende el modelo.</td></tr>
+<tr><td><b>Kernel</b></td><td>Función de similitud que permite separar linealmente en un espacio de mayor dimensión.</td></tr>
+<tr><td><b>Manifold (variedad)</b></td><td>Estructura de menor dimensión que localmente se parece a un hiperplano.</td></tr>
+<tr><td><b>Out-of-bag</b></td><td>Observaciones que no entraron en una muestra bootstrap (≈ 36.8%).</td></tr>
+<tr><td><b>Perplejidad</b></td><td>Número efectivo de vecinos en t-SNE (5–50).</td></tr>
+<tr><td><b>Poda</b></td><td>Eliminar ramas de un árbol para reducir el sobreajuste.</td></tr>
+<tr><td><b>Silhouette</b></td><td>(b − a) / máx(a, b); de −1 a 1.</td></tr>
+<tr><td><b>Vectores de soporte</b></td><td>Puntos más cercanos al hiperplano; definen el margen.</td></tr>
+</table>
+</section>
+
+<section class="unidad">
+<h1>8. Simulacros de examen</h1>
+<p>Tres simulacros en el formato del examen integrador. Resolverlos sin mirar el apunte, en unos 30 minutos cada uno, y recién después controlar con las hojas de respuestas del final. Salvo que se indique "puede haber más de una", cada pregunta tiene <b>una sola</b> respuesta correcta.</p>
+<ul>
+  <li><b>Simulacro 1:</b> el parcial real del 01/12/2023 (20 preguntas).</li>
+  <li><b>Simulacro 2:</b> unidades 1 a 3 (28 preguntas).</li>
+  <li><b>Simulacro 3:</b> unidades 4 a 6 (29 preguntas).</li>
+</ul>
+
+<h2>Simulacro 1. Parcial del 01/12/2023</h2>
+
+<div class="q"><div class="enun">1. En PCA, ¿cuáles son los componentes principales?</div><ol>
+<li>Son aquellas categorías de variables cuya eliminación mejora la precisión del modelo.</li>
+<li>Son aquellas direcciones en las cuales la varianza de los elementos del conjunto de datos es máxima.</li>
+<li>Son aquellas direcciones en las cuales la varianza de los elementos del conjunto de datos es mínima.</li>
+<li>Son aquellas direcciones en las cuales los elementos están menos separados los unos de los otros.</li></ol></div>
+
+<div class="q"><div class="enun">2. ¿Cómo funciona el método ISOMAP?</div><ol>
+<li>Comienza estimando las distancias geodésicas entre los puntos en las entradas utilizando las distancias más cercanas.</li>
+<li>Comienza estimando las distancias euclídeas entre los puntos en las entradas utilizando las distancias más cercanas en el grafo de los vecinos más cercanos del conjunto de datos.</li>
+<li>Comienza estimando las distancias euclídeas entre los puntos en las entradas utilizando las distancias más cercanas.</li>
+<li>Comienza estimando las distancias geodésicas entre los puntos en las entradas utilizando las distancias más cercanas en el grafo de los vecinos más cercanos del conjunto de datos.</li></ol></div>
+
+<div class="q"><div class="enun">3. ¿Cuáles técnicas de reducción de la dimensionalidad son no lineales? <span class="multi">(puede haber más de una)</span></div><ol>
+<li>Isomap</li><li>UMAP</li><li>PCA</li><li>t-SNE</li></ol></div>
+
+<div class="q"><div class="enun">4. ¿Cuáles afirmaciones son correctas respecto a UMAP? <span class="multi">(puede haber más de una)</span></div><ol>
+<li>Utiliza un enfoque basado en grafos para construir una representación topológica de los datos, que luego se incrusta en un espacio de baja dimensión mediante un descenso de gradiente estocástico.</li>
+<li>Busca construir una representación de baja dimensión de los datos que preserve la estructura global y local del espacio de alta dimensión.</li>
+<li>Busca construir una representación de baja dimensión de los datos que preserve la estructura global y local del espacio de baja dimensión.</li>
+<li>Utiliza un enfoque basado en grafos para construir una representación topológica de los datos, que luego se incrusta en un espacio de baja dimensión mediante un descenso de gradiente estocástico.</li></ol></div>
+
+<div class="q"><div class="enun">5. ¿Cuál de las siguientes no es una ventaja de la agrupación de K-means?</div><ol>
+<li>Fácil de implementar y entender.</li><li>Escalable a grandes conjuntos de datos.</li><li>Garantizado para encontrar el óptimo global.</li><li>Converge relativamente rápido.</li></ol></div>
+
+<div class="q"><div class="enun">6. ¿Qué sucede si el número k especificado es demasiado pequeño en K-means?</div><ol>
+<li>El algoritmo no logrará converger.</li>
+<li>Los grupos resultantes contienen demasiados datos y es posible que no capturen la estructura subyacente de los datos.</li>
+<li>Los grupos resultantes serán demasiado específicos y pueden sobreajustarse a los datos.</li>
+<li>El algoritmo ajustará automáticamente el número de grupos.</li></ol></div>
+
+<div class="q"><div class="enun">7. ¿Qué es un dendrograma?</div><ol>
+<li>Un diagrama que representa la estructura del árbol de la agrupación jerárquica.</li>
+<li>Un diagrama que representa el número óptimo de conglomerados.</li>
+<li>Un diagrama que representa la densidad de los conglomerados.</li>
+<li>Un diagrama que representa la distancia entre los grupos.</li></ol></div>
+
+<div class="q"><div class="enun">8. ¿Cuáles son los dos tipos principales de agrupación jerárquica?</div><ol>
+<li>K-means y K-medoids.</li><li>Aglomerativo y divisivo.</li><li>Basado en densidad y en red.</li><li>Basado en modelos y gráficos.</li></ol></div>
+
+<div class="q"><div class="enun">9. Los árboles de decisión son modelos de minería de datos que se caracterizan principalmente por:</div><ol>
+<li>Su capacidad predictiva.</li><li>Su capacidad explicativa y de interpretación.</li><li>Su velocidad de procesamiento.</li><li>Su característica de autoentrenamiento.</li></ol></div>
+
+<div class="q"><div class="enun">10. ¿Cuál es el objetivo de la poda de los árboles de decisión?</div><ol>
+<li>Mejorar las métricas del conjunto de entrenamiento.</li><li>Reducir el sobreajuste.</li><li>Reducir la velocidad de entrenamiento.</li><li>Reducir la necesidad de hacer una normalización.</li></ol></div>
+
+<div class="q"><div class="enun">11. ¿Qué es un árbol de decisiones en el contexto del aprendizaje automático?</div><ol>
+<li>Una representación gráfica de un conjunto de decisiones basadas en ciertas condiciones.</li>
+<li>Una estructura en forma de árbol utilizada para hacer predicciones basadas en características de entrada.</li>
+<li>Un método para optimizar los parámetros del modelo.</li>
+<li>Una técnica para encontrar la solución óptima en un espacio de búsqueda.</li></ol></div>
+
+<div class="q"><div class="enun">12. ¿Qué mide el índice de Gini?</div><ol>
+<li>El grado de impureza asociado a las variables categóricas.</li><li>El grado de impureza luego de la poda.</li><li>El grado de impureza de un nodo.</li><li>El grado de impureza asociado al sobreajuste.</li></ol></div>
+
+<div class="q"><div class="enun">13. ¿Qué es una red bayesiana?</div><ol>
+<li>Un modelo gráfico que representa las relaciones probabilísticas entre un conjunto de variables.</li>
+<li>Una red de antecedentes relacionados para el aprendizaje bayesiano.</li>
+<li>Una red neuronal con algoritmos de aprendizaje bayesiano.</li>
+<li>Una red de hipótesis y sus probabilidades previas asociadas.</li></ol></div>
+
+<div class="q"><div class="enun">14. ¿Qué teorema es la base del aprendizaje bayesiano?</div><ol>
+<li>Teorema del límite central</li><li>Ley de los grandes números</li><li>Teorema de Bayes</li><li>Descenso por el gradiente</li></ol></div>
+
+<div class="q"><div class="enun">15. ¿Cuál es el objetivo principal de una máquina de vectores de soporte (SVM)?</div><ol>
+<li>Encontrar el límite de decisión que maximiza el margen entre clases.</li>
+<li>Encontrar el límite de decisión que minimice el margen entre clases.</li>
+<li>Encontrar el límite de decisión que maximiza la precisión del clasificador.</li>
+<li>Encontrar el límite de decisión que minimice la complejidad computacional.</li></ol></div>
+
+<div class="q"><div class="enun">16. ¿Cómo se puede evaluar el rendimiento de una SVM?</div><ol>
+<li>Midiendo la precisión del clasificador.</li><li>Midiendo el recall del clasificador.</li><li>Midiendo el score-F1 del clasificador.</li><li>Todas las anteriores.</li></ol></div>
+
+<div class="q"><div class="enun">17. ¿Cuál de los siguientes es un algoritmo de aprendizaje perezoso?</div><ol>
+<li>Árboles de decisión</li><li>k-vecinos más cercanos</li><li>Máquinas de vectores de soporte</li><li>Redes neuronales</li></ol></div>
+
+<div class="q"><div class="enun">18. ¿Cuál de los siguientes algoritmos no es un método de ensamble?</div><ol>
+<li>Random Forest</li><li>AdaBoost</li><li>Árboles de decisión</li><li>Gradient Boosting</li></ol></div>
+
+<div class="q"><div class="enun">19. ¿Qué es un modelo de ensamble?</div><ol>
+<li>Un modelo que utiliza un único algoritmo para hacer predicciones.</li>
+<li>Un modelo que combina las predicciones de múltiples modelos base para hacer una predicción final.</li>
+<li>Un modelo que utiliza el aprendizaje no supervisado para hacer predicciones.</li>
+<li>Un modelo que utiliza el aprendizaje por refuerzo para hacer predicciones.</li></ol></div>
+
+<div class="q"><div class="enun">20. ¿Cuál es la diferencia entre bagging y Random Forest?</div><ol>
+<li>Random Forest es un tipo específico de bagging que utiliza árboles de decisión como aprendices base.</li>
+<li>Bagging utiliza subconjuntos aleatorios de datos para cada modelo base, mientras que Random Forest utiliza subconjuntos aleatorios de datos y características para cada clasificador base.</li>
+<li>Bagging ajusta los pesos de los clasificadores base según su error, mientras que Random Forest ajusta los pesos de las características según su importancia.</li>
+<li>Random Forest utiliza una combinación ponderada de las predicciones de los clasificadores base, mientras que bagging utiliza una mayoría de votos.</li></ol></div>
+</section>
+
+<section class="unidad">
+<h2>Simulacro 2. Unidades 1 a 3</h2>
+
+<div class="q"><div class="enun">1. Según la teoría, la clasificación, la regresión y el agrupamiento se basan en:</div><ol>
+<li>El aprendizaje por refuerzo.</li><li>El paradigma del aprendizaje inductivo.</li><li>El aprendizaje deductivo a partir de reglas fijadas por un experto.</li><li>La reducción de la dimensionalidad.</li></ol></div>
+
+<div class="q"><div class="enun">2. ¿Cuál es la diferencia entre clasificación y regresión?</div><ol>
+<li>La clasificación no necesita datos de entrenamiento.</li><li>La regresión es una tarea no supervisada.</li><li>La regresión asigna valores numéricos y la clasificación asigna etiquetas de un conjunto discreto de clases.</li><li>Solo la clasificación puede usar atributos continuos.</li></ol></div>
+
+<div class="q"><div class="enun">3. ¿Cómo deben calcularse los parámetros de la estandarización (media y desvío)?</div><ol>
+<li>Con todos los datos, antes de separar entrenamiento y test.</li><li>Solo con el conjunto de test.</li><li>Por separado en cada conjunto, cada uno con sus propios parámetros.</li><li>Solo con el entrenamiento, después de separar, y aplicando esos mismos parámetros a ambos conjuntos.</li></ol></div>
+
+<div class="q"><div class="enun">4. Rellenar los valores nulos de una variable categórica con la palabra "Desconocido":</div><ol>
+<li>Es un error, porque introduce una categoría que no existe en el fenómeno y el modelo aprendería a predecirla.</li><li>Es lo recomendable, porque no se pierden filas.</li><li>Es obligatorio para que scikit-learn funcione.</li><li>Es equivalente a imputar con la moda.</li></ol></div>
+
+<div class="q"><div class="enun">5. ¿Cuál de las siguientes situaciones es un caso de fuga de datos (data leakage)?</div><ol>
+<li>Hacer una partición estratificada.</li><li>Usar validación cruzada para elegir hiperparámetros.</li><li>Usar la propina de un viaje en taxi como variable para predecir su tarifa.</li><li>Estandarizar con los parámetros del entrenamiento.</li></ol></div>
+
+<div class="q"><div class="enun">6. ¿Cuál es el verdadero problema de la maldición de la dimensionalidad?</div><ol>
+<li>Que la distancia media entre los datos aumenta.</li><li>Que la variabilidad de las distancias entre los datos disminuye exponencialmente.</li><li>Que los datos se vuelven más densos.</li><li>Que desaparece el riesgo de sobreajuste.</li></ol></div>
+
+<div class="q"><div class="enun">7. La maldición de la dimensionalidad afecta principalmente a:</div><ol>
+<li>Los árboles de decisión.</li><li>Los métodos de asociación como Apriori.</li><li>Solo a la regresión lineal.</li><li>Las técnicas basadas en distancias, como k-NN y el clustering.</li></ol></div>
+
+<div class="q"><div class="enun">8. ¿Por qué conviene estandarizar las variables antes de aplicar PCA?</div><ol>
+<li>Porque PCA solo acepta valores entre 0 y 1.</li><li>Para que las componentes resulten no lineales.</li><li>Porque las variables de mayor escala dominarían la varianza y, con ella, las componentes.</li><li>Para eliminar los valores atípicos.</li></ol></div>
+
+<div class="q"><div class="enun">9. Según el criterio de Kaiser, se conservan las componentes principales:</div><ol>
+<li>Cuyo autovalor es mayor que 1.</li><li>Que acumulan el 80% de la varianza.</li><li>Anteriores al quiebre del gráfico del codo.</li><li>Cuyo autovalor es menor que 1.</li></ol></div>
+
+<div class="q"><div class="enun">10. En un gráfico del codo de PCA el quiebre se produce en la tercera componente. Según el criterio de la cátedra, ¿cuántas componentes se conservan?</div><ol>
+<li>2</li><li>3</li><li>4</li><li>Todas</li></ol></div>
+
+<div class="q"><div class="enun">11. ¿Cuál afirmación sobre t-SNE es correcta?</div><ol>
+<li>Los tamaños relativos de los clusters reflejan los tamaños reales.</li><li>Sus ejes son combinaciones lineales interpretables de las variables.</li><li>Es un método determinista.</li><li>Sus resultados pueden variar entre ejecuciones por la inicialización aleatoria.</li></ol></div>
+
+<div class="q"><div class="enun">12. En t-SNE, la perplejidad:</div><ol>
+<li>Es el número de iteraciones del descenso del gradiente.</li><li>Es una medida suave del número efectivo de vecinos; suele estar entre 5 y 50 y debe ser menor que la cantidad de puntos.</li><li>Es la tasa de aprendizaje.</li><li>Es la dimensión del espacio de salida.</li></ol></div>
+
+<div class="q"><div class="enun">13. t-SNE usa una distribución t de Student en el espacio de baja dimensión porque:</div><ol>
+<li>Es más rápida de calcular que la normal.</li><li>Es una distribución lineal.</li><li>Tiene colas más pesadas que la normal, lo que permite modelar mejor las distancias grandes.</li><li>Es necesaria para aplicar PCA antes.</li></ol></div>
+
+<div class="q"><div class="enun">14. En ISOMAP, ¿qué ocurre si el número de vecinos k es muy grande?</div><ol>
+<li>El grafo de vecindad queda desconectado.</li><li>Se crean "atajos" que no representan la verdadera estructura del manifold.</li><li>El método se vuelve supervisado.</li><li>No cambia nada.</li></ol></div>
+
+<div class="q"><div class="enun">15. ¿Cuál es una desventaja de ISOMAP?</div><ol>
+<li>Es no paramétrico: no puede aplicarse a datos nuevos sin repetir el proceso de reducción.</li><li>Es un método lineal.</li><li>Requiere datos etiquetados.</li><li>Solo trabaja con variables categóricas.</li></ol></div>
+
+<div class="q"><div class="enun">16. ¿Qué algoritmo de asociación construye un árbol y recorre el conjunto de datos una sola vez, sin generar candidatos?</div><ol>
+<li>Apriori</li><li>Eclat</li><li>DBSCAN</li><li>FP-Growth</li></ol></div>
+
+<div class="q"><div class="enun">17. ¿Qué diferencia a LDA de PCA?</div><ol>
+<li>LDA es un método no lineal.</li><li>LDA tiene en cuenta la pertenencia a una clase para separar las clases; PCA no.</li><li>PCA utiliza la etiqueta de clase.</li><li>Son el mismo método con distinto nombre.</li></ol></div>
+
+<div class="q"><div class="enun">18. ¿Cuál de los siguientes NO es un criterio de parada de K-means?</div><ol>
+<li>Los centroides dejan de cambiar.</li><li>Los puntos dejan de cambiar de cluster.</li><li>El coeficiente de Silhouette alcanza el valor 1.</li><li>Se alcanza un número máximo de iteraciones.</li></ol></div>
+
+<div class="q"><div class="enun">19. Un coeficiente de Silhouette cercano a 0 indica:</div><ol>
+<li>Clusters bien separados.</li><li>Clusters indiferentes o superpuestos.</li><li>Puntos asignados al cluster incorrecto.</li><li>Que hay un solo cluster.</li></ol></div>
+
+<div class="q"><div class="enun">20. El estadístico Gap compara:</div><ol>
+<li>La dispersión intracluster de los datos con la esperada bajo una distribución uniforme de referencia.</li><li>Dos algoritmos de clustering entre sí.</li><li>Los clusters con las etiquetas reales.</li><li>La distancia entre centroides con el coeficiente de Silhouette.</li></ol></div>
+
+<div class="q"><div class="enun">21. En el enlace simple (single linkage), la distancia entre dos clusters es:</div><ol>
+<li>La distancia máxima entre sus elementos.</li><li>El promedio de las distancias entre sus elementos.</li><li>La distancia mínima entre un elemento de cada cluster.</li><li>La distancia entre sus centroides.</li></ol></div>
+
+<div class="q"><div class="enun">22. En DBSCAN, un punto de borde es aquel que:</div><ol>
+<li>Tiene al menos min_samples puntos en su vecindad de radio eps.</li><li>No tiene ningún vecino.</li><li>Es el centroide de un cluster.</li><li>Tiene menos de min_samples puntos en su vecindad, pero al menos un punto central.</li></ol></div>
+
+<div class="q"><div class="enun">23. ¿Cuál es una ventaja de DBSCAN frente a K-means?</div><ol>
+<li>No requiere especificar el número de clusters y detecta clusters de forma arbitraria.</li><li>Solo encuentra clusters esféricos.</li><li>Requiere un único parámetro.</li><li>Siempre es más rápido.</li></ol></div>
+
+<div class="q"><div class="enun">24. En un dendrograma, una unión a gran altura indica que:</div><ol>
+<li>Los grupos unidos son muy similares.</li><li>Los grupos unidos son poco similares (están lejos).</li><li>Los puntos son ruido.</li><li>Hubo un error en el algoritmo.</li></ol></div>
+
+<div class="q"><div class="enun">25. La validación interna de un clustering:</div><ol>
+<li>Usa únicamente los datos y el resultado del agrupamiento, sin información externa.</li><li>Requiere las etiquetas reales.</li><li>Necesita un conjunto de test.</li><li>Solo se aplica a DBSCAN.</li></ol></div>
+
+<div class="q"><div class="enun">26. El clustering jerárquico aglomerativo aplica una estrategia:</div><ol>
+<li>Top-down</li><li>Bottom-up</li><li>Basada en densidad</li><li>Basada en centroides fijos</li></ol></div>
+
+<div class="q"><div class="enun">27. ¿Cuál es el principal inconveniente de los algoritmos de clustering jerárquico?</div><ol>
+<li>No pueden usar la distancia euclídea.</li><li>No determinan por sí mismos el número idóneo de grupos.</li><li>Requieren datos etiquetados.</li><li>Solo generan dos clusters.</li></ol></div>
+
+<div class="q"><div class="enun">28. ¿En cuáles de estas técnicas los resultados pueden variar entre ejecuciones? <span class="multi">(puede haber más de una)</span></div><ol>
+<li>PCA</li><li>t-SNE</li><li>UMAP</li><li>Ninguna</li></ol></div>
+</section>
+
+<section class="unidad">
+<h2>Simulacro 3. Unidades 4 a 6</h2>
+
+<div class="q"><div class="enun">29. Un índice de Gini igual a 0 en un nodo indica que:</div><ol>
+<li>El nodo tiene todas las clases mezcladas por igual.</li><li>El nodo es puro: contiene una sola clase.</li><li>El árbol fue podado.</li><li>El árbol está sobreajustado.</li></ol></div>
+
+<div class="q"><div class="enun">30. El algoritmo ID3 elige el atributo de cada división según:</div><ol>
+<li>El índice de Gini.</li><li>El error cuadrático medio.</li><li>La ganancia de información, basada en la entropía.</li><li>La distancia euclídea.</li></ol></div>
+
+<div class="q"><div class="enun">31. ¿Cuál es la señal típica de sobreajuste?</div><ol>
+<li>Error alto en entrenamiento y en test.</li><li>Error muy bajo en entrenamiento y alto en test.</li><li>Error bajo en entrenamiento y en test.</li><li>Error alto en entrenamiento y bajo en test.</li></ol></div>
+
+<div class="q"><div class="enun">32. El subajuste de un modelo se asocia con:</div><ol>
+<li>Alta varianza.</li><li>Demasiadas hojas.</li><li>Poda insuficiente.</li><li>Alto sesgo.</li></ol></div>
+
+<div class="q"><div class="enun">33. En un árbol de regresión (CART), ¿cómo se elige el umbral de cada división?</div><ol>
+<li>El que maximiza el índice de Gini.</li><li>El de menor costo: el error cuadrático medio ponderado de las regiones que genera.</li><li>El que deja más datos del lado izquierdo.</li><li>Uno al azar.</li></ol></div>
+
+<div class="q"><div class="enun">34. La exhaustividad (recall) de una clase es:</div><ol>
+<li>VP / (VP + FN)</li><li>VP / (VP + FP)</li><li>(VP + VN) / total</li><li>La media armónica entre precisión y exactitud</li></ol></div>
+
+<div class="q"><div class="enun">35. La exactitud (accuracy) puede ser engañosa cuando:</div><ol>
+<li>El conjunto de datos es grande.</li><li>Se usa validación cruzada.</li><li>Las clases están desbalanceadas.</li><li>Las variables están escaladas.</li></ol></div>
+
+<div class="q"><div class="enun">36. ¿Qué métrica de regresión es más robusta ante valores atípicos?</div><ol>
+<li>MSE</li><li>RMSE</li><li>MAE</li><li>R²</li></ol></div>
+
+<div class="q"><div class="enun">37. ¿Qué le pasa al R² cuando se agrega una variable independiente al modelo?</div><ol>
+<li>Siempre disminuye.</li><li>Aumenta o se mantiene, pero nunca disminuye.</li><li>Se vuelve negativo.</li><li>No cambia nunca.</li></ol></div>
+
+<div class="q"><div class="enun">38. En la validación cruzada k-fold:</div><ol>
+<li>Una observación puede usarse varias veces como test.</li><li>Cada observación se usa exactamente una vez para test.</li><li>No hace falta entrenar el modelo.</li><li>k suele valer 100 o 1000.</li></ol></div>
+
+<div class="q"><div class="enun">39. ¿Qué caracteriza a la validación Monte Carlo?</div><ol>
+<li>Cada observación se usa exactamente una vez para test.</li><li>Solo sirve para regresión.</li><li>No permite elegir hiperparámetros.</li><li>Genera particiones aleatorias repetidas, y una observación puede usarse varias veces como test.</li></ol></div>
+
+<div class="q"><div class="enun">40. La precisión macro en un problema multiclase es:</div><ol>
+<li>El promedio ponderado por la cantidad de casos de cada clase.</li><li>El promedio simple de la precisión de cada clase.</li><li>La precisión de la clase mayoritaria.</li><li>Siempre igual a la exactitud.</li></ol></div>
+
+<div class="q"><div class="enun">41. ¿Cuál es el supuesto principal de Bayes Ingenuo?</div><ol>
+<li>Los atributos son condicionalmente independientes dada la clase.</li><li>Las clases son equiprobables.</li><li>Todos los atributos siguen una distribución normal.</li><li>Las relaciones entre atributos son lineales.</li></ol></div>
+
+<div class="q"><div class="enun">42. ¿Cómo se resuelve en Bayes Ingenuo el problema de la frecuencia cero?</div><ol>
+<li>Aumentando k.</li><li>Aplicando PCA.</li><li>Podando el modelo.</li><li>Con suavizado de Laplace.</li></ol></div>
+
+<div class="q"><div class="enun">43. ¿Qué variante de Bayes Ingenuo se usa con variables booleanas (0/1)?</div><ol>
+<li>GaussianNB</li><li>MultinomialNB</li><li>BernoulliNB</li><li>CategoricalNB</li></ol></div>
+
+<div class="q"><div class="enun">44. En el teorema de Bayes, la probabilidad a priori P(clase):</div><ol>
+<li>Es la probabilidad de la clase dados los atributos.</li><li>Se estima con la frecuencia de la clase en el entrenamiento.</li><li>Es siempre 0.5.</li><li>Es la verosimilitud de los atributos.</li></ol></div>
+
+<div class="q"><div class="enun">45. ¿Por qué k-NN es un método de aprendizaje perezoso?</div><ol>
+<li>Porque converge lentamente.</li><li>Porque no construye un modelo: todo el cálculo ocurre al clasificar una instancia nueva.</li><li>Porque usa pocos datos.</li><li>Porque no utiliza distancias.</li></ol></div>
+
+<div class="q"><div class="enun">46. En k-NN, un valor de k muy pequeño:</div><ol>
+<li>Hace que el ruido tome importancia y produce sobreajuste.</li><li>Produce subajuste.</li><li>Hace que siempre gane la clase mayoritaria.</li><li>Es siempre la mejor opción.</li></ol></div>
+
+<div class="q"><div class="enun">47. ¿Por qué se suele elegir un k impar en k-NN?</div><ol>
+<li>Porque es más rápido de calcular.</li><li>Porque mejora la normalización.</li><li>Para minimizar la posibilidad de empates.</li><li>Porque la distancia euclídea lo exige.</li></ol></div>
+
+<div class="q"><div class="enun">48. En SVM, los vectores de soporte son:</div><ol>
+<li>Todos los puntos del entrenamiento.</li><li>Los puntos más cercanos al hiperplano, que definen el margen.</li><li>Los centroides de cada clase.</li><li>Los valores atípicos.</li></ol></div>
+
+<div class="q"><div class="enun">49. En una SVM de margen blando, un valor de C muy grande produce:</div><ol>
+<li>Un margen ancho que tolera muchos errores.</li><li>Un cambio automático de kernel.</li><li>Un modelo lineal en todos los casos.</li><li>Un margen estrecho que penaliza fuertemente los errores, con riesgo de sobreajuste.</li></ol></div>
+
+<div class="q"><div class="enun">50. El truco del kernel consiste en:</div><ol>
+<li>Transformar los datos a un espacio de mayor dimensión donde sean linealmente separables.</li><li>Reducir la dimensión de los datos.</li><li>Eliminar los valores atípicos.</li><li>Podar los vectores de soporte.</li></ol></div>
+
+<div class="q"><div class="enun">51. Con la estrategia one-versus-one, ¿cuántos clasificadores SVM se entrenan para 5 clases?</div><ol>
+<li>5</li><li>10</li><li>20</li><li>25</li></ol></div>
+
+<div class="q"><div class="enun">52. El bootstrap que usa bagging es un muestreo:</div><ol>
+<li>Aleatorio con reemplazo.</li><li>Aleatorio sin reemplazo.</li><li>Estratificado por clase.</li><li>Secuencial según el error.</li></ol></div>
+
+<div class="q"><div class="enun">53. Las observaciones out-of-bag son:</div><ol>
+<li>Los valores atípicos que se eliminan antes de entrenar.</li><li>Las observaciones mal clasificadas por el primer modelo.</li><li>Las que no fueron elegidas en una muestra bootstrap (alrededor de un tercio), útiles para estimar el error.</li><li>Las observaciones del conjunto de test.</li></ol></div>
+
+<div class="q"><div class="enun">54. ¿Qué diferencia a boosting de bagging?</div><ol>
+<li>Boosting entrena los modelos en paralelo e independientes.</li><li>Boosting entrena los modelos secuencialmente, dando más peso a los ejemplos mal clasificados.</li><li>Boosting no usa modelos base.</li><li>Boosting solo sirve para regresión.</li></ol></div>
+
+<div class="q"><div class="enun">55. ¿En qué se diferencia Gradient Boosting de AdaBoost?</div><ol>
+<li>Usa bootstrap.</li><li>Entrena los modelos en paralelo.</li><li>No usa modelos débiles.</li><li>Entrena cada predictor sobre los errores residuales del anterior, en lugar de re-ponderar los puntos.</li></ol></div>
+
+<div class="q"><div class="enun">56. En stacking, la predicción final la produce:</div><ol>
+<li>Un meta-modelo entrenado con las predicciones de los modelos base.</li><li>El voto mayoritario simple.</li><li>El mejor modelo base.</li><li>El promedio de los modelos base.</li></ol></div>
+
+<div class="q"><div class="enun">57. ¿Qué reduce principalmente bagging?</div><ol>
+<li>El sesgo</li><li>La varianza</li><li>La dimensionalidad</li><li>El tiempo de entrenamiento</li></ol></div>
+</section>
+
+<section class="unidad">
+<h2>Grilla para marcar respuestas</h2>
+<p class="small">Marcar la letra elegida. Simulacro 1: preguntas 1–20; Simulacro 2: 1–28; Simulacro 3: 29–57.</p>
+<table class="grilla"><tr><th>Nº</th><th>Sim. 1</th><th>Nº</th><th>Sim. 2</th><th>Nº</th><th>Sim. 2</th><th>Nº</th><th>Sim. 3</th><th>Nº</th><th>Sim. 3</th></tr><tr><td>1</td><td></td><td>1</td><td></td><td>15</td><td></td><td>29</td><td></td><td>44</td><td></td></tr><tr><td>2</td><td></td><td>2</td><td></td><td>16</td><td></td><td>30</td><td></td><td>45</td><td></td></tr><tr><td>3</td><td></td><td>3</td><td></td><td>17</td><td></td><td>31</td><td></td><td>46</td><td></td></tr><tr><td>4</td><td></td><td>4</td><td></td><td>18</td><td></td><td>32</td><td></td><td>47</td><td></td></tr><tr><td>5</td><td></td><td>5</td><td></td><td>19</td><td></td><td>33</td><td></td><td>48</td><td></td></tr><tr><td>6</td><td></td><td>6</td><td></td><td>20</td><td></td><td>34</td><td></td><td>49</td><td></td></tr><tr><td>7</td><td></td><td>7</td><td></td><td>21</td><td></td><td>35</td><td></td><td>50</td><td></td></tr><tr><td>8</td><td></td><td>8</td><td></td><td>22</td><td></td><td>36</td><td></td><td>51</td><td></td></tr><tr><td>9</td><td></td><td>9</td><td></td><td>23</td><td></td><td>37</td><td></td><td>52</td><td></td></tr><tr><td>10</td><td></td><td>10</td><td></td><td>24</td><td></td><td>38</td><td></td><td>53</td><td></td></tr><tr><td>11</td><td></td><td>11</td><td></td><td>25</td><td></td><td>39</td><td></td><td>54</td><td></td></tr><tr><td>12</td><td></td><td>12</td><td></td><td>26</td><td></td><td>40</td><td></td><td>55</td><td></td></tr><tr><td>13</td><td></td><td>13</td><td></td><td>27</td><td></td><td>41</td><td></td><td>56</td><td></td></tr><tr><td>14</td><td></td><td>14</td><td></td><td>28</td><td></td><td>42</td><td></td><td>57</td><td></td></tr><tr><td>15</td><td></td><td></td><td></td><td></td><td></td><td>43</td><td></td><td></td><td></td></tr><tr><td>16</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>17</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>18</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>19</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>20</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr></table>
+</section>
+
+<section class="unidad">
+<h1>Hojas de respuestas</h1>
+<p class="small">No mirar antes de terminar los simulacros.</p>
+<h2>Respuestas del Simulacro 1 (parcial 01/12/2023)</h2>
+<table class="resp">
+<tr><td>1</td><td>b</td><td>Definición textual: direcciones de varianza <b>máxima</b>, donde los elementos están más separados (U2, 2.4).</td></tr>
+<tr><td>2</td><td>d</td><td>Distancias <b>geodésicas</b> usando las distancias más cercanas <b>en el grafo de vecinos</b> (filmina de resumen de ISOMAP).</td></tr>
+<tr><td>3</td><td>a, b, d</td><td>ISOMAP, UMAP y t-SNE son no lineales; PCA es lineal.</td></tr>
+<tr><td>4</td><td>a, b, d</td><td>a y d son la misma afirmación (está repetida en el examen). c es falsa: preserva la estructura del espacio de <b>alta</b> dimensión.</td></tr>
+<tr><td>5</td><td>c</td><td>K-means puede quedar en un óptimo local; no garantiza el global.</td></tr>
+<tr><td>6</td><td>b</td><td>Con k chico, los grupos son demasiado grandes y no capturan la estructura. c describe un k demasiado grande.</td></tr>
+<tr><td>7</td><td>a</td><td>Representa la estructura del árbol de la agrupación jerárquica.</td></tr>
+<tr><td>8</td><td>b</td><td>Aglomerativo (bottom-up) y divisivo (top-down).</td></tr>
+<tr><td>9</td><td>b</td><td>No por su capacidad predictiva, sino por su capacidad explicativa e interpretación.</td></tr>
+<tr><td>10</td><td>b</td><td>Se eliminan las hojas que causan sobreajuste.</td></tr>
+<tr><td>11</td><td>b</td><td>En aprendizaje automático, es una estructura en forma de árbol para predecir a partir de las características de entrada.</td></tr>
+<tr><td>12</td><td>c</td><td>Mide la impureza de un nodo (0 = puro).</td></tr>
+<tr><td>13</td><td>a</td><td>Modelo gráfico de relaciones probabilísticas entre variables.</td></tr>
+<tr><td>14</td><td>c</td><td>Teorema de Bayes.</td></tr>
+<tr><td>15</td><td>a</td><td>Maximizar el margen entre clases.</td></tr>
+<tr><td>16</td><td>d</td><td>Precisión, recall y F1 sirven para evaluar cualquier clasificador.</td></tr>
+<tr><td>17</td><td>b</td><td>k-NN no construye modelo; calcula todo al predecir.</td></tr>
+<tr><td>18</td><td>c</td><td>Un árbol de decisión es un modelo único (base de los ensambles).</td></tr>
+<tr><td>19</td><td>b</td><td>Combina las predicciones de múltiples modelos base.</td></tr>
+<tr><td>20</td><td>b</td><td>Random Forest agrega la selección aleatoria de características. a es una descripción cierta de RF, pero no es la <b>diferencia</b>; c describe boosting.</td></tr>
+</table>
+
+<h2>Respuestas del Simulacro 2</h2>
+<table class="resp">
+<tr><td>1</td><td>b</td><td>Las tres tareas se basan en el aprendizaje inductivo.</td></tr>
+<tr><td>2</td><td>c</td><td>Regresión: f: X → ℝ; clasificación: c: X → C.</td></tr>
+<tr><td>3</td><td>d</td><td>Separar, ajustar con el entrenamiento y aplicar a ambos; si no, hay fuga de datos.</td></tr>
+<tr><td>4</td><td>a</td><td>"Desconocido" no existe en el fenómeno.</td></tr>
+<tr><td>5</td><td>c</td><td>La propina solo se conoce al terminar el viaje.</td></tr>
+<tr><td>6</td><td>b</td><td>Que la distancia media aumente no es grave; el problema es que las distancias dejan de distinguirse.</td></tr>
+<tr><td>7</td><td>d</td><td>Afecta a las técnicas basadas en distancias.</td></tr>
+<tr><td>8</td><td>c</td><td>La varianza depende de la escala.</td></tr>
+<tr><td>9</td><td>a</td><td>Autovalor &gt; 1.</td></tr>
+<tr><td>10</td><td>b</td><td>La componente del quiebre se incluye.</td></tr>
+<tr><td>11</td><td>d</td><td>Depende de la inicialización aleatoria; los tamaños de clusters y los ejes no se interpretan.</td></tr>
+<tr><td>12</td><td>b</td><td>Número efectivo de vecinos, entre 5 y 50, menor que n.</td></tr>
+<tr><td>13</td><td>c</td><td>Colas pesadas.</td></tr>
+<tr><td>14</td><td>b</td><td>k grande crea atajos; k chico desconecta el grafo.</td></tr>
+<tr><td>15</td><td>a</td><td>Es no paramétrico (y además no lineal).</td></tr>
+<tr><td>16</td><td>d</td><td>FP-Growth con el árbol FP.</td></tr>
+<tr><td>17</td><td>b</td><td>LDA es supervisado; PCA no.</td></tr>
+<tr><td>18</td><td>c</td><td>Los tres criterios son centroides estables, puntos estables o límite de iteraciones.</td></tr>
+<tr><td>19</td><td>b</td><td>0 = indiferentes o superpuestos; −1 = mal asignados.</td></tr>
+<tr><td>20</td><td>a</td><td>Contra una referencia uniforme sobre el rectángulo de los datos.</td></tr>
+<tr><td>21</td><td>c</td><td>Mínima distancia; complete = máxima; average = promedio.</td></tr>
+<tr><td>22</td><td>d</td><td>a describe un punto central.</td></tr>
+<tr><td>23</td><td>a</td><td>DBSCAN tiene dos parámetros y detecta formas arbitrarias.</td></tr>
+<tr><td>24</td><td>b</td><td>Unión alta = grupos lejanos.</td></tr>
+<tr><td>25</td><td>a</td><td>La externa usa información externa como las etiquetas.</td></tr>
+<tr><td>26</td><td>b</td><td>Bottom-up; el divisivo es top-down.</td></tr>
+<tr><td>27</td><td>b</td><td>Hay que fijar el número o un criterio de parada.</td></tr>
+<tr><td>28</td><td>b, c</td><td>t-SNE y UMAP dependen de la inicialización; PCA da siempre lo mismo (salvo el signo).</td></tr>
+</table>
+
+<h2>Respuestas del Simulacro 3</h2>
+<table class="resp">
+<tr><td>29</td><td>b</td><td>Gini 0 = nodo puro.</td></tr>
+<tr><td>30</td><td>c</td><td>ID3 usa entropía y ganancia de información; CART, Gini; C4.5, gain ratio.</td></tr>
+<tr><td>31</td><td>b</td><td>No generaliza: va bien en entrenamiento y mal en test.</td></tr>
+<tr><td>32</td><td>d</td><td>Subajuste = alto sesgo; sobreajuste = alta varianza.</td></tr>
+<tr><td>33</td><td>b</td><td>Menor MSE ponderado de las regiones hijas.</td></tr>
+<tr><td>34</td><td>a</td><td>b es la precisión; c, la exactitud.</td></tr>
+<tr><td>35</td><td>c</td><td>Predecir siempre la clase mayoritaria ya da una exactitud alta.</td></tr>
+<tr><td>36</td><td>c</td><td>El MAE no eleva al cuadrado los errores grandes.</td></tr>
+<tr><td>37</td><td>b</td><td>Por eso existe el R² ajustado.</td></tr>
+<tr><td>38</td><td>b</td><td>a describe Monte Carlo; k es típicamente 5 o 10.</td></tr>
+<tr><td>39</td><td>d</td><td>m particiones aleatorias repetidas.</td></tr>
+<tr><td>40</td><td>b</td><td>Macro = promedio simple; weighted = ponderado.</td></tr>
+<tr><td>41</td><td>a</td><td>Independencia condicional dada la clase.</td></tr>
+<tr><td>42</td><td>d</td><td>Suavizado de Laplace.</td></tr>
+<tr><td>43</td><td>c</td><td>Bernoulli: booleanas; Multinomial: conteos; Gaussian: continuas.</td></tr>
+<tr><td>44</td><td>b</td><td>a es la a posteriori; d, la verosimilitud.</td></tr>
+<tr><td>45</td><td>b</td><td>Aprendizaje basado en instancias o en memoria.</td></tr>
+<tr><td>46</td><td>a</td><td>k grande produce subajuste.</td></tr>
+<tr><td>47</td><td>c</td><td>Impar o primo para evitar empates.</td></tr>
+<tr><td>48</td><td>b</td><td>Solo ellos definen el hiperplano.</td></tr>
+<tr><td>49</td><td>d</td><td>C chico da margen ancho y más generalización.</td></tr>
+<tr><td>50</td><td>a</td><td>Mapea a mayor dimensión.</td></tr>
+<tr><td>51</td><td>b</td><td>n(n−1)/2 = 5·4/2 = 10.</td></tr>
+<tr><td>52</td><td>a</td><td>Con reemplazo: hay repetidos y quedan observaciones afuera.</td></tr>
+<tr><td>53</td><td>c</td><td>Aproximadamente 36.8%; el error OOB estima el error de generalización.</td></tr>
+<tr><td>54</td><td>b</td><td>Bagging es paralelo; boosting, secuencial.</td></tr>
+<tr><td>55</td><td>d</td><td>AdaBoost re-pondera puntos; Gradient Boosting ajusta residuos.</td></tr>
+<tr><td>56</td><td>a</td><td>Dos niveles: modelos base y meta-modelo.</td></tr>
+<tr><td>57</td><td>b</td><td>Bagging reduce varianza; boosting, sesgo.</td></tr>
+</table>
+</section>
+</body>
+</html>
