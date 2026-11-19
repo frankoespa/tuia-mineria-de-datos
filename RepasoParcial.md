@@ -3,7 +3,10 @@
 Explicaciones para principiantes de **todos** los conceptos que vamos aplicando en los trabajos prácticos, con los ejemplos de nuestros propios datos.
 
 - **Secciones 1 a 17:** lo del TP1, con el conjunto de pingüinos (no supervisado).
-- **Secciones 18 en adelante:** lo del TP2, con las empresas y los medicamentos (supervisado).
+- **Secciones 18 a 26:** lo del TP2, con las empresas y los medicamentos (supervisado).
+- **Secciones 27 y 28:** lo del TP3, con los cultivos: SVM y modelos de ensamble.
+
+Varias secciones del TP2 (validación cruzada, codificación, estandarización, métricas) quedaron ampliadas con lo que agregó el TP3.
 
 Cada vez que aparece un tema nuevo en un TP, se agrega acá con su explicación.
 
@@ -36,10 +39,11 @@ Cada vez que aparece un tema nuevo en un TP, se agrega acá con su explicación.
 25. [Naive Bayes](#25-naive-bayes)
 26. [k vecinos más cercanos (k-NN)](#26-k-vecinos-más-cercanos-k-nn)
 27. [Máquinas de soporte vectorial (SVM)](#27-máquinas-de-soporte-vectorial-svm)
-28. [Preguntas típicas de parcial](#28-preguntas-típicas-de-parcial)
-29. [Lo que nos corrigió el profesor en el TP1](#29-lo-que-nos-corrigió-el-profesor-en-el-tp1)
-30. [Temas que todavía no vimos](#30-temas-que-todavía-no-vimos)
-31. [Resumen de una carilla](#31-resumen-de-una-carilla)
+28. [Modelos de ensamble: bagging, Random Forest y boosting](#28-modelos-de-ensamble-bagging-random-forest-y-boosting)
+29. [Preguntas típicas de parcial](#29-preguntas-típicas-de-parcial)
+30. [Lo que nos corrigió el profesor en el TP1](#30-lo-que-nos-corrigió-el-profesor-en-el-tp1)
+31. [Temas que todavía no vimos](#31-temas-que-todavía-no-vimos)
+32. [Resumen de una carilla](#32-resumen-de-una-carilla)
 
 ---
 
@@ -1312,6 +1316,41 @@ Resultado = promedio de las 5 evaluaciones
 
 **Versión estratificada:** en clasificación, sklearn usa automáticamente `StratifiedKFold`, que arma los folds respetando la proporción de clases.
 
+### `StratifiedKFold` escrito a mano
+
+En el TP2 alcanzó con poner `cv=5`: sklearn vio que era clasificación y usó folds estratificados solo. En el TP3 el enunciado pide escribirlo, y conviene saber por qué:
+
+```python
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEMILLA)
+```
+
+| Parámetro | Qué hace | Por qué importa |
+|---|---|---|
+| `n_splits=5` | Cinco folds | Lo pide el enunciado; es el valor típico |
+| `shuffle=True` | Mezcla antes de cortar | Sin esto, **dentro de cada clase los folds salen en el orden del archivo**: el fold 1 se lleva las primeras filas de cada cultivo, el fold 2 las siguientes, y así. Si el archivo trae algún orden interno, los folds quedan sistemáticamente distintos |
+| `random_state` | Fija el azar de esa mezcla | Sin él, cada corrida da folds distintos y las métricas se mueven |
+
+⚠️ `random_state` **solo tiene efecto si `shuffle=True`**. Con `shuffle=False` sklearn avisa con un error.
+
+*Qué significa "estratificado".* Si una clase es el 9.82 % del total, va a ser el 9.82 % de cada fold. Sin estratificar, con 10 clases y azar, un fold podría quedar con el doble de `lenteja` que otro y las métricas de esos folds no serían comparables. Eso lo garantiza `StratifiedKFold` **aunque no se mezcle**: `shuffle` no tiene que ver con las proporciones, sino con qué filas concretas caen en cada fold.
+
+El archivo de los cultivos, además, viene **agrupado por clase**: las primeras 5.001 filas son `arroz`, las 5.000 siguientes `maiz`, y así hasta `lenteja`. Con `KFold` común y sin mezclar, cada fold tendría dos cultivos y ninguno de los otros ocho: el modelo se evaluaría con clases que nunca vio.
+
+### Dos esquemas distintos de validación
+
+Esta es la diferencia grande entre el TP2 y el TP3, y conviene tenerla clara porque son dos formas válidas de usar lo mismo:
+
+| | **TP2** | **TP3** |
+|---|---|---|
+| Qué se parte primero | `train_test_split` 80/20 | Nada: se usa todo |
+| Dónde corre la validación cruzada | Solo dentro del entrenamiento | Sobre **todo el conjunto limpio** |
+| Para qué sirve la validación cruzada | Elegir hiperparámetros | Elegir hiperparámetros **y reportar el rendimiento** |
+| Qué se reporta | Métricas sobre el test apartado | Media ± desvío de los 5 folds |
+
+**¿El TP3 no comete fuga de datos?** No, y vale la pena entender por qué: dentro de cada fold, el modelo se entrena con 4 partes y se evalúa con la quinta, que no vio. Esa quinta parte cumple el papel del test. Lo que sí pasa es que, al elegir la mejor configuración mirando esos mismos promedios, el número elegido queda un poco optimista: es el mejor de 5, de 16 o de los que se hayan probado. Por eso el enunciado pide **justificar la elección** y no solo quedarse con el máximo.
+
+(Lo que sí quedó fuera de la regla estricta es el `StandardScaler`, que se ajustó con el conjunto completo antes de armar los folds, en lugar de ajustarse dentro de cada uno. Lo pide así el enunciado. Con 49.803 filas, la media y el desvío de un fold y del total son prácticamente iguales, así que el efecto es despreciable; con pocos datos no lo sería. Ver la sección 20.)
+
 ### GridSearchCV: la grilla
 
 *Grid* quiere decir grilla o rejilla: todas las combinaciones posibles de los valores que uno propone.
@@ -1362,6 +1401,52 @@ Es normal que varias combinaciones den exactamente el mismo puntaje. Suele pasar
 
 Que los primeros puestos estén muy cerca (en nuestro caso, 2.241 contra 2.261, menos del 1%) dice algo útil: **la elección de hiperparámetros no es crítica en ese problema**. Conviene escribirlo en el informe.
 
+### Varias métricas en la misma búsqueda
+
+`scoring` acepta una lista. Las tres métricas se calculan **sobre el mismo modelo ya entrenado**, así que pedir tres no cuesta tres veces más: el ajuste es uno solo por combinación y por fold.
+
+```python
+metricas = ["accuracy", "precision_weighted", "recall_weighted"]
+
+busqueda = GridSearchCV(SVC(kernel="linear"), {"C": [0.01, 0.1, 1, 10, 100]},
+                        scoring=metricas, refit=False, cv=cv, n_jobs=4)
+```
+
+Con varias métricas hay que agregar `refit`, porque sklearn ya no sabe cuál usar para elegir la ganadora. Hay dos caminos:
+
+- `refit="accuracy"`: elige por esa métrica y **reentrena la ganadora con todos los datos**, dejándola en `best_estimator_`.
+- `refit=False`: no reentrena nada. Quedan solo los resultados en `cv_results_`.
+
+En el TP3 usamos `refit=False` **porque ese reajuste final es caro**: con un SVM lineal sobre 49.803 filas y `C=100`, un solo ajuste son decenas de minutos, y no lo necesitamos porque las matrices de confusión se hacen aparte con una partición 80/20.
+
+### Leer `cv_results_`
+
+Es un diccionario con una fila por combinación. El patrón que usa el profesor en `Unidad5.py` deja solo lo que importa:
+
+```python
+resultados = pd.DataFrame(busqueda.cv_results_)
+resultados.filter(regex="(param_|mean_test|std_test)")
+```
+
+| Columna | Qué es |
+|---|---|
+| `param_C` | El valor probado |
+| `mean_test_accuracy` | **Media** de la exactitud en los 5 folds |
+| `std_test_accuracy` | **Desvío estándar** de esos 5 valores |
+| `split0_test_accuracy` … | El valor de cada fold por separado |
+| `mean_fit_time` | Segundos promedio que tardó un ajuste |
+
+### El desvío entre folds es estabilidad
+
+La media dice **qué tan bien anda** el modelo; el desvío entre los 5 folds dice **qué tan confiable es ese número**.
+
+- Desvío chico (0.003): los cinco folds dieron casi lo mismo. El modelo rinde parecido sin importar con qué datos le toque entrenar.
+- Desvío grande (0.05): con algunos cortes anda bien y con otros mal. Ese promedio es frágil.
+
+Por eso se reporta **media ± desvío** y no solo la media, y por eso el enunciado del TP3 pide comparar los modelos también por su estabilidad: entre dos modelos de media parecida, **conviene el de menor desvío**.
+
+Ojo con leerlo mal: el desvío mide la variación **entre folds**, no el error del modelo. Un desvío de 0.003 no quiere decir que el modelo se equivoque un 0.3 %.
+
 ### El esquema completo
 
 ```
@@ -1376,6 +1461,21 @@ Que los primeros puestos estén muy cerca (en nuestro caso, 2.241 contra 2.261, 
    mejor modelo ────────── predict ────────────→│
                                                  │
                                           MAE / MSE / RMSE
+```
+
+Y el del TP3, sin test apartado:
+
+```
+       ┌──────── TODO EL CONJUNTO LIMPIO (49.803) ────────┐
+       │                                                   │
+   StratifiedKFold(5, shuffle=True, random_state=13)
+       │
+   para cada configuración de la grilla:
+       entrena con 4 folds → evalúa con el 5º     (×5)
+       │
+   media ± desvío de accuracy, precision y recall weighted
+       │
+   se elige la mejor configuración y se justifica
 ```
 
 ---
@@ -1764,6 +1864,27 @@ La **diagonal** son los aciertos. Todo lo que está fuera de la diagonal es un e
 
 En nuestro TP2 las matrices del árbol son perfectamente diagonales: ni un caso fuera de lugar.
 
+### Cómo leer una matriz de 10 × 10
+
+Con dos o tres clases se lee de un vistazo. Con diez conviene tener un método, porque son cien casillas:
+
+1. **Mirar la diagonal primero.** Es donde tiene que estar todo. Si hay una casilla oscura fuera de ella, ahí está el problema.
+2. **Recorrer cada fila:** de los que **eran** de esa clase, cuántos se reconocieron. Es la exhaustividad de esa clase.
+3. **Recorrer cada columna:** de los que el modelo **dijo** que eran de esa clase, cuántos lo eran. Es la precisión de esa clase.
+4. **Buscar pares simétricos.** Dos casillas grandes y enfrentadas (la fila A columna B y la fila B columna A) quieren decir que el modelo **mezcla esas dos clases en las dos direcciones**, no que una se le escapa.
+
+*Lo que vimos en el TP3.* El SVM lineal mandaba 219 `banana` a `cafe` y 162 `cafe` a `banana`: un par simétrico, las confunde entre sí. En el Random Forest esas dos casillas bajan a 28 y 23.
+
+### Cuando los tres modelos fallan en la misma clase
+
+Es la observación más útil que sacamos de comparar matrices, y vale como regla general:
+
+En el TP3, `maiz` fue la peor clase **en los tres modelos**: 421 aciertos de 1.000 en el SVM lineal, 727 en el RBF y 790 en el bosque. Siempre el número más bajo de su matriz. Y sus errores no iban a un solo lugar: se repartían entre casi todos los demás cultivos.
+
+**Si tres modelos muy distintos —un hiperplano, una frontera curva y un bosque de árboles— se equivocan con la misma clase, el problema no es del modelo: es que esa clase no está bien separada en los datos.** Cambiar de algoritmo o ajustar hiperparámetros no lo va a arreglar; haría falta otra variable que distinga a esa clase.
+
+Al revés también sirve: `lenteja`, `coco` y `manzana` fueron las más fáciles en los tres. Son clases que ocupan una región propia del espacio.
+
 ### Los cuatro casos, en problemas de dos clases
 
 Pensando en una clase como "positiva":
@@ -1828,6 +1949,25 @@ Con más de dos clases, precisión y exhaustividad se calculan **por clase** y d
 Es exactamente lo que pasó con nuestro árbol podado: la exactitud cayó de 1.00 a 0.93, pero la **precisión macro se desplomó a 0.76**, porque DrogaC quedó en 0.
 
 **Por eso el enunciado del TP2 pide macro:** con clases desbalanceadas, es la única forma de que un fallo en una clase chica se note.
+
+### La exhaustividad weighted **es** la exactitud
+
+Esto lo descubrimos mirando la Tabla 10 del TP3: las columnas de exhaustividad weighted y de exactitud daban el mismo número hasta el último decimal, en las cinco filas. No es casualidad, es una identidad:
+
+```
+exhaustividad de la clase i  =  aciertos_i / n_i
+
+weighted = Σ (n_i / N) · (aciertos_i / n_i)  =  Σ aciertos_i / N  =  exactitud
+```
+
+Los `n_i` se cancelan. **La exhaustividad promediada pesando por el tamaño de cada clase siempre da la exactitud**, en cualquier problema, balanceado o no.
+
+Con la **precisión** no pasa: el denominador de la precisión de la clase i no es `n_i` (cuántas eran) sino cuántas el modelo *dijo* que eran, así que no se cancela. En el TP3 daban 0.6049 contra 0.6048: parecido, pero no idéntico.
+
+Dos consecuencias prácticas:
+
+- Si un informe reporta exactitud y exhaustividad weighted, **está reportando el mismo número dos veces**. En el TP3 lo pide el enunciado, así que se reporta igual, pero conviene saberlo y decirlo.
+- La fila de "micro" de la tabla de arriba y esta son la misma idea: micro también equivale a la exactitud.
 
 ### Cuando las clases están balanceadas da lo mismo
 
@@ -2104,11 +2244,59 @@ Eso es el **truco del kernel** (*kernel trick*): una función que calcula las di
 
 **El parámetro `gamma`** (en rbf) controla cuán lejos llega la influencia de cada punto: `gamma` alto hace fronteras muy ajustadas a cada dato (sobreajuste), `gamma` bajo las suaviza.
 
+**Metáfora:** cada punto de entrenamiento es una linterna. Con `gamma` chico la linterna ilumina lejos y los halos de todos se mezclan en una frontera suave; con `gamma` grande cada linterna ilumina apenas su propio pie y la frontera se vuelve un archipiélago de islas, una por punto.
+
+El valor por defecto es `gamma='scale'`, que vale 1 / (cantidad de variables × varianza de X). Con datos estandarizados la varianza es 1, así que con las 16 variables del TP3 `'scale'` equivale a `gamma = 1/16 = 0.0625`.
+
+### Leer un heatmap de C contra gamma
+
+Los dos parámetros **no son independientes**, y por eso el enunciado del TP3 pide verlos juntos en una tabla o un heatmap en vez de barrer uno y después el otro. Esta es la grilla que nos dio, con la exactitud media de los 5 folds:
+
+| C \ gamma | 0.001 | 0.01 | 0.1 | 1 |
+|---|---|---|---|---|
+| **0.1** | 0.5183 | 0.5975 | 0.7414 | 0.7611 |
+| **1** | 0.5813 | 0.6830 | 0.8243 | **0.8811** |
+| **10** | 0.6333 | 0.7511 | 0.8688 | **0.8864** |
+| **100** | 0.6896 | 0.8061 | **0.8850** | 0.8805 |
+
+Tres cosas para leer en una tabla así:
+
+1. **Crece en diagonal.** El peor valor está arriba a la izquierda (los dos chicos) y el mejor abajo a la derecha. Nunca hay que elegir mirando una fila o una columna sola.
+2. **Los dos se compensan.** Con `gamma = 0.001` hace falta `C = 100` para llegar a 0.69; con `gamma = 1` alcanza `C = 1` para llegar a 0.88. Un `gamma` chico pide un `C` grande, y al revés. Por eso una grilla cuadrada muestra una **cresta diagonal** de valores buenos.
+3. **El techo se nota cuando un valor baja.** En `gamma = 1`, pasar de `C = 10` a `C = 100` **empeora** (0.8864 → 0.8805). Ese es el único lugar donde subir C no ayuda, y es la señal de que ahí empieza el sobreajuste: el modelo ya se está adaptando al ruido. Si la mejor combinación quedara en un borde de la grilla **sin** que nada empeore, habría que ampliar la grilla, porque el máximo podría estar más allá.
+
+### Elegir cuando varias configuraciones empatan
+
+Pasó en las dos actividades de SVM del TP3 y es el tipo de decisión que hay que saber justificar.
+
+**La regla:** una diferencia entre configuraciones **solo es real si es más grande que el desvío entre folds**. Si dos configuraciones difieren en 0.0014 y el desvío de cada una es 0.003, están empatadas: cambiar el corte de los folds mueve más que la diferencia entre los modelos.
+
+Cuando hay empate, se desempata por lo que el enunciado del TP3 pide mirar igual:
+
+1. **Estabilidad:** el de menor desvío entre folds.
+2. **Tiempo de entrenamiento:** el más barato (`mean_fit_time` lo trae servido).
+3. **Interpretabilidad** o simplicidad del modelo.
+
+*Lo que elegimos.* En el lineal, C = 1, 10 y 100 daban 0.6219, 0.6229 y 0.6230 con desvío 0.0047: empate, y C = 1 tarda dieciséis veces menos que C = 100. En el RBF, el máximo era `C=10, gamma=1` (0.8864) pero elegimos `C=100, gamma=0.1` (0.8850), que tiene **la mitad de desvío** (0.0018 contra 0.0034) y tarda menos.
+
+⚠️ No confundir esto con quedarse con un modelo peor porque sí. Si la diferencia **supera** el desvío entre folds, se elige el mejor aunque tarde más.
+
 ### Clasificación con más de dos clases
 
-El hiperplano separa **dos** grupos, así que para varias clases hay que combinar varios clasificadores. `scikit-learn` usa **uno contra uno** (*one-versus-one*): entrena un SVM para **cada par** de clases y decide por votación.
+El hiperplano separa **dos** grupos, así que para varias clases hay que combinar varios clasificadores. Hay dos estrategias, y las filminas 61 a 64 explican las dos:
 
-Con n clases son n(n−1)/2 clasificadores. Con nuestras 5 drogas serían 10.
+| | **Uno contra todos** (one-versus-all) | **Uno contra uno** (one-versus-one) |
+|---|---|---|
+| Cuántos modelos | Uno por clase: n | Uno por cada par: n(n−1)/2 |
+| Cómo entrena cada uno | Esa clase contra todas las demás juntas | Solo con las muestras de esas dos clases |
+| Cómo decide | La clase cuyo clasificador dio positivo | Votación: gana la más votada |
+| Problemas | Puede dar positivo en varios a la vez, y cada modelo se entrena muy desbalanceado (1 contra 9) | Hay que entrenar y guardar más modelos, y puede haber empates en la votación |
+
+**`scikit-learn` usa uno contra uno** en `SVC`. Con nuestras 5 drogas serían 10 modelos; con los **10 cultivos del TP3 son 45**.
+
+Parece mucho más caro, pero no lo es tanto: cada uno de los 45 se entrena **solo con las muestras de dos clases**, o sea una quinta parte de los datos en el TP3, y el costo de un SVM crece con el cuadrado de las muestras. Por eso la filmina 64 dice que los clasificadores individuales son "más simples y rápidos de entrenar".
+
+⚠️ El markdown de la celda 56 del notebook de vinos dice que sklearn usa one-versus-rest por defecto. **Está mal**: las filminas y la documentación dicen one-versus-one.
 
 ### Cómo se usa
 
@@ -2128,6 +2316,29 @@ params_grid = [{'kernel': ['rbf'],    'gamma': [1e-3, 1e-4], 'C': [0.1, 1, 10, 1
 
 ⚠️ **SVM exige estandarizar**, por el mismo motivo que k-NN: trabaja con distancias al hiperplano, y sin escalar la variable de mayor rango domina. El notebook de clase siempre lo entrena sobre `Xtrn_std`.
 
+### Por qué SVM es lento: el costo computacional
+
+Es lo que dice la filmina 60, y en el TP3 lo sufrimos: **en el ajuste de un SVM participa una matriz de n × n**, donde n es la cantidad de muestras de entrenamiento. Cada casilla es el kernel entre dos muestras.
+
+La consecuencia práctica, textual de la filmina: **lo que más influye en el tiempo es el número de observaciones, no el de predictores**. Esto es al revés de lo que uno espera y es muy preguntable:
+
+- Duplicar las **columnas** (de 16 a 32): el tiempo casi no se mueve.
+- Duplicar las **filas** (de 25.000 a 50.000): el tiempo se multiplica por cuatro o más, porque la matriz pasa de 25.000² a 50.000² casillas.
+
+*Los números del TP3.* Un solo ajuste sobre 39.842 filas y 16 columnas:
+
+| Modelo | Ajuste | Predicción de 9.961 filas |
+|---|---|---|
+| `SVC(kernel='linear', C=1)` | 79 s | 11 s |
+| `SVC(kernel='rbf', C=10, gamma=0.1)` | 27 s | 18 s |
+| `RandomForestClassifier(n_estimators=500)` | 38 s | 0.5 s |
+
+Y el mismo SVM lineal con `C=100` tarda unos **30 minutos** por ajuste: C grande obliga a respetar casi todos los puntos, y encontrar esa frontera cuesta muchas más iteraciones. Multiplicado por 5 folds, una sola celda del notebook se va a horas.
+
+**La predicción también es lenta**, y esa es la otra sorpresa. Para clasificar un punto nuevo, el SVM calcula el kernel contra **cada vector de soporte**. Con datos difíciles, los vectores de soporte son muchísimos: en el TP3, el SVM lineal se quedó con 29.164 de 39.842 muestras, o sea el 73 %. Clasificar 9.961 filas contra 29.164 vectores son casi 300 millones de cuentas, y por eso tarda 11 segundos donde un bosque de 500 árboles tarda medio segundo.
+
+*La señal de alarma:* **si el modelo usa como vector de soporte a casi todo el conjunto, es que las clases no se separan bien**. En un problema fácil, los vectores de soporte son un puñado.
+
 ### Ventajas y desventajas
 
 **A favor:** funciona muy bien con fronteras complejas gracias a los kernels; es eficaz incluso con más variables que muestras; y al depender solo de los vectores de soporte, es robusto.
@@ -2146,12 +2357,193 @@ params_grid = [{'kernel': ['rbf'],    'gamma': [1e-3, 1e-4], 'C': [0.1, 1, 10, 1
 | ¿Interpretable? | **Sí** | Más o menos | No | No |
 | ¿Necesita escalar? | No | No (Gaussian) | **Sí** | **Sí** |
 | Velocidad al entrenar | Rápido | **Muy rápido** | Instantáneo | Lento |
-| Velocidad al predecir | Rápido | Rápido | **Lento** | Rápido |
+| Velocidad al predecir | Rápido | Rápido | **Lento** | Depende: rápido si hay pocos vectores de soporte, **lento** si hay muchos |
 | Hiperparámetros clave | profundidad, hojas | `alpha` | k, métrica | kernel, C, gamma |
 
 ---
 
-## 28. Preguntas típicas de parcial
+## 28. Modelos de ensamble: bagging, Random Forest y boosting
+
+> Es toda la unidad 6. En el TP3 usamos Random Forest.
+
+### La idea: muchos modelos mediocres deciden mejor que uno bueno
+
+Un **ensamble** combina las decisiones de varios modelos para dar una sola respuesta. En clasificación, lo más común es que cada modelo vote y gane la clase más votada.
+
+**Metáfora:** un solo médico puede equivocarse en un diagnóstico difícil. Si se consulta a cien médicos y se toma la opinión mayoritaria, los errores individuales se compensan, siempre que **no se equivoquen todos de la misma manera**.
+
+Esa última condición es la clave de todo lo que viene: el ensamble sirve si sus modelos son **distintos entre sí**. Cien médicos que estudiaron del mismo apunte se equivocan juntos y promediarlos no aporta nada. Por eso todas las técnicas de ensamble son, en el fondo, formas de **fabricar diferencias** entre los modelos base.
+
+### Qué problema resuelve: la varianza del árbol
+
+Un árbol de decisión sin podar tiene **sesgo bajo y varianza alta**:
+
+- **Sesgo bajo:** puede aprender cualquier frontera, por complicada que sea.
+- **Varianza alta:** si se cambian unas pocas filas del entrenamiento, el árbol que sale es otro. Un corte distinto arriba cambia todo lo que cuelga abajo.
+
+Promediar muchos árboles **no toca el sesgo pero baja la varianza**: los caprichos de cada árbol se cancelan entre sí y queda lo que todos tienen en común, que es la señal real.
+
+Por eso los árboles profundos son el modelo base ideal para estas técnicas: hay mucha varianza para bajar.
+
+### Dos familias
+
+| | **En paralelo** (bagging, Random Forest) | **En secuencia** (boosting) |
+|---|---|---|
+| Cómo se entrenan | Todos a la vez, cada uno por su cuenta | Uno después del otro; cada uno corrige al anterior |
+| Qué modelo base usa | Modelos **fuertes** (árboles profundos) | Modelos **débiles** (árboles de 1 o 2 niveles) |
+| Qué reduce | **Varianza** | **Sesgo** |
+| Se puede paralelizar | Sí | No, por definición |
+
+### Bootstrap: de un conjunto, muchos
+
+**Bootstrap** es muestrear **con reemplazo**: de un conjunto de N filas se sacan N filas, pero pudiendo repetir. Así, algunas filas salen dos o tres veces y otras no salen ninguna.
+
+```
+Original:   [1 2 3 4 5 6 7 8 9 10]
+
+Muestra 1:  [3 1 7 7 2 9 4 1 10 6]   ← faltan 5 y 8, se repiten 1 y 7
+Muestra 2:  [5 5 2 8 1 3 10 9 6 2]   ← falta 4 y 7, se repite 5 y 2
+```
+
+Cada muestra es **parecida pero no igual** al original, y esa es justo la diferencia que necesitan los modelos del ensamble.
+
+### Bagging
+
+*Bagging* = **B**ootstrap **agg**regat**ing**, de Leo Breiman (1996). Son tres pasos:
+
+1. **Bootstrap:** armar k muestras con reemplazo del entrenamiento.
+2. **Entrenar:** un modelo por muestra, todos del mismo tipo y sin podar.
+3. **Agregar:** votación por mayoría (clasificación) o promedio (regresión), **dando el mismo peso a todos**.
+
+```python
+modelo_bagging = BaggingClassifier(
+    estimator=DecisionTreeClassifier(random_state=SEMILLA),
+    n_estimators=100,     # cuántos árboles
+    bootstrap=True,       # cada uno con su muestra con reemplazo
+    oob_score=True,       # evaluar con lo que quedó afuera
+    random_state=SEMILLA)
+```
+
+**A favor:** simple, efectivo y baja la varianza. **En contra:** se pierde la interpretabilidad (ya no hay un árbol para mostrar) y hay que entrenar k modelos en vez de uno.
+
+### Las muestras OOB y el error OOB
+
+*Out of bag* = "fuera de la bolsa": las filas que **no** entraron en la muestra bootstrap de un árbol.
+
+¿Cuántas son? Cada vez que se saca una fila, la probabilidad de **no** elegir una en particular es (1 − 1/N). Repitiendo N veces, la probabilidad de que nunca salga es (1 − 1/N)^N, que tiende a 1/e ≈ **0.368**. O sea que **cada árbol deja afuera alrededor del 37 % de los datos**, un poco más de un tercio.
+
+Esas filas son, para ese árbol, datos que nunca vio: sirven de test gratis. El **error OOB** evalúa cada fila con los árboles que no la usaron, y da una estimación del rendimiento **sin apartar un conjunto de test ni hacer validación cruzada**.
+
+```python
+modelo.oob_score_    # exactitud estimada con las muestras OOB
+```
+
+⚠️ **Errata del notebook de clase** (celda 16 de `U6_Ensambles.ipynb`): dice que la probabilidad "tiende a 0.36%". Es **36 %**, no 0.36 %. La filmina 17 lo dice bien: "un tercio de los datos no se usan para el entrenamiento".
+
+### Random Forest
+
+Bagging tiene un punto flojo: si una variable es muy dominante, **todos los árboles la eligen para el primer corte** y terminan pareciéndose mucho. Los modelos no son tan distintos como uno creía, y el ensamble rinde menos de lo que podría.
+
+Random Forest (Breiman, 2001) agrega una **segunda fuente de azar**: en cada nodo, el árbol no puede mirar todas las variables, sino **un subconjunto elegido al azar**.
+
+```
+Bagging:        cada nodo evalúa las 16 variables
+Random Forest:  cada nodo evalúa 4 variables al azar (√16)
+```
+
+Así, un árbol al que no le tocó la variable dominante en el primer nodo se ve obligado a cortar por otra, y descubre estructura distinta. Los árboles quedan **descorrelacionados**, que es exactamente lo que el ensamble necesita.
+
+El parámetro es `max_features` (en la bibliografía de R se llama **mtry**). El valor habitual en clasificación es `'sqrt'`: la raíz cuadrada de la cantidad de variables.
+
+### Los hiperparámetros de Random Forest
+
+| Parámetro | Qué controla | Cómo se comporta |
+|---|---|---|
+| `n_estimators` (ntree) | Cuántos árboles | **Más es mejor, hasta que deja de mejorar.** No produce sobreajuste: solo cuesta tiempo. Se busca el punto en que el error se estabiliza |
+| `max_depth` | Profundidad de cada árbol | Limitarla previene sobreajuste, pero en un ensamble suele convenir dejarlos crecer: la varianza ya la controla el promedio |
+| `max_features` (mtry) | Variables candidatas por nodo | Menos variables = árboles más distintos entre sí, pero cada uno más débil |
+| `bootstrap`, `oob_score` | Muestreo con reemplazo y evaluación OOB | |
+
+Notar la diferencia con un árbol suelto: ahí `max_depth` era la defensa principal contra el sobreajuste. En el bosque, **más árboles nunca empeora**, y eso es lo que lo hace fácil de ajustar.
+
+*Lo que nos dio en el TP3.* La grilla de 4 × 4 deja ver de un vistazo cuál de los dos parámetros importa:
+
+| max_depth \ n_estimators | 50 | 100 | 200 | 500 |
+|---|---|---|---|---|
+| **5** | 0.6385 | 0.6426 | 0.6447 | 0.6456 |
+| **10** | 0.8394 | 0.8417 | 0.8422 | 0.8431 |
+| **20** | 0.9106 | 0.9125 | 0.9138 | 0.9141 |
+| **None** | 0.9137 | 0.9149 | 0.9155 | **0.9167** |
+
+- **Bajando (más profundidad) la exactitud se mueve muchísimo**: de 0.64 a 0.92.
+- **Hacia la derecha (más árboles) casi no se mueve**: unos 0.003 en cada fila, aunque la cantidad se multiplique por diez.
+- Los saltos entre filas se achican: 5 → 10 son 0.20 puntos, 10 → 20 son 0.07, y 20 → sin límite solo 0.0026. **Los árboles dejan de crecer solos antes de que el límite los corte**, así que subir más el límite ya no cambia nada.
+
+La moraleja práctica, que es muy preguntable: **si hay poco tiempo, conviene gastarlo en dejar crecer los árboles antes que en poner más**. Los 50 primeros árboles traen casi todo el resultado; los 450 siguientes agregan 0.003 y multiplican por dieciséis el tiempo de entrenamiento.
+
+Y una advertencia sobre la grilla: `max_depth = 5` con diez clases da como mucho 2⁵ = 32 hojas por árbol. No alcanza, y por eso esa fila queda incluso por debajo de un SVM lineal. Al armar una grilla conviene mirar si los valores tienen sentido para la cantidad de clases del problema.
+
+### La importancia de las variables
+
+`feature_importances_` da un número por variable, y los números suman 1. Mide **cuánto bajó la impureza** gracias a los cortes hechos por esa variable, sumado sobre todos los nodos de todos los árboles y pesado por cuántas muestras pasaron por cada nodo.
+
+```python
+features_df = pd.DataFrame({"features": X.columns,
+                            "importances": modelo.feature_importances_})
+sns.barplot(data=features_df.sort_values("importances", ascending=False),
+            x="importances", y="features")
+```
+
+Es la única ventana interpretable del bosque: no se puede dibujar "el" árbol, pero sí se puede decir **qué variables lo sostienen**. En el TP2, `RyD_Spend` se llevaba el 98.9 % de la importancia y las tres columnas de `State` quedaban en 0.
+
+*Los dos casos extremos, para comparar.* En el TP2 una sola variable se llevaba casi todo; en el TP3, las 16 se reparten entre 0.1172 (`temp_min_mensual`) y 0.0283 (`N`), o sea entre el 12 % y el 3 %. **Ninguna domina y el modelo necesita todas.**
+
+Lo interesante del TP3 es que el orden parte el problema en dos de forma perfecta: los ocho primeros puestos son las siete variables de clima más `elevacion`, y los ocho últimos son las ocho de suelo, sin una sola mezcla. El clima decide qué cultivo va en cada lugar bastante más que la química del suelo.
+
+⚠️ **Lo que no dice:** la importancia no indica si la relación es positiva o negativa, ni para qué clase sirve la variable. Y tiende a favorecer a las variables continuas o con muchos valores distintos, porque ofrecen más cortes posibles.
+
+### Boosting
+
+Boosting le da vuelta la idea. En vez de muchos modelos fuertes e independientes, usa **modelos débiles encadenados**: cada uno se entrena prestando más atención a los casos que el anterior clasificó mal.
+
+```
+Modelo 1 → se equivoca en estos casos → Modelo 2 les da más peso
+        → sigue fallando en estos      → Modelo 3 les da más peso → ...
+Predicción final: voto ponderado, donde pesa más el que anduvo mejor
+```
+
+| Variante | Cómo corrige |
+|---|---|
+| **AdaBoost** (Freund y Schapire) | Sube el peso de las muestras mal clasificadas en cada ronda |
+| **Gradient Boosting** | El modelo nuevo se entrena sobre el **error residual** del anterior |
+| **XGBoost** | Gradient boosting optimizado, con regularización. El más usado en competencias |
+
+**A favor:** suele dar la mejor precisión de todos. **En contra:** es **sensible al ruido y a los atípicos**, porque insiste justamente en los casos difíciles, que muchas veces son errores de carga; no se puede paralelizar; y tiene más hiperparámetros que ajustar.
+
+### Stacking
+
+En lugar de votar, se entrena **un modelo que aprende a combinar** las salidas de los modelos base (el *meta-clasificador*). Los modelos base pueden ser de tipos distintos: un árbol, un SVM y un k-NN, por ejemplo, y el meta-modelo aprende a cuál conviene hacerle caso en cada situación.
+
+### Las tres, comparadas
+
+| | **Bagging** | **Random Forest** | **Boosting** |
+|---|---|---|---|
+| Muestreo de filas | Bootstrap | Bootstrap | Pesos que cambian por ronda |
+| Muestreo de variables | Todas | **Subconjunto al azar por nodo** | Todas |
+| Entrenamiento | Paralelo | Paralelo | Secuencial |
+| Agregación | Voto mayoritario | Voto mayoritario | Voto **ponderado** |
+| Qué reduce | Varianza | Varianza | **Sesgo** |
+| Modelo base | Fuerte (árbol profundo) | Fuerte (árbol profundo) | Débil (árbol de 1-2 niveles) |
+
+### Ventajas y desventajas de los ensambles
+
+**A favor:** son de los métodos más precisos que hay; son robustos (si un modelo falla, los demás compensan); manejan muchas variables sin tener que elegirlas de antemano; y Random Forest estima el error sin necesidad de apartar datos, gracias al OOB.
+
+**En contra:** cuestan mucho más tiempo y memoria que un modelo solo, y **se pierde la interpretabilidad**. Es el intercambio central de la unidad 6: se cambia poder explicativo por precisión.
+
+---
+
+## 29. Preguntas típicas de parcial
 
 **¿Por qué hay que estandarizar antes de PCA o de un clustering?**
 Porque trabajan con varianzas y distancias. Sin estandarizar, la variable con los números más grandes domina el resultado solo por su unidad de medida.
@@ -2323,7 +2715,7 @@ La mediana, si hay asimetría o valores extremos, porque no se deja arrastrar po
 
 ---
 
-## 29. Lo que nos corrigió el profesor en el TP1
+## 30. Lo que nos corrigió el profesor en el TP1
 
 El TP1 se aprobó con **7**. La devolución llegó el 16/10/2026, con el trabajo ya entregado, así que el notebook no se modificó: lo que sigue es para no repetirlo en el TP2 ni en el parcial.
 
@@ -2341,11 +2733,11 @@ El TP1 se aprobó con **7**. La devolución llegó el 16/10/2026, con el trabajo
 
 ---
 
-## 30. Temas que todavía no vimos
+## 31. Temas que todavía no vimos
 
-**Todos los temas de los TPs y de las unidades 1 a 5 ya están explicados en este apunte.**
+**Todos los temas de los TPs y de las unidades 1 a 6 ya están explicados en este apunte.**
 
-Quedan afuera algunos métodos que aparecen mencionados en los notebooks de clase pero que no se desarrollaron ni en los trabajos prácticos ni en las filminas con profundidad:
+Quedan afuera algunos métodos que aparecen mencionados en los notebooks o las filminas de clase pero que no se desarrollaron ni en los trabajos prácticos ni en las filminas con profundidad:
 
 | Método | Dónde aparece | Qué es, en una línea |
 |---|---|---|
@@ -2353,12 +2745,15 @@ Quedan afuera algunos métodos que aparecen mencionados en los notebooks de clas
 | **UMAP** | U2 | Alternativa a t-SNE, más rápida y que conserva mejor la estructura global |
 | **DBSCAN** | U3 | Clustering por densidad: no hay que fijar k y detecta ruido |
 | **HDBSCAN** | U3 | Versión jerárquica de DBSCAN |
+| **Kernel polinomial y sigmoideo** | U5 | Otros kernels de SVM; el notebook de vinos los prueba, el TP3 solo pide lineal y rbf |
+| **AdaBoost, Gradient Boosting, XGBoost** | U6 | Variantes de boosting; están explicadas en la sección 28 pero no se usaron en ningún TP |
+| **Stacking** | U6 | Un modelo que aprende a combinar las salidas de otros; misma situación |
 
 Si alguno entra en el parcial, se agregan con el mismo nivel de detalle.
 
 ---
 
-## 31. Resumen de una carilla
+## 32. Resumen de una carilla
 
 Para repasar el día antes. Todo lo de acá está explicado en detalle en las secciones anteriores.
 

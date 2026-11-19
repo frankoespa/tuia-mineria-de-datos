@@ -213,6 +213,114 @@ Enunciado: `tp2/TP2.pdf`. Entrega: `tp2/tp2_mineria_renna_esparza.ipynb`, un sol
 
 Igual que el del TP1, con `PYTHONUTF8=1` obligatorio. Tarda unos 15 segundos.
 
+## TP3 (unidades 5 y 6)
+
+Enunciado: `tp3/TP3.pdf`. Entrega: `tp3/tp3_mineria_renna_esparza.ipynb`, un solo archivo. Datos: `tp3/crop_recommendation/crop_recommendation_geo.csv`.
+
+Clasificación multiclase de 10 cultivos (`clase`) a partir de 16 variables de suelo y clima. Cinco actividades: (1) EDA, limpieza y estandarización; (2) SVM lineal variando `C`; (3) SVM RBF variando `C` y `gamma`; (4) Random Forest variando `n_estimators` y `max_depth`; (5) comparación de los tres con matrices de confusión.
+
+**`random_state=13` en todo** (constante `SEMILLA`). Métricas: Precision y Recall **weighted** (no macro como en el TP2), Accuracy, media ± desvío de los 5 folds. Máximo 3-4 gráficos por actividad.
+
+### Particularidades del CSV
+
+- **Separador `;` y coma decimal**: `pd.read_csv(..., sep=";", decimal=",")`. Sin `decimal=","` las 16 columnas quedan como texto.
+- 50.004 filas × 17 columnas. El enunciado dice 50.005 porque cuenta la cabecera.
+- La objetivo se llama **`clase`** en minúscula. El enunciado escribe `temp_mim_mensual`, pero la columna es **`temp_min_mensual`**.
+- **El archivo viene agrupado por clase**: las primeras 5.001 filas son `arroz`, las siguientes 5.000 `maiz`, y así. Por eso `shuffle=True` en el `StratifiedKFold` no es opcional.
+- Problemas intencionales: **1 fila** con `ph`, `cec` y `humedad` vacíos (índice 25085); **198 duplicados** exactos (218 filas de `lenteja` y 110 de `manzana` entre las involucradas); **2 filas imposibles** (25111 con `ph` 25.317; 30012 con `ph` 18.017, `arcilla` 142.383 y `humedad` 148.141, que además tiene los máximos de `temperatura` y `temp_max_mensual` y el mínimo de `radiacion_solar`).
+- Tras la limpieza quedan **49.803 filas**. El balance pasa de ~5.000 por clase a ir de `lenteja` 4.891 (9.82 %) a `banana`/`cafe`/`coco` 5.000 (10.04 %): el leve desbalance del que habla el enunciado lo crea la limpieza.
+
+### Decisiones de los autores
+
+| Problema | Decisión | Justificación |
+|---|---|---|
+| Fila 25085 con 3 faltantes | **Eliminarla** | Le faltan 3 de 16 variables: imputarlas sería inventar la muestra |
+| 198 duplicados | **`drop_duplicates()`** | Coinciden las 17 columnas con decimales; en validación cruzada el modelo se evaluaría con filas que ya vio |
+| 2 filas con valores imposibles | **Eliminarlas** | Fuera del rango físico de la variable; la 30012 está rota entera |
+| Atípicos IQR (3.645 en `soc`, 3.485 en `P`, 2.821 en `elevacion`, 2.165 en `cec`) | **Conservarlos** | La Figura 3 muestra que están concentrados por cultivo: son lo que los distingue |
+| Tamaño del conjunto para los SVM | **Todo el conjunto limpio** | Lo pide el enunciado, aunque cueste ~3 h de ejecución |
+| `C` del SVM lineal | **1**, no 100 | C = 1, 10 y 100 difieren en menos que el desvío entre folds; C = 1 tarda 16 veces menos |
+| `C` y `gamma` del RBF | **100 y 0.1**, no el máximo de la grilla | El máximo (C=10, gamma=1, 0.8864) está a 0.0014 del elegido (0.8850), menos que el desvío; el elegido tiene **la mitad de desvío** (0.0018) y tarda menos |
+| Random Forest | **500 árboles, `max_depth=None`** (el máximo) | A diferencia del RBF, ninguna combinación empeora al subir los parámetros, así que el mejor valor está en el borde de la grilla |
+| Modelo final | **Random Forest** | Gana en las tres métricas por 0.0317 sobre el RBF, casi 10 × el desvío entre folds |
+
+### Lo que impone la teoría (`tp3/teoria/`)
+
+| Archivo | Qué aporta |
+|---|---|
+| `Unidad 5/Mineria_Datos_U5.pdf` | SVM en las págs. 32-75: margen, `C` (59), **costo computacional (60)**, kernels (53-56), **multiclase one-versus-one (61-64)**, ventajas y desventajas (65-66) |
+| `Unidad 5/U5_SVMClassifier_wine.ipynb` | `SVC`, `GridSearchCV` con grilla de kernels, `StandardScaler().set_output(transform="pandas")`, `ConfusionMatrixDisplay.from_predictions`, histogramas en grilla (celda 21), heatmap de correlación (celda 18) |
+| `Unidad 5/U5_KNNClassifier.ipynb` | Ya usa `random_state=13` con `stratify=y`; boxplots en grilla (celda 27); `Winsorizer` (celda 28), que acá **no** se aplica |
+| `Unidad 5/Práctica-20261116/Unidad5.py` | `np.logspace` para la grilla de `C`, `GridSearchCV` con `n_jobs`, y **`pd.DataFrame(grid.cv_results_).filter(regex='(param.*|mean_t|std_t)')`**, que es la tabla de media y desvío que pide el enunciado. Usa `mlxtend`, que no está instalado |
+| `Unidad 6/Mineria_Datos_U6.pdf` | Ensambles: bagging (8-12), Random Forest (13-20) con OOB (17-18) y `ntree`/`mtry` (19), boosting (26-30), stacking (31-32) |
+| `Unidad 6/U6_Ensambles.ipynb` | `RandomForestClassifier`, `BaggingClassifier`, `feature_importances_` con `sns.barplot` (celda 32), `SEMILLA` como constante |
+| `Unidad 6/Practica-20261116/Unidad6.py` | `RandomizedSearchCV`, `precision_score`/`recall_score`. Usa `graphviz`, que no está instalado |
+
+**Erratas del material de clase que no hay que copiar:**
+- `U5_SVMClassifier_wine.ipynb` celda 56: dice que sklearn usa one-versus-rest por defecto. **Es one-versus-one** (filminas 61-64): con 10 clases son 45 clasificadores.
+- `U6_Ensambles.ipynb` celda 16: dice que la probabilidad de quedar fuera de la bolsa "tiende a 0.36%". Es **36 %** (1/e ≈ 0.368), como dice la filmina 17.
+
+**Tensión con la U4:** la filmina 70 de la U4 pide estandarizar **después** de separar train/test. El enunciado del TP3 pide estandarizar en la actividad 1 y recién después validar de forma cruzada sobre todo el conjunto, así que el escalador ve los 5 folds. Se hace como pide el enunciado; la diferencia está explicada en `RepasoParcial.md`, no en el notebook.
+
+### Convenciones propias del TP3
+
+- Prefijos de celda: `cab-`, `conf-`, `imp-` como siempre, y después `a1-` a `a5-` (una por actividad del enunciado) y `conc-01`.
+- **Figuras y tablas se numeran desde 1**, independientes del TP1 y del TP2. El notebook llega a la **Figura 8** y la **Tabla 13**.
+- El kernel arranca en `tp3/`, así que el CSV se lee con ruta relativa `crop_recommendation/...`.
+- Variables que se arrastran: `cultivos` (limpio, 49.803 filas), `predictoras` (las 16), `X`, `y` (codificada), `X_std`, `codificador`, `cv`, `metricas`, y `resultados_lineal` / `resultados_rbf` / `resultados_bosque`.
+- **`NUCLEOS` en la celda `imp-01`**: los núcleos que usan las tres búsquedas (`n_jobs=NUCLEOS`). No cambia ningún resultado, solo el tiempo. Está en 8 para la máquina de Renna (8 núcleos, 32 GB); en la de Esparza (4 núcleos) hay que ponerle 4.
+- Se usa `refit=False` en los tres `GridSearchCV`: con varias métricas hay que indicarlo, y el reajuste final sería carísimo (con `C=100` son ~30 min). Los modelos elegidos se instancian a mano en la actividad 5.
+
+### Resultados
+
+| Modelo | Configuración elegida | Exactitud (5 folds) | Ajuste | Predicción |
+|---|---|---|---|---|
+| SVM lineal | `C = 1` | 0.6219 ± 0.0048 | 177 s | 30 s |
+| SVM RBF | `C = 100, gamma = 0.1` | 0.8850 ± 0.0018 | 49 s | 30 s |
+| **Random Forest** | **500 árboles, `max_depth=None`** | **0.9167 ± 0.0036** | 329 s | 3 s |
+
+- **SVM lineal:** 0.6048 / 0.6178 / 0.6219 / 0.6229 / 0.6230 para C = 0.01 / 0.1 / 1 / 10 / 100. La curva se aplana en C = 1.
+- **SVM RBF:** la grilla crece en diagonal, de 0.5183 (C=0.1, gamma=0.001) a 0.8864 (C=10, gamma=1). **Único punto donde subir un parámetro empeora:** con gamma=1, C=100 da 0.8805 contra 0.8864 de C=10.
+- **Random Forest:** `max_depth` manda y `n_estimators` casi no mueve nada. Por profundidad: 0.6456 (5), 0.8431 (10), 0.9141 (20), 0.9167 (None). Dentro de cada fila, multiplicar por diez los árboles suma ~0.003. Con 50 árboles ya se llega a 0.9137.
+- **Importancias (Figura 7):** los 8 primeros puestos son las 7 variables de clima más `elevacion` (de 0.1172 a 0.0715) y los 8 últimos las 8 de suelo (de 0.0439 a 0.0283). Ninguna domina.
+- **Partición 80/20 (Figura 8):** exactitud 0.6204 / 0.8850 / 0.9165, consistente con la validación cruzada. **`maiz` es la peor clase en los tres modelos** (421 / 727 / 790 aciertos de 1.000) y `lenteja`, `coco` y `manzana` las mejores. El SVM lineal confunde `banana` con `cafe` en las dos direcciones (219 y 162); en el bosque esas casillas bajan a 28 y 23.
+- La exhaustividad weighted **coincide exactamente con la exactitud** en todas las tablas: es una identidad matemática, explicada en `RepasoParcial.md`.
+
+### Estado
+
+| Actividad | Contenido | Estado |
+|---|---|---|
+| 1 | EDA (Tablas 1-3, Figuras 1-2), limpieza (Tablas 4-7, Figura 3), codificación y estandarización (Tablas 8-9) | Hecho |
+| 2 | SVM lineal: Tabla 10 y Figura 4 | Hecho |
+| 3 | SVM RBF: Tabla 11 y heatmap de la Figura 5 | Hecho |
+| 4 | Random Forest: Tabla 12, Figura 6 y importancias en la Figura 7 | Hecho |
+| 5 | Comparación: Tabla 13 y matrices de confusión de la Figura 8 | Hecho |
+| — | Conclusiones (`conc-01`) | Hecho |
+
+**El TP3 está completo en contenido.** Falta la ejecución final del notebook.
+
+### Ejecutar el notebook del TP3
+
+Igual que los anteriores, con `PYTHONUTF8=1` obligatorio, pero **tarda alrededor de 3 horas con 4 núcleos** (97 min la actividad 2, 44 la 3, 32 la 4). Por eso las celdas pesadas se desarrollaron con scripts aparte y el notebook se ejecuta entero una sola vez, al final:
+
+```powershell
+$env:PYTHONUTF8 = "1"; .entorno\Scripts\jupyter-execute.exe tp3\tp3_mineria_renna_esparza.ipynb --inplace
+```
+
+Lo que domina el tiempo es `C=100` en la actividad 2: **47 de los 97 minutos**. En un SVM el costo crece con el cuadrado de las filas (filmina 60 de la U5), y acá cada ajuste entrena con 39.842.
+
+**Prueba de humo antes de una corrida larga:** ejecutar el código real de todas las celdas sobre una muestra chica (`cultivos.groupby("clase").head(200)`) detecta errores en segundos en vez de después de 3 horas. Es lo que validó los filtros de la Tabla 13, sobre todo `param_max_depth.isna()` para encontrar el `None`.
+
+### Cuidado al generar celdas por script
+
+Un `.ipynb` guarda el contenido de cada celda como una lista de líneas, y **cada línea tiene que terminar en `\n`**. Partir el texto con `split("\n")` saca esos saltos y Jupyter pega todo en un solo párrafo (pasó con la cabecera del TP3). El helper correcto:
+
+```python
+def lines(src):
+    p = src.split("\n")
+    return [x + "\n" for x in p[:-1]] + [p[-1]]
+```
+
 ## Estado del TP1
 
 ### Consigna 1: análisis exploratorio, limpieza y estandarización (terminada)
