@@ -283,7 +283,9 @@ Clasificación multiclase de 10 cultivos (`clase`) a partir de 16 variables de s
 - **SVM RBF:** la grilla crece en diagonal, de 0.5183 (C=0.1, gamma=0.001) a 0.8864 (C=10, gamma=1). **Único punto donde subir un parámetro empeora:** con gamma=1, C=100 da 0.8805 contra 0.8864 de C=10.
 - **Random Forest:** `max_depth` manda y `n_estimators` casi no mueve nada. Por profundidad: 0.6456 (5), 0.8431 (10), 0.9141 (20), 0.9167 (None). Dentro de cada fila, multiplicar por diez los árboles suma ~0.003. Con 50 árboles ya se llega a 0.9137.
 - **Importancias (Figura 7):** los 8 primeros puestos son las 7 variables de clima más `elevacion` (de 0.1172 a 0.0715) y los 8 últimos las 8 de suelo (de 0.0439 a 0.0283). Ninguna domina.
-- **Partición 80/20 (Figura 8):** exactitud 0.6204 / 0.8850 / 0.9165, consistente con la validación cruzada. **`maiz` es la peor clase en los tres modelos** (421 / 727 / 790 aciertos de 1.000) y `lenteja`, `coco` y `manzana` las mejores. El SVM lineal confunde `banana` con `cafe` en las dos direcciones (219 y 162); en el bosque esas casillas bajan a 28 y 23.
+- **Partición 80/20 (Figura 8):** exactitud 0.6204 / 0.8850 / 0.9165, consistente con la validación cruzada. **`maiz` es la peor clase en los tres modelos** (421 / 727 / 790 aciertos de 999). **Las mejores no coinciden:** en el RBF `manzana` 957, `lenteja` 945, `coco` 923; en el bosque `coco` 963, `manzana` 958, `lenteja` 955; en el lineal `lenteja` 864 y `coco` 837, con `manzana` en el medio (608). El SVM lineal confunde `banana` con `cafe` en las dos direcciones (219 y 162) y manda 190 `cafe` y 172 `banana` a `coco`; en el bosque esas casillas bajan a 28, 23, 14 y 15. En el bosque `maiz` aporta 209 de los 832 errores (25 %), no la mayoría.
+- **Importancias:** el orden es `temp_min_mensual`, `temp_max_mensual`, `radiacion_solar`, `lluvia`, `humedad`, `temperatura` (sexta), `estacionalidad_lluvias`, `elevacion` y después las 8 de suelo.
+- **Redacción revisada (19/11/2026):** a pedido de los autores, la celda `a1-14` (correlaciones) **no se toca**: los valores del texto son los que ellos leen en la Figura 2. En las matrices no citar totales por clase (999, 978), porque no se leen en la figura; solo los aciertos de la diagonal. Las diferencias entre modelos se llaman "diferencia de exactitud", no "distancia".
 - La exhaustividad weighted **coincide exactamente con la exactitud** en todas las tablas: es una identidad matemática, explicada en `RepasoParcial.md`.
 
 ### Estado
@@ -297,7 +299,7 @@ Clasificación multiclase de 10 cultivos (`clase`) a partir de 16 variables de s
 | 5 | Comparación: Tabla 13 y matrices de confusión de la Figura 8 | Hecho |
 | — | Conclusiones (`conc-01`) | Hecho |
 
-**El TP3 está completo en contenido.** Falta la ejecución final del notebook.
+**El TP3 está completo y ejecutado.** La corrida completa en la máquina de Renna (8 núcleos) tarda unos 25 minutos.
 
 ### Ejecutar el notebook del TP3
 
