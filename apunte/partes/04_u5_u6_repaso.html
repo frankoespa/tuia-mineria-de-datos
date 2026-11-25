@@ -367,6 +367,8 @@
 <li><b>Alta / baja dimensión:</b> UMAP y t-SNE preservan la estructura del espacio de <b>alta</b> dimensión en el de baja.</li>
 <li><b>Geodésica / euclídea:</b> ISOMAP preserva distancias geodésicas; usa las euclídeas solo para armar el grafo de vecinos.</li>
 <li><b>Lineal / no lineal:</b> PCA y LDA son lineales; ISOMAP, t-SNE y UMAP no.</li>
+<li><b>LDA es supervisado</b> (usa la etiqueta de clase), aunque la filmina lo mencione en la unidad de no supervisado. PCA no usa la etiqueta.</li>
+<li><b>Local / global:</b> t-SNE conserva lo local (no se leen distancias ni tamaños entre grupos); PCA e ISOMAP, lo global; UMAP, las dos.</li>
 <li><b>Sesgo / varianza:</b> subajuste = alto sesgo; sobreajuste = alta varianza. Bagging reduce varianza; boosting, sesgo.</li>
 <li><b>Precisión / exhaustividad:</b> precisión = de lo que dije positivo, cuánto lo era; exhaustividad = de lo positivo, cuánto encontré.</li>
 <li><b>Aglomerativo / divisivo:</b> bottom-up y top-down. Los dos tipos de jerárquico son estos, no "K-means y K-medoids".</li>
@@ -386,9 +388,11 @@
 <tr><td><b>Dendrograma</b></td><td>Diagrama del árbol de una agrupación jerárquica.</td></tr>
 <tr><td><b>Distancia geodésica</b></td><td>Camino más corto sobre la variedad (aproximado por el grafo de vecinos).</td></tr>
 <tr><td><b>Entropía</b></td><td>Medida de impureza o incertidumbre de un nodo.</td></tr>
+<tr><td><b>Estructura local / global</b></td><td>Local: que los vecinos sigan siendo vecinos. Global: la ubicación, distancia y tamaño relativo de los grupos.</td></tr>
 <tr><td><b>Gini</b></td><td>Impureza de un nodo; 0 = puro.</td></tr>
 <tr><td><b>Hiperparámetro</b></td><td>Valor que se fija antes de entrenar (k, C, max_depth), a diferencia de los parámetros que aprende el modelo.</td></tr>
 <tr><td><b>Kernel</b></td><td>Función de similitud que permite separar linealmente en un espacio de mayor dimensión.</td></tr>
+<tr><td><b>LDA</b></td><td>Análisis discriminante lineal: reducción lineal y <b>supervisada</b> que busca la dirección que mejor separa las clases.</td></tr>
 <tr><td><b>Manifold (variedad)</b></td><td>Estructura de menor dimensión que localmente se parece a un hiperplano.</td></tr>
 <tr><td><b>Out-of-bag</b></td><td>Observaciones que no entraron en una muestra bootstrap (≈ 36.8%).</td></tr>
 <tr><td><b>Perplejidad</b></td><td>Número efectivo de vecinos en t-SNE (5–50).</td></tr>
