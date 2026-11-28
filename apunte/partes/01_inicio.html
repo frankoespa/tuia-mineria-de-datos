@@ -68,6 +68,10 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 9pt; backgrou
 .resp td:nth-child(2) { width: 34pt; font-weight: bold; color: var(--acc); }
 .grilla { font-size: 9.5pt; }
 .grilla td { text-align: center; width: 9%; height: 14pt; }
+/* Ejercicios de desarrollo */
+figure.mpl svg { max-width: 100%; height: auto; }
+ol.sub { list-style: none; padding-left: 8pt; }
+ol.sub li { margin-bottom: 3pt; }
 </style>
 </head>
 <body>
@@ -75,10 +79,10 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 9pt; backgrou
 <section class="portada">
   <div class="inst">Tecnicatura Universitaria en Inteligencia Artificial · FCEIA · UNR</div>
   <div class="tit">Minería de Datos</div>
-  <div class="sub">Apunte integral de teoría, unidades 1 a 6,<br>con guía de preguntas típicas y simulacros de examen</div>
+  <div class="sub">Apunte integral de teoría, unidades 1 a 6,<br>con el examen final resuelto, ejercicios de desarrollo y simulacros</div>
   <div class="linea"></div>
   <div class="meta">
-    Preparado para el examen integrador del 27 de noviembre de 2026<br>
+    Preparado para el examen integrador del 27 de noviembre de 2026 y su recuperatorio<br>
     Basado en las filminas del Prof. Flavio E. Spetale, los notebooks de clase y el parcial de ejemplo del 01/12/2023<br>
     Franco Renna · Franco Esparza
   </div>
@@ -87,18 +91,17 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 9pt; backgrou
 <section class="unidad">
 <h1>Cómo usar este apunte</h1>
 
-<div class="abstract"><b>Resumen.</b> Este documento reúne la totalidad de los contenidos teóricos de la materia: introducción y preparación de datos (U1), reducción de la dimensionalidad (U2), aprendizaje no supervisado y clustering (U3), árboles de decisión, métricas y validación (U4), clasificadores supervisados Bayes Ingenuo, k-NN y SVM (U5) y modelos de ensamble (U6). Cada unidad prioriza la comprensión conceptual de cómo y por qué funciona cada método, porque el examen integrador es de opción múltiple y pregunta por conceptos, no por demostraciones. Las fórmulas aparecen solo cuando ayudan a entender, y los métodos más difíciles van acompañados de figuras y de analogías con la vida cotidiana. Al final hay un parcial real resuelto y dos simulacros nuevos, con las respuestas y su justificación en hojas separadas.</div>
+<div class="abstract"><b>Resumen.</b> Este documento reúne la totalidad de los contenidos teóricos de la materia: introducción y preparación de datos (U1), reducción de la dimensionalidad (U2), aprendizaje no supervisado y clustering (U3), árboles de decisión, métricas y validación (U4), clasificadores supervisados Bayes Ingenuo, k-NN y SVM (U5) y modelos de ensamble (U6). Cada unidad prioriza la comprensión conceptual de cómo y por qué funciona cada método, porque el examen integrador pide interpretar gráficos y justificar decisiones con la teoría, no demostraciones. Las fórmulas aparecen solo cuando ayudan a entender, y los métodos más difíciles van acompañados de figuras y de analogías con la vida cotidiana. Al final está el examen del 27/11/2026 resuelto, dos prácticas de desarrollo en su mismo formato con los temas que no se evaluaron, y los simulacros de opción múltiple del formato anterior, con las respuestas en hojas separadas.</div>
 
 <h2>Qué tipo de examen es</h2>
-<p>El parcial de ejemplo (01/12/2023) tiene 20 preguntas de opción múltiple, más o menos tres por unidad. Revisándolo aparecen cinco patrones que se repiten:</p>
+<p>El examen integrador del <b>27/11/2026</b> fue de <b>desarrollo</b>: cuatro ejercicios que suman 10 puntos, cada uno con una situación concreta (en la mayoría, con una figura) y tres preguntas. Está resuelto en el capítulo 8. Las preguntas fueron de cuatro tipos:</p>
 <ol>
-  <li><b>Definición directa:</b> "¿Qué es un dendrograma?", "¿Qué mide el índice de Gini?". La respuesta correcta suele ser casi textual de las filminas.</li>
-  <li><b>Pares opuestos:</b> dos opciones idénticas salvo una palabra (máxima/mínima, alta/baja dimensión, geodésica/euclídea). Hay que leer con lupa.</li>
-  <li><b>"¿Cuál NO es...?":</b> ventajas o miembros de una familia. Ejemplo: "¿cuál no es un método de ensamble?" → árboles de decisión.</li>
-  <li><b>Consecuencias:</b> "¿qué pasa si k es demasiado pequeño en K-means?", "¿cuál es el objetivo de la poda?".</li>
-  <li><b>Clasificación de métodos:</b> lineal o no lineal, perezoso o no, supervisado o no, ensamble o no.</li>
+  <li><b>Interpretar una figura:</b> "Compará los gráficos con perplexity 5 y 40", "¿Qué diferencias encontrás entre K = 3 y K = 4?". Hay que describir lo que se ve, con referencias concretas al gráfico.</li>
+  <li><b>Explicar un concepto aplicado:</b> "¿Qué mide el coeficiente de silueta?", "¿Qué valor predice el árbol en una hoja?", "¿Cómo funciona la multiclase en SVM?".</li>
+  <li><b>Decidir y justificar:</b> "¿Qué valor de K elegirías y por qué?", "¿Cuál de los dos árboles corresponde usar?".</li>
+  <li><b>Anticipar un problema y su solución:</b> "¿Qué pasaría si no se hubiera estandarizado?", "¿Qué problema aparece con clases desbalanceadas y cómo se evita?", "¿Significa un F1 de 0.92 que todas las clases andan bien?".</li>
 </ol>
-<p>Algunas preguntas admiten más de una respuesta correcta (por ejemplo, "¿cuáles técnicas son no lineales?"). En los simulacros están marcadas.</p>
+<p>El parcial de 2023, en cambio, era de 20 preguntas de opción múltiple (capítulo 10). Sus preguntas siguen sirviendo para repasar definiciones, pero para el recuperatorio conviene practicar escribiendo con los ejercicios del capítulo 9.</p>
 
 <h2>Recuadros</h2>
 <div class="box def"><p>el concepto formal, como lo define la teoría.</p></div>
@@ -108,19 +111,14 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 9pt; backgrou
 <div class="box prof"><p>observaciones que hizo el profesor al corregir nuestros TPs.</p></div>
 <div class="box analog"><p>una comparación con la vida cotidiana para entender la idea antes de la teoría.</p></div>
 
-<h2>Plan de estudio sugerido (17 al 27 de noviembre)</h2>
+<h2>Cómo preparar el recuperatorio</h2>
 <table>
-<tr><th>Día</th><th>Fecha</th><th>Contenido</th></tr>
-<tr><td>1</td><td>lun 17/11</td><td>U1 completa y repaso del examen de ejemplo (sin mirar respuestas)</td></tr>
-<tr><td>2</td><td>mar 18/11</td><td>U2: maldición de la dimensionalidad, PCA y criterios</td></tr>
-<tr><td>3</td><td>mié 19/11</td><td>U2: MDS, ISOMAP, t-SNE, UMAP y su comparación</td></tr>
-<tr><td>4</td><td>jue 20/11</td><td>U3: no supervisado, K-means, jerárquico, validación</td></tr>
-<tr><td>5</td><td>vie 21/11</td><td>U3: DBSCAN, HDBSCAN, asociación · U4: árboles e impureza</td></tr>
-<tr><td>6</td><td>sáb 22/11</td><td>U4: sesgo y varianza, poda, métricas, validación cruzada</td></tr>
-<tr><td>7</td><td>dom 23/11</td><td>U5: Bayes Ingenuo y k-NN</td></tr>
-<tr><td>8</td><td>lun 24/11</td><td>U5: SVM · U6: ensambles</td></tr>
-<tr><td>9</td><td>mar 25/11</td><td>Simulacros 2 y 3 cronometrados; repasar solo lo que se falló</td></tr>
-<tr><td>10</td><td>mié 26/11</td><td>Repaso final (capítulo 7) y examen de ejemplo otra vez</td></tr>
+<tr><th>Paso</th><th>Qué hacer</th></tr>
+<tr><td>1</td><td>Leer el capítulo 8 (el examen resuelto) y la guía para responder preguntas de desarrollo.</td></tr>
+<tr><td>2</td><td>Repasar los temas que no se evaluaron: PCA e ISOMAP (cap. 2), jerárquico y DBSCAN (cap. 3), árboles de clasificación (cap. 4), Naive Bayes y k-NN (cap. 5), ensambles (cap. 6) y preparación de datos (cap. 1).</td></tr>
+<tr><td>3</td><td>Resolver por escrito la Práctica 1 del capítulo 9, con reloj (unos 90 minutos), y recién después corregir con las respuestas.</td></tr>
+<tr><td>4</td><td>Repasar lo que salió mal y resolver la Práctica 2 y los ejercicios complementarios.</td></tr>
+<tr><td>5</td><td>Hacer los simulacros de opción múltiple (capítulo 10) para controlar definiciones, y repasar el capítulo 7.</td></tr>
 </table>
 
 <h2>Contenido</h2>
@@ -132,6 +130,8 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 9pt; backgrou
 <div><b>5. Clasificación supervisada</b><br>Bayes Ingenuo y sus variantes · Redes bayesianas · k-NN y distancias · SVM: margen, vectores de soporte, margen blando, kernels, multiclase</div>
 <div><b>6. Modelos de ensamble</b><br>Por qué combinar · Bagging y bootstrap · Out-of-bag · Random Forest · Boosting: AdaBoost, Gradient Boosting, XGBoost · Stacking</div>
 <div><b>7. Repaso transversal</b><br>Tabla comparativa de todos los métodos · Qué método necesita escalado · Glosario</div>
-<div><b>8. Simulacros</b><br>Parcial 2023 · Simulacro 2 · Simulacro 3 · Hojas de respuestas justificadas</div>
+<div><b>8. Examen final del 27/11/2026 resuelto</b><br>Cómo responder una pregunta de desarrollo · t-SNE · K-means y silueta · Árbol de regresión · SVM multiclase, validación estratificada y F1-weighted</div>
+<div><b>9. Ejercicios de desarrollo</b><br>Práctica 1: PCA, jerárquico, árbol de clasificación, k-NN y métricas · Práctica 2: ISOMAP, DBSCAN, Naive Bayes, Random Forest · Complementarios: SVM con C y gamma, árbol de regresión y métricas, preparación de datos · Respuestas</div>
+<div><b>10. Simulacros de opción múltiple</b><br>Parcial 2023 · Simulacro 2 · Simulacro 3 · Hojas de respuestas justificadas</div>
 </div>
 </section>

@@ -117,6 +117,8 @@ PDF con toda la teoría U1–U6, preguntas típicas y tres simulacros con respue
 - Usa Edge (o Chrome) sin interfaz. **Si el PDF está abierto en un visor, Windows lo bloquea**: el script lo detecta y pide cerrarlo.
 - Las figuras son SVG escritos dentro de las partes. Se numeran por unidad (`Figura 3.2`) en el `figcaption`; al insertar una, renumerar las siguientes de esa unidad.
 - Recuadros disponibles: `box def`, `clave`, `trampa`, `preg`, `prof` y `analog` (analogías con la vida cotidiana).
+- **El examen del 27/11/2026 fue de desarrollo, no de opción múltiple** (fotos en `Parciales de ejemplo/`): 4 ejercicios con figura y tres preguntas cada uno, sobre un dataset de granos (maíz, trigo, girasol, soja). Temas: t-SNE (perplexity 5/40 × max_iter 250/1000), K-means con K=3/4 y silueta, árbol de regresión y SVM RBF multiclase con 5-fold y F1-weighted. Está resuelto en el capítulo 8 (`partes/05_examen_final.html`).
+- Capítulo 9: dos prácticas de desarrollo para el recuperatorio con los temas no evaluados (PCA, jerárquico, árbol de clasificación, k-NN, ISOMAP, DBSCAN, Naive Bayes, Random Forest, SVM con C y gamma, métricas de regresión, preparación de datos), más sus respuestas. Las figuras son SVG de matplotlib (`figure class="mpl"`) generadas con datos sintéticos; las respuestas citan los números reales de esas corridas. Los simulacros de opción múltiple pasaron al capítulo 10 (`partes/06_simulacros.html`).
 
 ## Devolución del profesor sobre el TP1 (nota 7)
 

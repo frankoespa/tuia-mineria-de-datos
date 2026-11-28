@@ -107,6 +107,7 @@
 <li>Ventajas: <b>fácil de implementar y entender</b>, <b>escalable</b> a grandes conjuntos y <b>converge relativamente rápido</b>.</li>
 </ul></div>
 <div class="box preg"><p>"¿Cuál no es una ventaja de K-means?" → <b>"Garantizado para encontrar el óptimo global"</b>. "¿Qué sucede si k es demasiado pequeño?" → los grupos contienen <b>demasiados datos</b> y pueden no capturar la estructura subyacente. (Si k es demasiado grande, los grupos son demasiado específicos y se sobreajustan.)</p></div>
+<div class="box trampa"><p>Con K menor que la cantidad real de grupos, K-means une dos grupos distintos, y suele elegir los que menos aumentan la inercia: por ejemplo, un grupo <b>chico</b> con su vecino más cercano, porque pocos puntos suman poca inercia. En el examen del 27/11 (sección 8.2), con K = 3 la nube chica de arriba a la izquierda quedó unida a la nube grande del centro. Y como K-means usa distancias, <b>sin estandarizar</b> manda la variable de valores más grandes (el magnesio, en cientos de mg, frente a la humedad, en unidades de %).</p></div>
 
 <h2>3.3 Clustering jerárquico</h2>
 <p>Construye una <b>jerarquía de particiones</b>. Hay <b>dos tipos</b>, con enfoques inversos:</p>
@@ -419,6 +420,7 @@
 
 <h3>Multiclase</h3>
 <p>Se calcula precisión y exhaustividad <b>por clase</b>; el valor <b>macro</b> es el <b>promedio simple</b> de las clases, sin pesar por tamaño (las clases chicas cuentan igual). <i>Weighted</i> pondera por la cantidad de casos de cada clase. Ejemplo de clase: frutas con matriz [[28, 2, 5], [3, 30, 2], [4, 1, 25]] → precisión de manzana 28/35 ≈ 0.80, exhaustividad de banana 30/35 ≈ 0.86.</p>
+<div class="box trampa"><p>Con clases desbalanceadas, un <b>weighted alto no garantiza que todas las clases anden bien</b>: lo dominan las clases grandes. Con soja 50 %, maíz 25 %, trigo 20 % y girasol 5 %, y F1 de 0.98, 0.95, 0.92 y 0.40, el F1-weighted da 0.93 aunque el girasol esté mal clasificado; el macro da 0.81. Hay que mirar las métricas por clase y la matriz de confusión (examen del 27/11, sección 8.4).</p></div>
 <h3>Curva ROC y AUC</h3>
 <p>La <b>curva ROC</b> grafica la tasa de verdaderos positivos (recall) contra la tasa de falsos positivos, <b>variando el umbral</b> de decisión. El <b>AUC</b> (área bajo la curva) va de 0 a 1; <b>1 es el clasificador ideal</b>. (La filmina asocia 0 a un modelo aleatorio; en la literatura un modelo aleatorio da AUC ≈ 0.5.)</p>
 <figure>
@@ -451,6 +453,7 @@
   <li>El rendimiento final es el <b>promedio</b> de las k evaluaciones.</li>
 </ol>
 <p><b>Cada observación se usa exactamente una vez para test</b>; aprovecha mejor los datos limitados y da una estimación más estable. <b>k típicamente 5 o 10.</b></p>
+<p><b>Validación cruzada estratificada</b> (<code>StratifiedKFold</code>): arma cada partición manteniendo la proporción de clases del total. Con clases desbalanceadas es necesaria, porque al azar una partición puede quedar con muy pocas muestras de la clase chica, o con ninguna. Si los datos vienen ordenados por clase, además hay que mezclarlos (<code>shuffle=True</code>).</p>
 <h3>Validación Monte Carlo</h3>
 <p>Se generan m particiones aleatorias de entrenamiento y validación (por ejemplo 100 o 1000), se entrena y evalúa en cada una y se promedian las métricas y su <b>varianza</b>. Permite tamaños de conjuntos flexibles, <b>una observación puede usarse varias veces</b> como test, y sirve para medir la variabilidad del rendimiento o cuando k-fold es muy costoso con muchos datos.</p>
 <figure>

@@ -354,6 +354,8 @@
 <li>Es <b>costoso</b> (O(n²) por iteración en su versión estándar).</li>
 <li>No hay una métrica única de calidad: se evalúa visualmente y con conocimiento del dominio.</li>
 </ul></div>
+<div class="box clave"><p>En scikit-learn las primeras <b>250 iteraciones</b> son la fase de <i>early exaggeration</i>, que comprime cada grupo a propósito. Por eso con <code>max_iter = 250</code> los grupos aparecen colapsados en manchas o líneas, y algunos pegados a otros: el gráfico todavía no convergió y no se interpreta. Con 1000 iteraciones la forma ya se estabiliza.</p></div>
+<div class="box preg"><p>Examen del 27/11/2026 (sección 8.1): cuatro gráficos de t-SNE con perplexity 5 y 40 y max_iter 250 y 1000. Preguntaron qué representan los ejes (nada: no se relacionan con las variables), si t-SNE usó la etiqueta (no: es no supervisado), el efecto de la perplejidad (5 fragmenta los grupos, 40 los muestra compactos) y el de las iteraciones (250 no converge).</p></div>
 <p>Se recomienda estandarizar antes. <b>Aplicaciones:</b> datos genómicos, imágenes, redes sociales, <i>embeddings</i> de palabras.</p>
 
 <h2>2.8 UMAP (Uniform Manifold Approximation and Projection)</h2>
